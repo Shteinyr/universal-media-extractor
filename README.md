@@ -1,0 +1,813 @@
+# Universal Media Extractor & Transcriber
+
+Status: Block 11 Desktop Wrapper completed; Udemy Course Offline Export initial implementation added.
+
+This project is evaluating whether a local web app can accept a URL or local audio/video file, analyze available media variants, extract or download selected outputs, transcribe audio locally, and save structured results without paid APIs or cloud services.
+
+Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, selected-format download from the selected output button, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, in-memory job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, browser smoke screenshots, desktop wrapper launcher, generated transcript result actions, and structured output folders. Chrome extension, packaged/signed `.app`, auth, database, stored credentials, online service behavior, batch processing, external queue, and AI summary are not implemented.
+
+The visible UI has been simplified for a more final user-facing surface: the sidebar now focuses on mode selection and input, while development-oriented status, flow checklist, helper copy, and Recent results are hidden from the main screen.
+
+Roadmap note: new work is now organized by larger blocks, not new Phase numbers, unless the user explicitly authorizes new Phase numbering.
+
+Roadmap v2 is recorded in `docs/ROADMAP_V2.md`. Blocks 1-11 are completed. The current next planned block is Block 12: Chrome Extension, but it must not start without explicit user confirmation.
+
+Durable project context is recorded in `PROJECT_CONTEXT.md`. Read it before large tasks and update it after completed large blocks.
+
+## Quick Start
+
+From the project directory:
+
+```bash
+cd /Users/aleksandr/Documents/Codex/Projects/universal-media-extractor
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+```
+
+Required local CLIs:
+
+```bash
+ffmpeg -version
+yt-dlp --version
+whisper --help
+```
+
+Run tests:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Start the local app:
+
+```bash
+.venv/bin/python scripts/run_api.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000/
+```
+
+## Desktop Mode
+
+Run the desktop wrapper:
+
+```bash
+.venv/bin/python scripts/run_desktop.py
+```
+
+The wrapper starts the same FastAPI app on `127.0.0.1` and opens the existing UI in a desktop window. If port `8000` is busy, it chooses the next free local port through `8020`.
+
+Development smoke helper:
+
+```bash
+.venv/bin/python scripts/run_desktop.py --smoke-seconds 3
+```
+
+This opens the desktop window briefly and closes it automatically.
+
+## Development App Bundle
+
+Build a local development `.app` launcher:
+
+```bash
+.venv/bin/python scripts/build_dev_app.py
+```
+
+Run it:
+
+```bash
+open "build/dev/Universal Media Extractor Dev.app"
+```
+
+This `.app` does not bundle the project. It points back to this working tree and runs:
+
+```bash
+.venv/bin/python scripts/run_desktop.py
+```
+
+So code changes are picked up the next time the `.app` starts, as long as the project path and `.venv` stay in place.
+
+For convenient Finder use, copy it to Applications:
+
+```bash
+rm -rf "/Applications/Universal Media Extractor Dev.app"
+cp -R "build/dev/Universal Media Extractor Dev.app" "/Applications/Universal Media Extractor Dev.app"
+```
+
+## Browser Smoke Test
+
+Browser verification uses Python Playwright in the project `.venv`.
+
+Install browser binaries after installing requirements:
+
+```bash
+.venv/bin/python -m playwright install chromium
+```
+
+Run the backend:
+
+```bash
+.venv/bin/python scripts/run_api.py
+```
+
+In another terminal, run the analysis-only browser smoke:
+
+```bash
+.venv/bin/python scripts/browser_smoke.py
+```
+
+The default smoke opens the local UI, analyzes `https://youtu.be/UUdxAp3kuKA`, verifies `Showreel` and format groups, and saves:
+
+```text
+proof/block_10/ui_initial.png
+proof/block_10/ui_analyze_result.png
+```
+
+Optional full-flow browser smoke exists behind an explicit flag:
+
+```bash
+.venv/bin/python scripts/browser_smoke.py --full-flow
+```
+
+The default smoke does not download or transcribe.
+
+## MVP Flow
+
+URL flow:
+
+1. Paste a public media URL.
+2. Click `Analyze`.
+3. Select a format row.
+4. Click `Download selected` and watch the download job status.
+5. If the downloaded output contains audio, choose a Whisper model and transcript format.
+6. Click `Transcribe` and watch the transcription job status.
+7. Review the saved transcript and copy transcript or output path.
+
+Local file flow:
+
+1. Switch to `Local file mode`.
+2. Choose a local audio/video file.
+3. Click `Analyze local file`.
+4. Choose a Whisper model and transcript format.
+5. Click `Transcribe local file`.
+6. Review the saved transcript and copy transcript or output path.
+
+Recent results:
+
+- user outputs under `outputs/` are listed in the UI;
+- each item can copy its path;
+- each item can be safely deleted by output id;
+- `proof/` is not listed and is not deleted automatically.
+
+Outputs are written under:
+
+```text
+~/Downloads/Universal Media Extractor/<safe_source_title>/
+outputs/local_<timestamp>_<safe_filename>/
+```
+
+## Udemy Course Mode
+
+Course mode is a local, best-effort export path for Udemy courses you can access in your own account.
+
+Use it from the UI:
+
+1. Choose `Course mode`.
+2. Paste a Udemy URL. Prefer the URL from the opened course player, for example `/course/<slug>/learn/lecture/<id>`.
+3. Keep `Login source` set to `Chrome session`.
+4. Make sure Udemy is open in Chrome and you are signed in.
+5. Click `Analyze course`.
+6. Choose quality/container and click `Download course`.
+
+Default output:
+
+```text
+~/Downloads/Universal Media Extractor/Udemy
+```
+
+The app does not store Udemy passwords, does not copy cookies into output folders, and does not bypass DRM/CAPTCHA/paywalls. If Chrome session access is unavailable, Course mode has an advanced `Manual cookies.txt` fallback. Some courses or lectures may be unavailable because of Udemy restrictions, expired cookies, DRM, or extractor changes.
+
+If a clean `/course/<slug>/` URL fails, paste the URL from the opened lecture/player page instead. On the tested course, the clean course URL failed with `Unable to extract course id`, while the lecture URL returned the full course playlist.
+
+The URL download card includes a `Save to` field. Change it before clicking `Download selected` if you want another output base folder. URL downloads put the selected media/subtitle file directly inside the result folder. Service artifacts are stored in hidden `.metadata` and `.logs` folders.
+
+After a download starts with a custom `Save to` folder, `Recent results` uses that folder for listing outputs.
+
+The download card also includes a `Format` selector:
+
+- Video: `MP4` default, `MKV`, `WEBM`;
+- Audio: `M4A` default, `MP3`, `WAV`;
+- Subtitles: `SRT` default, `VTT`.
+
+When `Video` is selected, the app asks `yt-dlp` to combine the selected video stream with the best available audio stream into one final file.
+
+Transcription saves one selected format per run:
+
+- `TXT` default;
+- `Markdown`;
+- `JSON`.
+
+The selected transcript file is written directly into the same result folder as the downloaded media. Whisper's intermediate files and logs are kept in hidden service folders.
+
+When proof runs specify a custom output base, outputs are written under that proof directory instead.
+
+## Simplified Format Selection
+
+After analysis, the UI now asks the user to choose one output type first:
+
+- `Audio`
+- `Video`
+- `Subtitles`
+
+Audio options show only container and approximate size, for example `M4A · 616.91 KB`.
+
+Video options show only container, quality, and approximate size. Variants below `1080p` are hidden from the UI. Duplicate user-facing video rows are collapsed by container and quality, so repeated `MP4 · 1080p` options are not shown. When a `Video` option is downloaded, the app asks `yt-dlp` to combine the selected video stream with the best available audio stream into one final file.
+
+Subtitles show one short row per language and type, for example manual or automatic captions. Multiple subtitle formats such as `vtt`, `srt`, or `json3` are merged into one option instead of repeated as duplicate rows.
+
+## UI Reference Port
+
+The downloaded v0 UI project was used only as a visual/UX reference. The main app still uses static HTML/CSS/vanilla JS served by FastAPI.
+
+Transferred UI ideas:
+
+- compact sidebar layout;
+- downloader/file-manager style main work area;
+- concise media card;
+- segmented output selector;
+- compact recent results and result files.
+
+No Next.js, React, Tailwind build step, shadcn/ui runtime, or Vercel analytics were added to the main project.
+
+## MVP Limitations
+
+- URL support is best-effort through `yt-dlp`.
+- DRM, CAPTCHA, paywall, login-only, and private sources are out of scope.
+- Udemy Course mode can use the local Chrome session or an advanced manual `cookies.txt` fallback. The app does not store passwords or copy cookies into outputs.
+- Local file mode copies selected files into the project output folder.
+- Download/transcription run as in-memory local jobs.
+- Job progress uses status/current-step polling and parses practical `yt-dlp` percent output when available.
+- Whisper progress is step-based; the UI does not fake Whisper percent.
+- Cancel is best-effort and attempts to terminate a registered active `yt-dlp`, `ffmpeg`, or Whisper subprocess.
+- Whisper quality depends on model and audio quality; `tiny` is fast but can be poor.
+- Browser UI cannot open local folders directly; it shows/copies paths.
+- Output delete is limited to direct folders inside `outputs/`.
+- `proof/` is a development proof area and is not managed by the UI.
+- Desktop wrapper and development `.app` launcher exist for local use, but there is no packaged/signed/notarized distributable `.app` or installer.
+- No Chrome extension, auth, database, batch processing, online service, or AI summary API.
+
+See `docs/MVP_KNOWN_LIMITATIONS.md` for the full limitations list.
+
+## Phase 0 Verdict
+
+CONDITIONAL GO.
+
+The core idea is technically feasible as a local, single-user, best-effort extractor/transcriber using `yt-dlp`, `ffmpeg`, and local Whisper CLI. It is not feasible as a guaranteed universal downloader for every website.
+
+Further work remains block-gated: continue only when the user explicitly authorizes the next roadmap block.
+
+Roadmap governance:
+
+- do not create new Phase numbering;
+- do not create new Blocks without explicit user approval;
+- Codex recommendations are recommendations only, not roadmap decisions;
+- follow Roadmap v2 unless the user explicitly changes it.
+
+## Phase 1 Status
+
+The user accepted the CONDITIONAL GO constraints. Phase 1 prepared a local Python virtual environment and verified minimal CLI/tool availability.
+
+- Virtual environment: `.venv`
+- Direct dependencies: FastAPI, Uvicorn standard extras, Pydantic, python-multipart, aiofiles
+- CLI proof checks: `ffmpeg`, `ffprobe`, `yt-dlp`, and Whisper CLI are available
+
+URL format listing was not tested because no user-provided test URL was supplied.
+
+## Phase 2 Status
+
+The user provided and confirmed ownership of `https://youtu.be/UUdxAp3kuKA`. Phase 2 safely analyzed the URL with `yt-dlp` without downloading media.
+
+Results:
+
+- Source recognized by `yt-dlp` as YouTube.
+- Title: `Showreel`
+- Duration: 39 seconds
+- Formats found: audio-only, video-only, and combined video+audio.
+- Subtitles: none.
+- Automatic captions: none.
+
+Raw proof outputs are stored in `proof/phase_2/`. Phase 2 did not create application code.
+
+## Phase 3 Status
+
+Phase 3 defined a normalized future `AnalyzeResult` contract for the analyze endpoint and UI. It is based on the real Phase 2 `yt-dlp` output and includes source summary, grouped media options, subtitles, automatic captions, metadata, warnings, errors, and legal/safety confirmation state.
+
+Created documentation:
+
+- `docs/PHASE_3_ANALYZE_DATA_CONTRACT.md`
+- `docs/PHASE_3_SAMPLE_ANALYZE_RESULT.json`
+- `docs/PHASE_3_BACKEND_MODEL_NOTES.md`
+- `docs/PHASE_3_FRONTEND_MODEL_NOTES.md`
+
+No application code has been created yet.
+
+## Phase 4 Status
+
+Phase 4 created Pydantic v2 models for the normalized analyze-result contract and tests that validate the Phase 3 sample JSON.
+
+Created code:
+
+- `src/universal_media_extractor/models/analyze.py`
+- `tests/test_analyze_models.py`
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 5 passed.
+
+No FastAPI app, routes, frontend, downloader, transcription module, media download, Whisper run, extension, or desktop wrapper has been created.
+
+## Phase 9 Status
+
+Phase 9 created a minimal service layer without FastAPI routes or frontend code.
+
+Created code:
+
+- `src/universal_media_extractor/services/analyze_service.py`
+- `src/universal_media_extractor/services/output_manager.py`
+- `src/universal_media_extractor/services/safety_service.py`
+- `src/universal_media_extractor/services/job_service.py`
+- `src/universal_media_extractor/models/job.py`
+
+Created tests:
+
+- `tests/test_analyze_service.py`
+- `tests/test_output_manager.py`
+- `tests/test_safety_service.py`
+- `tests/test_job_service.py`
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 26 passed.
+
+No FastAPI app, routes, frontend, downloader, transcription module, media download, Whisper run, MVP, extension, desktop wrapper, database, or persistent job storage has been created.
+
+## Phase 10 Status
+
+Phase 10 created a minimal analysis-only FastAPI backend with local-only Uvicorn binding.
+
+Created code:
+
+- `src/universal_media_extractor/api/app.py`
+- `src/universal_media_extractor/api/schemas.py`
+- `scripts/run_api.py`
+
+Implemented endpoints:
+
+- `GET /health`
+- `POST /analyze`
+- `GET /jobs/{job_id}`
+
+Run locally:
+
+```bash
+.venv/bin/python scripts/run_api.py --port 8000
+```
+
+The run script binds to `127.0.0.1` only.
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 31 passed.
+
+Runtime health check was verified at `http://127.0.0.1:8765/health`.
+
+No frontend, downloader, media download, Whisper run, Chrome extension, desktop wrapper, online service, auth, database, or cookies/login has been created.
+
+## Phase 11 Status
+
+Phase 11 manually verified the real local API endpoint `POST /analyze` on the user-authorized URL `https://youtu.be/UUdxAp3kuKA`.
+
+Proof summary:
+
+- backend ran on `http://127.0.0.1:8000`;
+- `GET /health` returned local-only status;
+- `POST /analyze` returned normalized `AnalyzeResult`;
+- job status: `succeeded`;
+- title: `Showreel`;
+- duration: 39 seconds;
+- extractor: `youtube`;
+- errors: none;
+- media options: 3 audio-only, 4 video-only, 5 combined;
+- subtitles and automatic captions: none.
+
+Proof artifacts:
+
+- `proof/phase_11/health_response.json`
+- `proof/phase_11/analyze_response.json`
+- `proof/phase_11/analyze_response_pretty.json`
+- `proof/phase_11/job_response.json`
+- `proof/phase_11/job_response_pretty.json`
+- `docs/PHASE_11_MANUAL_API_ANALYZE_PROOF.md`
+
+No frontend, downloader, media download, Whisper run, extension, desktop wrapper, auth, database, or cookies/login was created or used.
+
+## Phase 12 Status
+
+Phase 12 planned the first frontend as an analysis-result display only UI based on the real Phase 11 API response.
+
+Planned UI loop:
+
+```text
+Paste URL -> Analyze -> Display normalized AnalyzeResult
+```
+
+Recommended first frontend approach:
+
+- static HTML/CSS/vanilla JS;
+- connect to `POST http://127.0.0.1:8000/analyze`;
+- show source summary, thumbnail, format groups, warnings, errors, and empty subtitle/caption states;
+- no Vite app yet.
+
+Created documentation:
+
+- `docs/PHASE_12_FRONTEND_ANALYSIS_UI_PLAN.md`
+- `docs/PHASE_12_UI_COMPONENT_MAP.md`
+- `docs/PHASE_12_FRONTEND_SCOPE_BOUNDARY.md`
+
+No frontend app, UI code, downloader, media download, Whisper run, extension, desktop wrapper, auth, database, cookies/login, or API changes were created.
+
+## Phase 13 Status
+
+Phase 13 created the first static analysis-only UI.
+
+Open locally:
+
+```bash
+.venv/bin/python scripts/run_api.py
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8000/
+```
+
+Created UI files:
+
+- `src/universal_media_extractor/static/index.html`
+- `src/universal_media_extractor/static/styles.css`
+- `src/universal_media_extractor/static/app.js`
+
+Implemented UI loop:
+
+```text
+Paste URL -> Analyze -> Display normalized AnalyzeResult
+```
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 33 passed.
+
+Live checks confirmed `/`, `/static/app.js`, and `POST /analyze` work on `127.0.0.1:8000`.
+
+No download, Whisper/transcription, local file upload, extension, desktop wrapper, auth, database, cookies/login, settings page, React, Vite, CDN, or external asset bundle was added.
+
+## Phase 14 Status
+
+Phase 14 polished the existing static analysis-only UI without adding new features.
+
+Improved:
+
+- visual hierarchy and spacing;
+- compact format group display;
+- warning/error separation;
+- keyboard focus styles;
+- URL input accessibility;
+- status/error aria roles;
+- loading `aria-busy`;
+- reduced-motion support;
+- empty thumbnail state;
+- narrow layout behavior.
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 33 passed.
+
+Live checks confirmed `/`, `/static/styles.css`, `/static/app.js`, and real `POST /analyze` still work on `127.0.0.1:8000`.
+
+Documentation:
+
+- `docs/PHASE_14_UI_POLISH_ACCESSIBILITY.md`
+
+At the time of Phase 14, Browser/Playwright screenshot verification was not performed because browser automation was unavailable in the local toolchain. Block 10 later added Playwright browser smoke tooling.
+
+No download, Whisper/transcription, local file upload, extension, desktop wrapper, auth, database, cookies/login, settings page, React, Vite, CDN, external assets, or backend API changes were added.
+
+## Phase 15 Status
+
+Phase 15 refined analysis-only error handling without adding new product features.
+
+Covered states:
+
+- empty URL;
+- invalid URL;
+- API unavailable;
+- API validation/error response;
+- `AnalyzeResult.errors`;
+- unsupported source;
+- login required;
+- cookies required;
+- analyzer failure;
+- subtitle/caption empty states as non-errors.
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 36 passed.
+
+Live checks confirmed `/`, `/static/app.js`, invalid URL `422`, and real `POST /analyze` still work on `127.0.0.1:8000`.
+
+Documentation:
+
+- `docs/PHASE_15_ERROR_STATE_REFINEMENT.md`
+
+No download, Whisper/transcription, local file upload, extension, desktop wrapper, auth, database, cookies/login, settings page, React, Vite, CDN, external assets, or media processing was added.
+
+## Block 2 Download + Output Pipeline
+
+Block 2 added selected-format downloads through the existing local-only app.
+
+Implemented:
+
+- `DownloadRequest`, `DownloadResult`, `DownloadMode`, and `DownloadStatus`;
+- `DownloadService.download_media(...)`;
+- `POST /download`;
+- structured output folders with `media/`, `metadata/`, and `logs/`;
+- static UI selection of an analyzed format;
+- rights confirmation checkbox before download;
+- download result display with output paths and files.
+
+Run locally:
+
+```bash
+.venv/bin/python scripts/run_api.py
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8000/
+```
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 43 passed.
+
+Manual proof:
+
+- source: `https://youtu.be/UUdxAp3kuKA`;
+- format: `140`;
+- mode: audio-only;
+- output: `proof/download_block/20260529T092713Z_UUdxAp3kuKA/media/Showreel [UUdxAp3kuKA].m4a`.
+
+No Whisper/transcription, local file upload, extension, desktop wrapper, auth, database, cookies/login, online service behavior, or AI summary was added.
+
+## Block 3 Whisper + Transcript Pipeline
+
+Block 3 added local transcription for downloaded audio/video files.
+
+Implemented:
+
+- `TranscriptionRequest`, `TranscriptionResult`, `SourceMediaKind`, and `TranscriptionStatus`;
+- `TranscriptionService.transcribe_file(...)`;
+- `POST /transcribe`;
+- audio -> Whisper CLI -> transcript artifacts;
+- video -> ffmpeg extracted audio -> Whisper CLI -> transcript artifacts;
+- `transcript.txt`;
+- `transcript.md`;
+- `transcript.json`;
+- `summary_prompt.md`;
+- UI transcript panel after successful download.
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 49 passed.
+
+Manual proof:
+
+- input: `proof/download_block/20260529T092713Z_UUdxAp3kuKA/media/Showreel [UUdxAp3kuKA].m4a`;
+- Whisper model: `tiny`;
+- output:
+  - `proof/download_block/20260529T092713Z_UUdxAp3kuKA/transcripts/transcript.txt`;
+  - `proof/download_block/20260529T092713Z_UUdxAp3kuKA/transcripts/transcript.md`;
+  - `proof/download_block/20260529T092713Z_UUdxAp3kuKA/transcripts/transcript.json`;
+  - `proof/download_block/20260529T092713Z_UUdxAp3kuKA/transcripts/summary_prompt.md`.
+
+No AI summary API, Chrome extension, desktop wrapper, batch processing, cookies/login, auth, database, online service behavior, or advanced download hardening was added.
+
+## Block 4 Processing UI + MVP Flow
+
+Block 4 unified the static UI into the end-to-end MVP flow:
+
+```text
+Analyze -> Select format -> Confirm rights -> Download -> Transcribe -> Result
+```
+
+Implemented:
+
+- visible MVP flow tracker;
+- clearer selected format summary;
+- disabled download until format + rights confirmation are present;
+- Whisper model selector: `tiny`, `base`, `small`, `medium`, `turbo/default`;
+- transcription action after successful download;
+- generated-files card;
+- transcript preview;
+- `Copy transcript`;
+- `Copy summary prompt`;
+- `Copy output path`.
+
+The UI reuses existing endpoints:
+
+- `POST /analyze`;
+- `POST /download`;
+- `POST /transcribe`.
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 49 passed.
+
+Manual proof artifacts:
+
+- `proof/block_4/analyze_response_pretty.json`;
+- `proof/block_4/download_response_pretty.json`;
+- `proof/block_4/transcribe_response_pretty.json`;
+- `proof/block_4/20260530T132006Z_UUdxAp3kuKA/media/Showreel [UUdxAp3kuKA].m4a`;
+- `proof/block_4/20260530T132006Z_UUdxAp3kuKA/transcripts/transcript.txt`;
+- `proof/block_4/20260530T132006Z_UUdxAp3kuKA/transcripts/transcript.md`;
+- `proof/block_4/20260530T132006Z_UUdxAp3kuKA/transcripts/transcript.json`;
+- `proof/block_4/20260530T132006Z_UUdxAp3kuKA/transcripts/summary_prompt.md`.
+
+At the time of Block 4, visual browser automation was unavailable because the local `playwright` module was not found. Block 10 later added Playwright browser smoke tooling.
+
+No job/progress/cancel, batch, Chrome extension, desktop wrapper, AI summary API, auth/database/cookies, React/Vite, CDN assets, advanced download hardening, or roadmap changes were added.
+
+## Block 5 MVP Integration / Readiness Review
+
+Block 5 reviewed the current MVP as a product checkpoint.
+
+Verified flow:
+
+```text
+URL -> Analyze -> Select format -> Confirm rights -> Download -> Transcribe -> Result
+```
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 49 passed.
+
+Manual smoke test:
+
+- source: `https://youtu.be/UUdxAp3kuKA`;
+- selected format: audio-only `140`;
+- Whisper model: `tiny`;
+- output: `proof/block_5/20260530T132548Z_UUdxAp3kuKA/`.
+
+Readiness docs:
+
+- `docs/BLOCK_5_MVP_READINESS_REVIEW.md`;
+- `docs/MVP_KNOWN_LIMITATIONS.md`.
+
+Only text/readiness fixes were made. No new product features were added.
+
+## Phase 5 Status
+
+Phase 5 created a pure normalizer for successful `yt-dlp --dump-json` data.
+
+Created code:
+
+- `src/universal_media_extractor/normalizers/ytdlp.py`
+- `tests/test_ytdlp_normalizer.py`
+
+The normalizer converts an already-loaded raw `yt-dlp` dictionary into `AnalyzeResult`, grouping formats into audio-only, video-only, and combined video+audio options.
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 11 passed.
+
+No CLI orchestration, FastAPI app, routes, frontend, downloader, transcription module, media download, Whisper run, extension, or desktop wrapper has been created.
+
+## Phase 6 Status
+
+Phase 6 created a safe URL analysis wrapper around `yt-dlp --simulate --dump-json`.
+
+Created code:
+
+- `src/universal_media_extractor/analyzers/ytdlp.py`
+- `tests/test_ytdlp_analyzer.py`
+- `scripts/manual_analyze_url.py`
+
+The analyzer:
+
+- uses subprocess list arguments with `shell=False`;
+- uses only `yt-dlp --simulate --dump-json URL`;
+- handles timeout, invalid JSON, non-zero exits, missing `yt-dlp`, and common source/access errors;
+- returns `AnalyzeResult`;
+- saves raw JSON only when `raw_output_dir` is provided.
+
+Verification:
+
+```bash
+.venv/bin/python -m pytest -q
+```
+
+Result: 18 passed.
+
+The manual script was created but not run during Phase 6. No FastAPI app, routes, frontend, downloader, media download, Whisper run, extension, or desktop wrapper has been created.
+
+## Phase 7 Status
+
+Phase 7 ran the manual analysis script on the user-authorized URL `https://youtu.be/UUdxAp3kuKA`.
+
+Result:
+
+- analysis succeeded;
+- normalized `AnalyzeResult` returned with `errors=[]`;
+- raw analysis JSON saved to `proof/phase_7/`;
+- no media download was performed;
+- Whisper was not run.
+
+No FastAPI app, routes, frontend, downloader, extension, or desktop wrapper has been created.
+
+## Phase 8 Status
+
+Phase 8 documented the future service layer and first MVP boundary without creating backend routes or frontend code.
+
+Created documentation:
+
+- `docs/PHASE_8_SERVICE_LAYER_PLAN.md`
+- `docs/PHASE_8_API_DRAFT.md`
+- `docs/PHASE_8_FRONTEND_FLOW_DRAFT.md`
+- `docs/PHASE_8_MVP_BOUNDARY.md`
+
+Planned first MVP services:
+
+- `AnalyzeService`
+- minimal `OutputManager`
+- minimal `JobService`
+- minimal `SafetyService`
+
+First MVP boundary:
+
+- URL analysis;
+- normalized `AnalyzeResult`;
+- UI display of analyze result;
+- no download in the first UI prototype;
+- no Whisper in the first UI prototype.
+
+No FastAPI app, routes, frontend, downloader, transcription module, media download, Whisper run, extension, or desktop wrapper has been created.

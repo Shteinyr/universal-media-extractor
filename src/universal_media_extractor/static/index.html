@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Universal Media Extractor</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#url-input">Skip to input</a>
+    <main class="app-shell">
+      <section class="intro-panel" aria-labelledby="app-title">
+        <header class="app-header">
+          <p class="eyebrow">Local downloader</p>
+          <h1 id="app-title">Universal Media Extractor</h1>
+        </header>
+
+        <div class="mode-tabs" role="tablist" aria-label="Input mode">
+          <button id="url-mode-button" type="button" class="mode-tab is-active" aria-pressed="true">URL mode</button>
+          <button id="local-mode-button" type="button" class="mode-tab" aria-pressed="false">Local file mode</button>
+          <button id="course-mode-button" type="button" class="mode-tab" aria-pressed="false">Course mode</button>
+        </div>
+
+        <form class="input-card" id="analyze-form">
+          <label for="url-input">Media URL</label>
+          <div class="input-row">
+            <input
+              id="url-input"
+              name="url"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              placeholder="https://youtu.be/..."
+              required
+            >
+            <button id="analyze-button" type="submit">Analyze</button>
+          </div>
+          <p class="sr-only" id="input-hint">Analyze first, then choose an output.</p>
+          <p class="sr-only" id="safety-note">Use only media you have the right to process.</p>
+        </form>
+
+        <form class="input-card hidden" id="local-file-form">
+          <label for="local-file-input">Local audio/video file</label>
+          <input
+            id="local-file-input"
+            name="file"
+            type="file"
+            accept="audio/*,video/*"
+          >
+          <p class="hint" id="local-file-name">No file selected.</p>
+          <button id="local-analyze-button" type="submit">Analyze local file</button>
+          <p class="sr-only" id="local-input-hint">Files stay local and are copied into project outputs.</p>
+        </form>
+
+        <form class="input-card hidden" id="course-form">
+          <label for="course-url-input">Udemy course URL</label>
+          <div class="input-row">
+            <input
+              id="course-url-input"
+              name="course_url"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              placeholder="https://www.udemy.com/course/..."
+              required
+            >
+            <button id="course-analyze-button" type="submit">Analyze course</button>
+          </div>
+          <label class="model-field" for="course-auth-source">
+            Login source
+            <select id="course-auth-source">
+              <option value="chrome" selected>Chrome session</option>
+              <option value="manual_cookies">Manual cookies.txt</option>
+            </select>
+          </label>
+          <p class="hint">Open Udemy in Chrome and make sure you are signed in.</p>
+          <div class="advanced-field hidden" id="course-manual-cookies-panel">
+            <label class="path-field" for="course-cookies-path">
+              Manual cookies.txt
+              <input id="course-cookies-path" type="text" placeholder="/Users/.../cookies.txt" autocomplete="off" spellcheck="false">
+            </label>
+          </div>
+          <p class="sr-only">The app uses your local Chrome session or a manual cookies file and does not store passwords.</p>
+        </form>
+
+        <section class="status-card sr-only" role="status" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <div>
+            <strong>Backend</strong>
+            <p id="api-status">Using local API at http://127.0.0.1:8000</p>
+          </div>
+        </section>
+
+        <section class="flow-card hidden" aria-labelledby="flow-title">
+          <h2 id="flow-title">MVP flow</h2>
+          <ol class="flow-steps" id="flow-steps">
+            <li data-step="analyze" class="is-active">Analyze</li>
+            <li data-step="select">Select format</li>
+            <li data-step="download">Download</li>
+            <li data-step="transcribe">Transcribe</li>
+            <li data-step="result">Result</li>
+          </ol>
+        </section>
+
+        <section class="recent-card hidden" aria-labelledby="recent-title">
+          <div class="group-header">
+            <h2 id="recent-title">Recent results</h2>
+            <button id="refresh-outputs-button" type="button" class="small-button">Refresh</button>
+          </div>
+          <div id="recent-results-list" class="recent-results-list">
+            <p class="empty-line">No outputs loaded yet.</p>
+          </div>
+        </section>
+      </section>
+
+      <section class="result-panel" aria-live="polite" aria-labelledby="result-title">
+        <div class="empty-result" id="empty-state">
+          <h2 id="result-title">Ready to analyze</h2>
+              <p>Paste a URL or choose a local file. The app will show clean output options without downloading first.</p>
+        </div>
+
+        <div class="loading-state hidden" id="loading-state" role="status" aria-live="polite">
+          <div class="loader" aria-hidden="true"></div>
+          <div>
+            <h2>Analyzing...</h2>
+            <p>Waiting for the local API. No media download.</p>
+          </div>
+        </div>
+
+        <div class="result-content hidden" id="result-content">
+          <article class="source-card" aria-labelledby="media-title">
+            <div class="thumbnail-wrap">
+              <img id="thumbnail" alt="" referrerpolicy="no-referrer">
+            </div>
+            <div class="source-details">
+              <div class="source-topline">
+                <span class="pill" id="extractor-pill">source</span>
+                <span class="muted" id="duration">duration unknown</span>
+              </div>
+              <h2 id="media-title">Untitled source</h2>
+              <p id="uploader" class="muted">Uploader unavailable</p>
+              <a id="webpage-link" href="#" target="_blank" rel="noreferrer">Open source page</a>
+            </div>
+          </article>
+
+          <section class="format-picker hidden" id="format-picker" aria-labelledby="format-picker-title">
+            <div class="group-header compact-header">
+              <div>
+                <h3 id="format-picker-title">Choose output</h3>
+                <p class="muted compact-copy">Audio, video, or subtitles.</p>
+              </div>
+            </div>
+            <div class="format-tabs" role="tablist" aria-label="Output type">
+              <button id="format-tab-audio" type="button" class="format-tab" data-category="audio">Audio</button>
+              <button id="format-tab-video" type="button" class="format-tab" data-category="video">Video</button>
+              <button id="format-tab-subtitles" type="button" class="format-tab" data-category="subtitles">Subtitles</button>
+            </div>
+            <p class="empty-line" id="format-picker-empty">Choose Audio, Video, or Subtitles.</p>
+            <div class="groups-grid" aria-label="Format options">
+              <div class="format-group hidden" id="audio-group"></div>
+              <div class="format-group hidden" id="video-group"></div>
+              <div class="format-group hidden" id="combined-group"></div>
+              <div class="format-group hidden" id="subtitles-group"></div>
+              <div class="format-group hidden" id="captions-group"></div>
+            </div>
+          </section>
+
+          <section class="notice-panel hidden" id="warnings-panel" aria-labelledby="warnings-title">
+            <h3 id="warnings-title">Warnings</h3>
+            <div id="warnings-list"></div>
+          </section>
+
+          <section class="notice-panel error hidden" id="errors-panel" aria-labelledby="errors-title" role="alert">
+            <h3 id="errors-title">Errors</h3>
+            <div id="errors-list"></div>
+          </section>
+
+          <section class="download-card hidden" id="download-panel" aria-labelledby="download-title">
+            <div class="group-header">
+              <h3 id="download-title">Download selected</h3>
+              <span class="count" id="selected-format-label">No format selected</span>
+            </div>
+            <div class="selection-summary" id="selected-format-summary">
+              Select a format row to continue.
+            </div>
+            <label class="path-field" for="download-output-dir">
+              Save to
+              <input id="download-output-dir" type="text" value="~/Downloads/Universal Media Extractor" autocomplete="off" spellcheck="false">
+            </label>
+            <label class="path-field" for="download-output-format">
+              Format
+              <select id="download-output-format"></select>
+            </label>
+            <input id="rights-checkbox" type="checkbox" checked hidden>
+            <button id="download-button" type="button" disabled>Download selected</button>
+            <button id="cancel-download-button" type="button" class="secondary-button hidden">Cancel download</button>
+            <div class="download-result hidden" id="download-result" role="status" aria-live="polite"></div>
+          </section>
+
+          <section class="download-card hidden" id="transcript-panel" aria-labelledby="transcript-title">
+            <div class="group-header">
+              <h3 id="transcript-title">Transcript</h3>
+              <span class="count" id="transcript-file-label">No file selected</span>
+            </div>
+            <label class="model-field" for="whisper-model">
+              Whisper model
+              <select id="whisper-model">
+                <option value="tiny" selected>tiny - fastest</option>
+                <option value="base">base</option>
+                <option value="small">small</option>
+                <option value="medium">medium</option>
+                <option value="turbo">turbo/default</option>
+              </select>
+            </label>
+            <label class="model-field" for="transcript-format">
+              Save transcript as
+              <select id="transcript-format">
+                <option value="txt" selected>TXT</option>
+                <option value="md">Markdown</option>
+                <option value="json">JSON</option>
+              </select>
+            </label>
+            <button id="transcribe-button" type="button">Transcribe</button>
+            <button id="cancel-transcribe-button" type="button" class="secondary-button hidden">Cancel transcription</button>
+            <div class="download-result hidden" id="transcript-result" role="status" aria-live="polite"></div>
+          </section>
+
+          <section class="download-card hidden" id="local-file-panel" aria-labelledby="local-file-title">
+            <div class="group-header">
+              <h3 id="local-file-title">Local file metadata</h3>
+              <span class="count" id="local-media-type">unknown</span>
+            </div>
+            <div id="local-metadata-list"></div>
+            <input id="local-rights-checkbox" type="checkbox" checked hidden>
+            <label class="model-field" for="local-whisper-model">
+              Whisper model
+              <select id="local-whisper-model">
+                <option value="tiny" selected>tiny - fastest</option>
+                <option value="base">base</option>
+                <option value="small">small</option>
+                <option value="medium">medium</option>
+                <option value="turbo">turbo/default</option>
+              </select>
+            </label>
+            <label class="model-field" for="local-transcript-format">
+              Save transcript as
+              <select id="local-transcript-format">
+                <option value="txt" selected>TXT</option>
+                <option value="md">Markdown</option>
+                <option value="json">JSON</option>
+              </select>
+            </label>
+            <button id="local-transcribe-button" type="button" disabled>Transcribe local file</button>
+            <button id="cancel-local-transcribe-button" type="button" class="secondary-button hidden">Cancel local transcription</button>
+            <div class="download-result hidden" id="local-transcript-result" role="status" aria-live="polite"></div>
+          </section>
+
+          <section class="download-card hidden" id="course-panel" aria-labelledby="course-title">
+            <div class="group-header">
+              <h3 id="course-title">Udemy course export</h3>
+              <span class="count" id="course-lecture-count">No lectures loaded</span>
+            </div>
+            <div id="course-summary-list"></div>
+            <label class="path-field" for="course-output-dir">
+              Save to
+              <input id="course-output-dir" type="text" value="~/Downloads/Universal Media Extractor/Udemy" autocomplete="off" spellcheck="false">
+            </label>
+            <label class="model-field" for="course-quality">
+              Quality
+              <select id="course-quality">
+                <option value="best" selected>Best</option>
+                <option value="1080">1080p</option>
+                <option value="720">720p</option>
+                <option value="480">480p</option>
+              </select>
+            </label>
+            <label class="model-field" for="course-output-format">
+              Format
+              <select id="course-output-format">
+                <option value="mp4" selected>MP4</option>
+                <option value="mkv">MKV</option>
+                <option value="webm">WEBM</option>
+              </select>
+            </label>
+            <label class="checkbox-line" for="course-subtitles">
+              <input id="course-subtitles" type="checkbox" checked>
+              Include subtitles when available
+            </label>
+            <button id="course-download-button" type="button" disabled>Download course</button>
+            <button id="cancel-course-download-button" type="button" class="secondary-button hidden">Cancel course download</button>
+            <div class="download-result hidden" id="course-download-result" role="status" aria-live="polite"></div>
+          </section>
+
+          <section class="download-card hidden" id="files-panel" aria-labelledby="files-title">
+            <div class="group-header">
+              <h3 id="files-title">Generated files</h3>
+              <span class="count" id="output-dir-label">No output yet</span>
+            </div>
+            <div id="files-list"></div>
+            <div class="actions-row">
+              <button id="copy-transcript-button" type="button" disabled>Copy transcript</button>
+              <button id="copy-summary-button" type="button" class="hidden" disabled>Copy summary prompt</button>
+              <button id="copy-output-button" type="button" disabled>Copy output path</button>
+            </div>
+            <div class="preview-card hidden" id="transcript-preview-card">
+              <h3>Transcript preview</h3>
+              <pre id="transcript-preview"></pre>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/option_normalizer.js" defer></script>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
