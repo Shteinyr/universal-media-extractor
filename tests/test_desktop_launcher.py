@@ -48,3 +48,43 @@ def test_find_available_port_rejects_invalid_range():
         assert "preferred_port" in str(exc)
     else:
         raise AssertionError("Expected ValueError for invalid port range.")
+
+
+def test_resolve_runtime_paths_dev_uses_existing_app_defaults():
+    module = load_run_desktop_module()
+
+    paths = module.resolve_runtime_paths(profile="dev")
+
+    assert paths == {
+        "raw_output_base_dir": None,
+        "output_base_dir": None,
+        "job_db_path": None,
+    }
+
+
+def test_resolve_runtime_paths_production_uses_app_support(tmp_path):
+    module = load_run_desktop_module()
+    app_data_dir = tmp_path / "App Support"
+
+    paths = module.resolve_runtime_paths(
+        profile="production",
+        app_data_dir=app_data_dir,
+    )
+
+    assert app_data_dir.exists()
+    assert paths["raw_output_base_dir"] == app_data_dir.resolve() / "analysis"
+    assert paths["output_base_dir"] == Path.home() / "Downloads" / "Universal Media Extractor"
+    assert paths["job_db_path"] == app_data_dir.resolve() / "jobs.sqlite3"
+
+
+def test_ensure_cli_search_path_adds_homebrew_paths(monkeypatch):
+    module = load_run_desktop_module()
+    monkeypatch.setenv("PATH", "/usr/bin:/custom/bin")
+
+    module.ensure_cli_search_path()
+
+    paths = module.os.environ["PATH"].split(module.os.pathsep)
+    assert paths[0] == "/opt/homebrew/bin"
+    assert "/usr/local/bin" in paths
+    assert "/custom/bin" in paths
+    assert paths.count("/usr/bin") == 1

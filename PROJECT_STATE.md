@@ -374,3 +374,13 @@ The development `.app` now uses a tiny compiled Mach-O launcher in `Contents/Mac
 - Do not add AI summary API, Chrome extension, packaged desktop distribution, auth, database, cookies/login, online service behavior, batch processing, advanced download hardening, external queue, persistent local file library/history, automatic proof cleanup, output batch delete, output search/filtering, persistent job storage, or new roadmap blocks until explicitly authorized in a future block.
 
 - Diagnostics bundles now redact cookies, tokens, passwords, transcripts, full URLs, and local paths by default.
+
+## 2026-08-05 - Commercial Block 7 macOS Production Build Foundation
+
+- Added PyInstaller macOS production-foundation build support.
+- `scripts/build_macos_app.py` builds `build/macos/dist/Universal Media Extractor.app`.
+- `scripts/run_desktop.py` now supports production runtime paths and Finder-safe CLI path setup.
+- Production desktop data uses `~/Library/Application Support/Universal Media Extractor`; user outputs default to `~/Downloads/Universal Media Extractor`.
+- Verification confirmed the built app starts the local backend, opens the desktop UI, and stops the backend after close.
+- Apple Developer ID signing/notarization and DMG installer are separate next packaging tasks, not part of this block.
+- Next recommended commercial block: issue #13, macOS signing and notarization, but do not start it without explicit user approval.

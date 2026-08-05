@@ -850,3 +850,17 @@ First MVP boundary:
 - no Whisper in the first UI prototype.
 
 No FastAPI app, routes, frontend, downloader, transcription module, media download, Whisper run, extension, or desktop wrapper has been created.
+
+## macOS Production-Foundation App Build
+
+Build the local macOS `.app` bundle:
+
+```bash
+.venv/bin/python -m pip install -r requirements-packaging.txt
+.venv/bin/python scripts/build_macos_app.py
+open "build/macos/dist/Universal Media Extractor.app"
+```
+
+This bundle is for local production-foundation testing. Public distribution still requires Developer ID signing, notarization, and a DMG/installer.
+
+Docs: `docs/COMMERCIAL_BLOCK_7_MACOS_PRODUCTION_BUILD_FOUNDATION.md`.

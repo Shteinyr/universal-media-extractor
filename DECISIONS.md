@@ -174,3 +174,10 @@
 - `skip` must not run `yt-dlp` when the target output already exists.
 - `overwrite` is explicit and only applies inside the managed output base.
 - Revealing folders is limited to managed direct output folders and uses OS commands with `shell=False`.
+
+## 2026-08-05 - macOS Production Foundation
+
+- macOS production foundation uses PyInstaller with a checked-in spec file.
+- The production-foundation `.app` bundles the Python app/runtime but does not yet include Developer ID signing, notarization, or a DMG installer.
+- GUI launches prepend standard Homebrew/system CLI paths so external media engines can be found from Finder-launched apps.
+- Public distribution work remains split into separate signing/notarization and installer tasks.

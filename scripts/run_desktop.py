@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import socket
 import sys
 import time
@@ -25,10 +26,22 @@ WINDOW_TITLE = "Universal Media Extractor"
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 820
 WINDOW_MIN_SIZE = (980, 680)
+APP_SUPPORT_DIR = (
+    Path.home() / "Library" / "Application Support" / "Universal Media Extractor"
+)
+DESKTOP_CLI_PATHS = (
+    "/opt/homebrew/bin",
+    "/usr/local/bin",
+    "/usr/bin",
+    "/bin",
+    "/usr/sbin",
+    "/sbin",
+)
 
 
 def main() -> int:
     args = parse_args()
+    ensure_cli_search_path()
     port = find_available_port(
         host=args.host,
         preferred_port=args.port,
@@ -37,7 +50,11 @@ def main() -> int:
     app_url = f"http://{args.host}:{port}/"
     health_url = f"http://{args.host}:{port}/health"
 
-    server, thread = start_backend(args.host, port)
+    runtime_paths = resolve_runtime_paths(
+        profile=args.profile,
+        app_data_dir=args.app_data_dir,
+    )
+    server, thread = start_backend(args.host, port, **runtime_paths)
     try:
         wait_for_backend(health_url, timeout_seconds=args.startup_timeout)
         print(f"Desktop UI: {app_url}")
@@ -80,7 +97,59 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Development proof helper: close the desktop window after N seconds.",
     )
+    parser.add_argument(
+        "--profile",
+        choices=["dev", "production"],
+        default="production" if is_frozen_app() else "dev",
+        help="Runtime profile. Frozen macOS bundles default to production.",
+    )
+    parser.add_argument(
+        "--app-data-dir",
+        type=Path,
+        default=None,
+        help="Production profile app data directory. Defaults to ~/Library/Application Support/Universal Media Extractor.",
+    )
     return parser.parse_args()
+
+
+def is_frozen_app() -> bool:
+    """Return True when running from a frozen app bundle."""
+
+    return bool(getattr(sys, "frozen", False))
+
+
+def resolve_runtime_paths(
+    *,
+    profile: str,
+    app_data_dir: Path | None = None,
+) -> dict[str, Path | None]:
+    """Resolve backend storage locations for dev vs production desktop runs."""
+
+    if profile != "production":
+        return {
+            "raw_output_base_dir": None,
+            "output_base_dir": None,
+            "job_db_path": None,
+        }
+
+    base_dir = (app_data_dir or APP_SUPPORT_DIR).expanduser().resolve()
+    base_dir.mkdir(parents=True, exist_ok=True)
+    return {
+        "raw_output_base_dir": base_dir / "analysis",
+        "output_base_dir": Path.home() / "Downloads" / "Universal Media Extractor",
+        "job_db_path": base_dir / "jobs.sqlite3",
+    }
+
+
+def ensure_cli_search_path() -> None:
+    """Make Homebrew/system CLIs discoverable when launched from Finder."""
+
+    existing_paths = [path for path in os.environ.get("PATH", "").split(os.pathsep) if path]
+    merged_paths: list[str] = []
+    for path in (*DESKTOP_CLI_PATHS, *existing_paths):
+        if path not in merged_paths:
+            merged_paths.append(path)
+    os.environ["PATH"] = os.pathsep.join(merged_paths)
 
 
 def find_available_port(
@@ -114,13 +183,24 @@ def is_port_available(host: str, port: int) -> bool:
     return True
 
 
-def start_backend(host: str, port: int) -> tuple[uvicorn.Server, Thread]:
+def start_backend(
+    host: str,
+    port: int,
+    *,
+    raw_output_base_dir: Path | None = None,
+    output_base_dir: Path | None = None,
+    job_db_path: Path | None = None,
+) -> tuple[uvicorn.Server, Thread]:
     """Start the FastAPI backend on localhost in a background thread."""
 
     from universal_media_extractor.api.app import create_app
 
     config = uvicorn.Config(
-        create_app(),
+        create_app(
+            raw_output_base_dir=raw_output_base_dir,
+            output_base_dir=output_base_dir,
+            job_db_path=job_db_path,
+        ),
         host=host,
         port=port,
         log_level="info",

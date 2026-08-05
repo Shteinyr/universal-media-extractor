@@ -504,3 +504,10 @@ Result:
 Documentation:
 
 - `docs/COMMERCIAL_BLOCK_5_SQLITE_JOBS_HISTORY.md`
+
+## Commercial Block 7 - macOS Production Build Foundation
+
+- GitHub issue #12: `[P0] Build production macOS Apple Silicon app`.
+- Status: completed foundation.
+- Added PyInstaller `.app` build script/spec and smoke-verified `build/macos/dist/Universal Media Extractor.app`.
+- Signing/notarization (#13) and DMG installer (#14) remain separate roadmap tasks.

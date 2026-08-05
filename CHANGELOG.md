@@ -551,3 +551,13 @@
 - Added compact UI controls for name template, duplicate behavior, and Reveal in Finder.
 - Added regression tests for templates, duplicate policies, safe reveal, and download command safety.
 - Created `docs/COMMERCIAL_BLOCK_6_OUTPUT_TEMPLATES_DUPLICATES.md`.
+
+## 2026-08-05 - Commercial Block 7 macOS Production Build Foundation
+
+- Added `scripts/build_macos_app.py` for PyInstaller-based macOS `.app` builds.
+- Added `packaging/macos/universal_media_extractor_macos.spec`.
+- Added `requirements-packaging.txt` with `pyinstaller==6.21.0`.
+- Updated desktop launcher production runtime paths and Finder-safe CLI `PATH` setup.
+- Added macOS build script and desktop launcher regression tests.
+- Built `build/macos/dist/Universal Media Extractor.app` and verified smoke startup/shutdown.
+- Created `docs/COMMERCIAL_BLOCK_7_MACOS_PRODUCTION_BUILD_FOUNDATION.md`.
