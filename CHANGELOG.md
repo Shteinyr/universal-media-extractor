@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-05 - Beta Website Download Flow
+
+- Created `docs/BETA_WEBSITE_DOWNLOAD_FLOW.md` with public positioning, landing page sections, download CTA states, macOS/Windows availability copy, early-access messaging, limitations, privacy/no-cloud copy, and support diagnostics copy.
+- Updated README and project memory to reference the beta website/download flow.
+- Confirmed this was a docs-only packaging block: no production website deployment, checkout, licensing, installer signing, roadmap change, or core app code change.
+
 ## 2026-08-05 - Public Beta Security Diagnostics QA Review
 
 - Added `Cache-Control: no-store` for `/config` because it returns the in-memory UI session token.

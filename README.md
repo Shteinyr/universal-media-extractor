@@ -51,6 +51,7 @@ Commercial foundation docs:
 - `docs/COMMERCIAL_BLOCK_13_BATCH_QUEUE_FOUNDATION.md`
 - `docs/COMMERCIAL_BLOCK_14_PUBLIC_BETA_UI_READINESS.md`
 - `docs/PUBLIC_BETA_SECURITY_DIAGNOSTICS_QA_REVIEW.md`
+- `docs/BETA_WEBSITE_DOWNLOAD_FLOW.md`
 
 Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1`. In that mode, internal/experimental Course Mode is hidden from the static UI by default.
 
@@ -174,6 +175,16 @@ Start here:
 - `docs/MACOS_SIGNING_NOTARIZATION_TROUBLESHOOTING.md`
 
 Do not ship the unsigned local DMG as a public release.
+
+## Beta Website / Download Flow
+
+The public beta website/download flow is documented in:
+
+```text
+docs/BETA_WEBSITE_DOWNLOAD_FLOW.md
+```
+
+Current public beta packaging stance: use `Join the beta` / early-access CTAs until signed macOS and Windows installers exist. Public copy must stay local-first, limitations-aware, and must not advertise internal/experimental Course Mode. No checkout or license activation is live.
 
 ## Founder Launch Static Site
 

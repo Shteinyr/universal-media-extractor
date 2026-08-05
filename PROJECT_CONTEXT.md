@@ -77,7 +77,11 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
-Public Beta Security / Diagnostics / QA Review - done.
+Beta Website / Download Flow - done.
+
+Result: the public beta website/download packaging is documented without deploying a production site or changing core app code. The doc defines public positioning, landing sections, download CTA states, macOS/Windows availability copy, early-access/waitlist flow, limitations, privacy/no-cloud copy, and support diagnostics messaging. Documented in `docs/BETA_WEBSITE_DOWNLOAD_FLOW.md`.
+
+Previous completed block: Public Beta Security / Diagnostics / QA Review - done.
 
 Result: local beta security and support readiness were tightened without roadmap changes. `/config` and diagnostics responses now use no-store headers, non-local Host rejection has regression coverage, and failed/cancelled background jobs can copy the existing redacted diagnostics bundle from the UI. Documented in `docs/PUBLIC_BETA_SECURITY_DIAGNOSTICS_QA_REVIEW.md`.
 
@@ -138,10 +142,10 @@ Commercial Blocks 1-14 are completed or prepared except for externally blocked A
 Recommended next user-approved commercial block:
 
 ```text
-Public Beta Readiness
+Windows Production Foundation or macOS signed release unblock
 ```
 
-Candidate issues: production packaging foundations, queue/batch foundation, and beta-ready QA/documentation. Output templates and duplicate handling are completed in issue #11.
+Candidate direction: continue toward shippable desktop builds. Website/download copy is prepared, but real public download links still require signed/notarized macOS builds and later Windows packaging.
 
 Do not start the next block until the user explicitly confirms. Do not start checkout or licensing enforcement until payment provider approval and user business details are ready.
 
