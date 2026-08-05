@@ -195,3 +195,11 @@
 - macOS DMG readiness uses a drag-to-Applications layout: app bundle plus `Applications -> /Applications` symlink.
 - Local proof DMGs may be unsigned/unnotarized, but public release DMGs must contain a signed/notarized app and should be signed, notarized, stapled, verified, and published with SHA-256 checksum.
 - DMG installer work remains separate from Windows packaging, payments, website, and product features.
+
+## 2026-08-05 - macOS Public Release Prep
+
+- Direct public macOS distribution remains gated by an Apple Developer Program account, Developer ID Application certificate, and notarytool credentials.
+- The public artifact should be the outermost signed/notarized/stapled DMG, not an unsigned local proof DMG.
+- Notary credentials must be stored in macOS Keychain through a profile such as `UME_NOTARY`; passwords and private keys must not be committed or shared in chat.
+- Issues #13 and #14 must remain open until real Developer ID signing, notarization, stapling, and Gatekeeper validation pass.
+- Udemy Course Mode remains hidden from public commercial builds unless separately approved.

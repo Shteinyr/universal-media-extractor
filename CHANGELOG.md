@@ -581,3 +581,14 @@
 - Built local unsigned DMG proof and SHA-256 checksum under `build/macos/dmg/`.
 - Created proof report under `proof/commercial_block_9_macos_dmg_readiness/`.
 - Documented install/uninstall behavior and the blocker for final public DMG: signed/notarized app from issue #13.
+
+## 2026-08-05 - Commercial Block 10 macOS Public Release Prep
+
+- Created `docs/COMMERCIAL_BLOCK_10_MACOS_PUBLIC_RELEASE_PREP.md`.
+- Created `docs/MACOS_PUBLIC_RELEASE_CHECKLIST.md`.
+- Created `docs/APPLE_DEVELOPER_ACCOUNT_SETUP.md`.
+- Created `docs/MACOS_RELEASE_VALIDATION_CHECKLIST.md`.
+- Created `docs/MACOS_SIGNING_NOTARIZATION_TROUBLESHOOTING.md`.
+- Added `scripts/notarize_macos_dmg.py` for later signed DMG notarization, stapling, and Gatekeeper assessment.
+- Added `tests/test_notarize_macos_dmg.py`.
+- Documented that GitHub issues #13 and #14 remain open until Apple Developer ID signing/notarization can be completed with user-provided account access.

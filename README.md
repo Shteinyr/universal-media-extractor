@@ -1,10 +1,10 @@
 # Universal Media Extractor & Transcriber
 
-Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, Commercial Block 2, Commercial Block 3, Commercial Block 4, Commercial Block 5, and Commercial Block 6 are completed.
+Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, and Commercial Blocks 2-10 are completed or prepared as far as possible without external Apple Developer ID access.
 
 This project is evaluating whether a local web app can accept a URL or local audio/video file, analyze available media variants, extract or download selected outputs, transcribe audio locally, and save structured results without paid APIs or cloud services.
 
-Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, preset-based output selection, selected-output download, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, SQLite-backed persistent job history, output templates with duplicate handling, reveal-in-Finder output action, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, generated transcript result actions, and structured output folders. Chrome extension, packaged/signed `.app`, auth, database, stored credentials, online service behavior, batch processing, external queue, and AI summary are not implemented.
+Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, preset-based output selection, selected-output download, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, SQLite-backed persistent job history, output templates with duplicate handling, reveal-in-Finder output action, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, macOS production `.app` build foundation, macOS signing/notarization readiness docs/scripts, DMG readiness docs/scripts, generated transcript result actions, and structured output folders. Chrome extension, final signed/notarized public `.app`, auth, stored credentials, online service behavior, batch processing, external queue, and AI summary are not implemented.
 
 The visible UI has been simplified for a more final user-facing surface: the sidebar now focuses on mode selection and input, while development-oriented status, flow checklist, helper copy, and Recent results are hidden from the main screen.
 
@@ -29,6 +29,14 @@ Commercial foundation docs:
 - `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`
 - `docs/COMMERCIAL_BLOCK_5_SQLITE_JOBS_HISTORY.md`
 - `docs/COMMERCIAL_BLOCK_6_OUTPUT_TEMPLATES_DUPLICATES.md`
+- `docs/COMMERCIAL_BLOCK_7_MACOS_PRODUCTION_BUILD_FOUNDATION.md`
+- `docs/COMMERCIAL_BLOCK_8_MACOS_SIGNING_NOTARIZATION_READINESS.md`
+- `docs/COMMERCIAL_BLOCK_9_MACOS_DMG_INSTALLER_READINESS.md`
+- `docs/COMMERCIAL_BLOCK_10_MACOS_PUBLIC_RELEASE_PREP.md`
+- `docs/MACOS_PUBLIC_RELEASE_CHECKLIST.md`
+- `docs/APPLE_DEVELOPER_ACCOUNT_SETUP.md`
+- `docs/MACOS_RELEASE_VALIDATION_CHECKLIST.md`
+- `docs/MACOS_SIGNING_NOTARIZATION_TROUBLESHOOTING.md`
 
 Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1`. In that mode, internal/experimental Course Mode is hidden from the static UI by default.
 
@@ -131,6 +139,27 @@ For convenient Finder use, copy it to Applications:
 rm -rf "/Applications/Universal Media Extractor Dev.app"
 cp -R "build/dev/Universal Media Extractor Dev.app" "/Applications/Universal Media Extractor Dev.app"
 ```
+
+## macOS Public Release Prep
+
+Production foundation commands:
+
+```bash
+.venv/bin/python scripts/build_macos_app.py
+.venv/bin/python scripts/check_macos_signing_readiness.py
+.venv/bin/python scripts/build_macos_dmg.py
+```
+
+Public release signing/notarization is prepared but not complete. It needs an active Apple Developer Program account, a `Developer ID Application` certificate, and notary credentials stored in the macOS Keychain.
+
+Start here:
+
+- `docs/MACOS_PUBLIC_RELEASE_CHECKLIST.md`
+- `docs/APPLE_DEVELOPER_ACCOUNT_SETUP.md`
+- `docs/MACOS_RELEASE_VALIDATION_CHECKLIST.md`
+- `docs/MACOS_SIGNING_NOTARIZATION_TROUBLESHOOTING.md`
+
+Do not ship the unsigned local DMG as a public release.
 
 ## Browser Smoke Test
 

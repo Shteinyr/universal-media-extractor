@@ -30,6 +30,7 @@ Primary sources:
 ## Files Added
 
 - `scripts/build_macos_dmg.py`
+- `scripts/notarize_macos_dmg.py`
 - `tests/test_build_macos_dmg.py`
 
 ## Local DMG Artifact
@@ -143,7 +144,7 @@ Issue #14 acceptance criteria require:
 - uninstall behavior is documented;
 - checksum/release artifact is produced.
 
-This block satisfies installer readiness, local unsigned DMG proof, documentation, and checksum generation. It does not satisfy the first acceptance item because issue #13 is still blocked by missing Apple Developer ID certificate/notarization credentials.
+This block satisfies installer readiness, local unsigned DMG proof, documentation, checksum generation, and later DMG notarization command preparation. It does not satisfy the first acceptance item because issue #13 is still blocked by missing Apple Developer ID certificate/notarization credentials.
 
 ## Not Included
 

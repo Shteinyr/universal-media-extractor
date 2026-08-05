@@ -35,7 +35,8 @@ Current setup:
 - 40 roadmap issues created.
 - All roadmap issues were added to the Project.
 - Project fields were populated through `gh project item-edit`, with `Roadmap Status=Backlog` for all initial items.
-- Commercial Foundation issues #1-#5, Commercial Block 2 issues #6-#7, Commercial Block 3 issue #9, Commercial Block 4 issue #8, Commercial Block 5 issue #10, and Commercial Block 6 issue #11 are now completed and should be tracked as `Done`.
+- Commercial Foundation issues #1-#5, Commercial Block 2 issues #6-#7, Commercial Block 3 issue #9, Commercial Block 4 issue #8, Commercial Block 5 issue #10, and Commercial Block 6 issue #11 are completed and should be tracked as `Done`.
+- Commercial Blocks 7-10 prepared macOS production/signing/DMG/public release readiness. Issues #13 and #14 remain open and `In Progress` because final acceptance needs Apple Developer ID credentials and real notarization/Gatekeeper validation.
 
 ## Recommended GitHub Project Fields
 

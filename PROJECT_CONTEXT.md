@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation; Commercial Block 3 issue #9 completed for preset-based output selection; Commercial Block 4 issue #8 completed for localhost security hardening; Commercial Block 5 issue #10 completed for SQLite-backed persistent jobs/history; Commercial Block 6 issue #11 completed for output templates and duplicate handling.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation; Commercial Block 3 issue #9 completed for preset-based output selection; Commercial Block 4 issue #8 completed for localhost security hardening; Commercial Block 5 issue #10 completed for SQLite-backed persistent jobs/history; Commercial Block 6 issue #11 completed for output templates and duplicate handling; Commercial Blocks 7-10 completed/prepared for macOS packaging readiness up to the Apple Developer ID blocker.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -76,6 +76,12 @@ Commercial direction after GPT Pro strategy review:
 - Block 11. Desktop Wrapper - done.
 
 ## Latest Completed Block
+
+Commercial Block 10: macOS Public Release Prep - prepared.
+
+Result: public macOS release checklist, Apple Developer setup guide, signed/notarized app and DMG validation checklist, and troubleshooting guide are documented. A DMG notarization helper exists for the later real Apple Developer ID flow. GitHub issues #13 and #14 remain open because final acceptance requires a real Developer ID Application certificate, notary credentials, successful notarization, stapling, and Gatekeeper validation.
+
+Previous completed block:
 
 Commercial Block 6: Output Templates And Duplicate Handling - done.
 
@@ -277,3 +283,12 @@ This document closes GitHub issue #10 and defines the first public-beta persiste
 - Created proof report under `proof/commercial_block_9_macos_dmg_readiness/`.
 - Added install/uninstall/checksum/release-flow docs in `docs/COMMERCIAL_BLOCK_9_MACOS_DMG_INSTALLER_READINESS.md`.
 - Issue #14 remains open because public acceptance requires the DMG to contain a signed/notarized app, which depends on issue #13 Apple Developer ID readiness.
+
+## 2026-08-05 - Commercial Block 10 macOS Public Release Prep
+
+- Added the public macOS release checklist.
+- Added the Apple Developer account setup guide with required user-provided data and secret-handling boundaries.
+- Added signed/notarized app and DMG validation checklist.
+- Added signing/notarization/Gatekeeper troubleshooting guide.
+- Added `scripts/notarize_macos_dmg.py` for later DMG notarization command execution.
+- Issues #13 and #14 remain open because final acceptance is blocked by Apple Developer ID credentials and real notarization validation.
