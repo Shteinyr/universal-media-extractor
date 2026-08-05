@@ -50,6 +50,7 @@ Commercial foundation docs:
 
 - `docs/COMMERCIAL_BLOCK_13_BATCH_QUEUE_FOUNDATION.md`
 - `docs/COMMERCIAL_BLOCK_14_PUBLIC_BETA_UI_READINESS.md`
+- `docs/PUBLIC_BETA_SECURITY_DIAGNOSTICS_QA_REVIEW.md`
 
 Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1`. In that mode, internal/experimental Course Mode is hidden from the static UI by default.
 
@@ -59,10 +60,10 @@ Commercial Block 2 adds public-beta error and diagnostics foundations. Failed jo
 GET /diagnostics/jobs/{job_id}
 ```
 
-Diagnostics are redacted by default: no cookies, tokens, transcripts, full URLs, or local paths. Details are documented in `docs/COMMERCIAL_BLOCK_2_ERRORS_DIAGNOSTICS.md`.
+Diagnostics are redacted by default: no cookies, tokens, transcripts, full URLs, or local paths. Failed background jobs can expose a local `Copy diagnostics` support action. Details are documented in `docs/COMMERCIAL_BLOCK_2_ERRORS_DIAGNOSTICS.md`.
 
 
-Commercial Block 4 adds localhost API hardening. The static UI receives a random in-memory session token from `/config` and sends it through `X-UME-Session-Token` for protected API calls. The API rejects non-local origins/hosts, uses a strict CORS allowlist, and caps local uploads. Details are documented in `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`.
+Commercial Block 4 adds localhost API hardening. The static UI receives a random in-memory session token from `/config` and sends it through `X-UME-Session-Token` for protected API calls. `/config` and diagnostics responses are marked `Cache-Control: no-store`. The API rejects non-local origins/hosts, uses a strict CORS allowlist, and caps local uploads. Details are documented in `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`.
 
 Commercial Block 5 adds SQLite-backed persistent jobs and local job history. Jobs now survive restart, interrupted active jobs recover to a clear failed state, failed jobs can be retried, and terminal history can be cleared without deleting downloaded files. Details are documented in `docs/COMMERCIAL_BLOCK_5_SQLITE_JOBS_HISTORY.md`.
 
@@ -207,6 +208,7 @@ Commercial Block 12 prepared the payment-provider and licensing documents withou
 
 - `docs/COMMERCIAL_BLOCK_13_BATCH_QUEUE_FOUNDATION.md`
 - `docs/COMMERCIAL_BLOCK_14_PUBLIC_BETA_UI_READINESS.md`
+- `docs/PUBLIC_BETA_SECURITY_DIAGNOSTICS_QA_REVIEW.md`
 
 Current decision: request Lemon Squeezy pre-approval first, keep Stripe as fallback, and do not implement checkout/webhooks/license activation until provider approval and user business details are ready.
 

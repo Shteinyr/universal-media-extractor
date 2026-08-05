@@ -1886,6 +1886,10 @@ function renderJobStatus(container, job, label) {
   if (job.error) {
     appendNoticeLines(container, [job.error]);
   }
+
+  if (["failed", "cancelled"].includes(status) && job.job_id) {
+    appendDiagnosticsButton(container, job.job_id);
+  }
 }
 
 async function pollJob(jobId, onUpdate) {
@@ -1918,6 +1922,34 @@ async function cancelJob(jobId, container, label) {
   const job = await response.json();
   renderJobStatus(container, job, label);
   return job;
+}
+
+function appendDiagnosticsButton(container, jobId) {
+  const actions = document.createElement("div");
+  actions.className = "actions-row diagnostics-actions";
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "secondary-button";
+  button.textContent = "Copy diagnostics";
+  button.addEventListener("click", async () => {
+    await copyDiagnosticsBundle(jobId);
+  });
+  actions.appendChild(button);
+  container.appendChild(actions);
+}
+
+async function copyDiagnosticsBundle(jobId) {
+  try {
+    const response = await apiFetch(`/diagnostics/jobs/${encodeURIComponent(jobId)}`);
+    if (!response.ok) {
+      apiStatus.textContent = await readErrorMessage(response);
+      return;
+    }
+    const bundle = await response.json();
+    await copyText(JSON.stringify(bundle, null, 2), "Diagnostics copied.");
+  } catch (error) {
+    apiStatus.textContent = normalizeNetworkError(error);
+  }
 }
 
 function delay(ms) {

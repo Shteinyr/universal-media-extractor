@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-08-05 - Public Beta Security Diagnostics QA Review
+
+- Added `Cache-Control: no-store` for `/config` because it returns the in-memory UI session token.
+- Added no-store handling for local diagnostics responses.
+- Added regression coverage for non-local Host rejection.
+- Added a local `Copy diagnostics` UI action for failed/cancelled background jobs using the existing redacted diagnostics endpoint.
+- Updated README, project memory, known limitations, and public beta QA documentation.
+
 ## 2026-08-05 - Commercial Block 14 Public Beta UI Readiness
 
 - Polished the existing static UI toward a clearer public beta surface without adding product features or changing API contracts.

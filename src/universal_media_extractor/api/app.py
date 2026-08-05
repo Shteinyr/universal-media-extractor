@@ -141,6 +141,8 @@ def create_app(
         response = await call_next(request)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "no-referrer")
+        if request.url.path in {"/config"} or request.url.path.startswith("/diagnostics/"):
+            response.headers.setdefault("Cache-Control", "no-store")
         return response
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -150,13 +152,17 @@ def create_app(
         return FileResponse(STATIC_DIR / "index.html")
 
     @app.get("/config", response_model=AppConfigResponse)
-    def config() -> AppConfigResponse:
+    def config() -> JSONResponse:
         public_mode = _read_bool_env("UME_PUBLIC_PRODUCT_MODE", default=False)
         course_default = not public_mode
-        return AppConfigResponse(
+        payload = AppConfigResponse(
             public_product_mode=public_mode,
             course_mode_enabled=_read_bool_env("UME_ENABLE_COURSE_MODE", default=course_default),
             session_token=app.state.session_token,
+        )
+        return JSONResponse(
+            content=payload.model_dump(mode="json"),
+            headers={"Cache-Control": "no-store"},
         )
 
     @app.get("/health", response_model=HealthResponse)

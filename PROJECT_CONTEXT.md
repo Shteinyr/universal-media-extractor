@@ -77,7 +77,11 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
-Commercial Block 14: Public Beta UI Readiness / User-Facing UX Pass - done.
+Public Beta Security / Diagnostics / QA Review - done.
+
+Result: local beta security and support readiness were tightened without roadmap changes. `/config` and diagnostics responses now use no-store headers, non-local Host rejection has regression coverage, and failed/cancelled background jobs can copy the existing redacted diagnostics bundle from the UI. Documented in `docs/PUBLIC_BETA_SECURITY_DIAGNOSTICS_QA_REVIEW.md`.
+
+Previous completed block: Commercial Block 14: Public Beta UI Readiness / User-Facing UX Pass - done.
 
 Result: the existing static UI was polished for a clearer public beta surface without new product features or API changes. Mode tabs, empty/loading states, download/transcript status cards, batch item rows, progress display, and primary error titles are now more user-facing. Proof screenshots are under `proof/commercial_block_14_ui_readiness/`.
 

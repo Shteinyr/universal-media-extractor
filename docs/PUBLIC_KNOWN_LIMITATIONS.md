@@ -39,4 +39,4 @@ Large files can take a long time to download, process, merge, or transcribe. The
 - batch queue foundation exists, but Archive Pack execution and public beta UX validation remain open;
 - no paid licensing system;
 - no public website/payment flow;
-- production diagnostics and localhost security behavior still need external beta validation.
+- production diagnostics and localhost security behavior have local sanity coverage, but still need external beta validation.

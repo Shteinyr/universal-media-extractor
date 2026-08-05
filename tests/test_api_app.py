@@ -89,6 +89,7 @@ def test_config_endpoint_defaults_to_internal_course_mode(tmp_path, monkeypatch)
     response = client.get("/config")
 
     assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
     body = response.json()
     assert body == {
         "service": "universal-media-extractor",
@@ -199,6 +200,8 @@ def test_static_javascript_is_available(tmp_path):
     assert "X-UME-Session-Token" in response.text
     assert "apiFetch" in response.text
     assert "session_token" in response.text
+    assert "Copy diagnostics" in response.text
+    assert "/diagnostics/jobs/" in response.text
 
 
 def test_static_option_normalizer_is_available(tmp_path):
@@ -240,6 +243,24 @@ def test_protected_endpoint_rejects_invalid_session_token(tmp_path):
 
     assert response.status_code == 403
     assert response.json() == {"detail": "Local session token is required."}
+
+
+def test_non_local_host_is_rejected_even_with_token(tmp_path):
+    app = create_app(raw_output_base_dir=tmp_path, session_token="s" * 32)
+    client = TestClient(
+        app,
+        base_url="http://127.0.0.1:8000",
+        headers={SECURITY_HEADER_NAME: app.state.session_token},
+    )
+
+    response = client.post(
+        "/analyze",
+        headers={"Host": "example.com"},
+        json={"source_type": "url", "url": "https://example.test/video"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Only localhost requests are allowed."}
 
 
 def test_cross_origin_request_is_rejected_even_with_token(tmp_path):
@@ -439,6 +460,7 @@ def test_diagnostics_endpoint_returns_redacted_job_bundle(tmp_path):
     assert body["job_id"] == job.job_id
     assert body["normalized_error"]["code"] == "private_or_deleted"
     assert body["engine_versions"]["yt-dlp"] == "yt-dlp test-version"
+    assert response.headers["cache-control"] == "no-store"
     assert "https://example.test/private/video" not in dumped
     assert str(tmp_path) not in dumped
 
