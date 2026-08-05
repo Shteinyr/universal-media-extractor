@@ -500,3 +500,15 @@
 - Moved URL download media/subtitle files directly into the result folder instead of a visible `media/` subfolder.
 - Moved URL download service artifacts into hidden `.metadata` and `.logs` folders.
 - Created `docs/DOWNLOAD_LOCATION_SETTINGS.md`.
+
+
+## 2026-08-05 - Commercial Block 3 Preset Output Selection
+
+- Replaced the public URL output picker with preset-based choices: `Best Video`, `1080p`, `Smaller Video`, `Audio M4A`, `Audio MP3`, `Subtitles`, and disabled planned `Archive Pack`.
+- Kept raw `format_id` values internal while preserving existing `/download` behavior.
+- Moved technical stream rows behind an `Advanced details` disclosure.
+- Added frontend normalizer tests for preset construction, missing preset states, and internal id preservation.
+- Updated browser smoke script to verify presets instead of old Audio/Video/Subtitles tabs.
+- Created `docs/COMMERCIAL_BLOCK_3_PRESET_OUTPUT_SELECTION.md`.
+- Verified with `node --check` for static JS files and `.venv/bin/python -m pytest -q`; result: 111 passed.
+- Verified browser smoke on `127.0.0.1:8766`; screenshots saved under `proof/commercial_block_3_presets/`.

@@ -1,10 +1,10 @@
 # Universal Media Extractor & Transcriber
 
-Status: Commercial strategy imported; Blocks 1-11 and Udemy Course Offline Export are completed.
+Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, Commercial Block 2, and Commercial Block 3 are completed.
 
 This project is evaluating whether a local web app can accept a URL or local audio/video file, analyze available media variants, extract or download selected outputs, transcribe audio locally, and save structured results without paid APIs or cloud services.
 
-Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, selected-format download from the selected output button, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, in-memory job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, browser smoke screenshots, desktop wrapper launcher, generated transcript result actions, and structured output folders. Chrome extension, packaged/signed `.app`, auth, database, stored credentials, online service behavior, batch processing, external queue, and AI summary are not implemented.
+Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, preset-based output selection, selected-output download, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, in-memory job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, browser smoke screenshots, desktop wrapper launcher, generated transcript result actions, and structured output folders. Chrome extension, packaged/signed `.app`, auth, database, stored credentials, online service behavior, batch processing, external queue, and AI summary are not implemented.
 
 The visible UI has been simplified for a more final user-facing surface: the sidebar now focuses on mode selection and input, while development-oriented status, flow checklist, helper copy, and Recent results are hidden from the main screen.
 
@@ -24,6 +24,8 @@ Commercial foundation docs:
 - `docs/PRIVACY_POLICY_DRAFT.md`
 - `docs/REFUND_POLICY_DRAFT.md`
 - `docs/PUBLIC_KNOWN_LIMITATIONS.md`
+- `docs/COMMERCIAL_BLOCK_2_ERRORS_DIAGNOSTICS.md`
+- `docs/COMMERCIAL_BLOCK_3_PRESET_OUTPUT_SELECTION.md`
 
 Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1`. In that mode, internal/experimental Course Mode is hidden from the static UI by default.
 
@@ -142,7 +144,7 @@ In another terminal, run the analysis-only browser smoke:
 .venv/bin/python scripts/browser_smoke.py
 ```
 
-The default smoke opens the local UI, analyzes `https://youtu.be/UUdxAp3kuKA`, verifies `Showreel` and format groups, and saves:
+The default smoke opens the local UI, analyzes `https://youtu.be/UUdxAp3kuKA`, verifies `Showreel` and output presets, and saves:
 
 ```text
 proof/block_10/ui_initial.png
@@ -163,7 +165,7 @@ URL flow:
 
 1. Paste a public media URL.
 2. Click `Analyze`.
-3. Select a format row.
+3. Select an output preset.
 4. Click `Download selected` and watch the download job status.
 5. If the downloaded output contains audio, choose a Whisper model and transcript format.
 6. Click `Transcribe` and watch the transcription job status.
@@ -237,19 +239,23 @@ The selected transcript file is written directly into the same result folder as 
 
 When proof runs specify a custom output base, outputs are written under that proof directory instead.
 
-## Simplified Format Selection
+## Preset-Based Output Selection
 
-After analysis, the UI now asks the user to choose one output type first:
+After URL analysis, the public UI shows simple output presets instead of raw technical streams:
 
-- `Audio`
-- `Video`
+- `Best Video`
+- `1080p`
+- `Smaller Video`
+- `Audio M4A`
+- `Audio MP3`
 - `Subtitles`
+- `Archive Pack`
 
-Audio options show only container and approximate size, for example `M4A · 616.91 KB`.
+Technical `yt-dlp` stream ids, codec strings, fps details, and duplicate stream rows are hidden from the main UI. The app still keeps the selected internal `format_id` behind the scenes so `/download` can use the existing working backend path.
 
-Video options show only container, quality, and approximate size. Variants below `1080p` are hidden from the UI. Duplicate user-facing video rows are collapsed by container and quality, so repeated `MP4 · 1080p` options are not shown. When a `Video` option is downloaded, the app asks `yt-dlp` to combine the selected video stream with the best available audio stream into one final file.
+Unavailable presets are shown as disabled with a short reason. `Archive Pack` is present as a planned disabled preset because real multi-output archive behavior belongs to later queue/batch/history work.
 
-Subtitles show one short row per language and type, for example manual or automatic captions. Multiple subtitle formats such as `vtt`, `srt`, or `json3` are merged into one option instead of repeated as duplicate rows.
+Advanced stream details remain available behind the `Advanced details` disclosure for diagnostics and support.
 
 ## UI Reference Port
 
@@ -463,7 +469,7 @@ Recommended first frontend approach:
 
 - static HTML/CSS/vanilla JS;
 - connect to `POST http://127.0.0.1:8000/analyze`;
-- show source summary, thumbnail, format groups, warnings, errors, and empty subtitle/caption states;
+- show source summary, thumbnail, output presets, warnings, errors, and empty subtitle/caption states;
 - no Vite app yet.
 
 Created documentation:
@@ -521,7 +527,7 @@ Phase 14 polished the existing static analysis-only UI without adding new featur
 Improved:
 
 - visual hierarchy and spacing;
-- compact format group display;
+- compact preset display;
 - warning/error separation;
 - keyboard focus styles;
 - URL input accessibility;
@@ -592,7 +598,7 @@ Implemented:
 - `DownloadService.download_media(...)`;
 - `POST /download`;
 - structured output folders with `media/`, `metadata/`, and `logs/`;
-- static UI selection of an analyzed format;
+- static UI selection of an output preset;
 - rights confirmation checkbox before download;
 - download result display with output paths and files.
 
@@ -667,14 +673,14 @@ No AI summary API, Chrome extension, desktop wrapper, batch processing, cookies/
 Block 4 unified the static UI into the end-to-end MVP flow:
 
 ```text
-Analyze -> Select format -> Confirm rights -> Download -> Transcribe -> Result
+Analyze -> Select preset -> Download -> Transcribe -> Result
 ```
 
 Implemented:
 
 - visible MVP flow tracker;
-- clearer selected format summary;
-- disabled download until format + rights confirmation are present;
+- clearer selected output summary;
+- disabled download until an output is selected;
 - Whisper model selector: `tiny`, `base`, `small`, `medium`, `turbo/default`;
 - transcription action after successful download;
 - generated-files card;
@@ -719,7 +725,7 @@ Block 5 reviewed the current MVP as a product checkpoint.
 Verified flow:
 
 ```text
-URL -> Analyze -> Select format -> Confirm rights -> Download -> Transcribe -> Result
+URL -> Analyze -> Select preset -> Download -> Transcribe -> Result
 ```
 
 Verification:
@@ -733,7 +739,7 @@ Result: 49 passed.
 Manual smoke test:
 
 - source: `https://youtu.be/UUdxAp3kuKA`;
-- selected format: audio-only `140`;
+- selected output: audio-only `140`;
 - Whisper model: `tiny`;
 - output: `proof/block_5/20260530T132548Z_UUdxAp3kuKA/`.
 

@@ -32,6 +32,8 @@ const errorsPanel = document.querySelector("#errors-panel");
 const errorsList = document.querySelector("#errors-list");
 const formatPicker = document.querySelector("#format-picker");
 const formatPickerEmpty = document.querySelector("#format-picker-empty");
+const presetList = document.querySelector("#preset-list");
+const advancedFormatDetails = document.querySelector("#advanced-format-details");
 const formatTabs = document.querySelectorAll(".format-tab");
 const flowSteps = document.querySelectorAll("#flow-steps li");
 const downloadPanel = document.querySelector("#download-panel");
@@ -292,7 +294,7 @@ downloadButton.addEventListener("click", async () => {
         user_confirmed_rights: true,
         output_base_dir: downloadOutputDirInput.value.trim() || DEFAULT_DOWNLOAD_OUTPUT_DIR,
         source_title: currentAnalyzeResult.title || mediaTitle.textContent || null,
-        output_format: downloadOutputFormatSelect.value || null,
+        output_format: selectedFormat.preset_output_format || downloadOutputFormatSelect.value || null,
       }),
     });
 
@@ -862,7 +864,7 @@ function renderAnalyzeResponse(data) {
       : `Last job ${data.job.job_id}: ${data.job.status}`;
 
   renderSourceSummary(result);
-  renderFormatPicker(buildFormatPickerData(result));
+  renderFormatPicker(result);
   renderWarnings(result.warnings || []);
   renderErrors(resultErrors, data.job.error);
   coursePanel.classList.add("hidden");
@@ -893,13 +895,81 @@ function renderSourceSummary(result) {
 }
 
 function renderFormatPicker(data) {
+  const presetData = buildPresetPickerData(data);
   formatPicker.classList.remove("hidden");
-  renderFormatGroup(groups.audio, "Audio", data.audio || [], "audio", "No audio options.");
-  renderFormatGroup(groups.video, "Video", data.video || [], "video", "No video options at 1080p or higher.");
-  renderFormatGroup(groups.subtitles, "Subtitles", data.subtitles || [], "subtitles", "No subtitles found.");
-  groups.combined.classList.add("hidden");
-  groups.captions.classList.add("hidden");
-  showFormatCategory(defaultFormatCategory(data));
+  renderPresetPicker(presetData.presets || []);
+  renderAdvancedFormatDetails(presetData.source || { audio: [], video: [], subtitles: [] });
+}
+
+function renderPresetPicker(presets) {
+  presetList.innerHTML = "";
+  const list = Array.isArray(presets) ? presets : [];
+  formatPickerEmpty.classList.toggle("hidden", list.length > 0);
+  if (list.length === 0) {
+    formatPickerEmpty.textContent = "No presets available.";
+    return;
+  }
+  list.forEach((preset) => presetList.appendChild(presetRow(preset)));
+}
+
+function presetRow(preset) {
+  const row = document.createElement("button");
+  row.type = "button";
+  row.className = "preset-row format-row";
+  row.dataset.selectionId = selectionKeyForOption(preset);
+  row.disabled = !preset.preset_available;
+  if (preset.preset_available) {
+    row.addEventListener("click", () => selectFormat(preset));
+  }
+
+  const main = document.createElement("div");
+  main.className = "preset-main";
+
+  const label = document.createElement("strong");
+  label.textContent = preset.preset_label || simpleFormatLabel(preset, categoryForOption(preset));
+  main.appendChild(label);
+
+  const meta = document.createElement("span");
+  meta.className = "preset-meta";
+  meta.textContent = preset.preset_detail || preset.preset_description || "";
+  main.appendChild(meta);
+
+  const badgeText = preset.preset_available ? presetBadge(preset) : "Unavailable";
+  if (badgeText) {
+    const badge = document.createElement("span");
+    badge.className = preset.preset_available ? "badge recommended" : "badge muted-badge";
+    badge.textContent = badgeText;
+    main.appendChild(badge);
+  }
+
+  const description = document.createElement("div");
+  description.className = "simple-format-helper";
+  description.textContent = preset.preset_description || "";
+
+  row.append(main, description);
+  return row;
+}
+
+function presetBadge(preset) {
+  if (preset.preset_id === "best_video" || preset.preset_id === "audio_m4a") {
+    return "Recommended";
+  }
+  if (preset.preset_output_format) {
+    return String(preset.preset_output_format).toUpperCase();
+  }
+  return "";
+}
+
+function renderAdvancedFormatDetails(data) {
+  renderFormatGroup(groups.audio, "Audio streams", data.audio || [], "audio", "No audio streams.");
+  renderFormatGroup(groups.video, "Video streams", data.video || [], "video", "No video streams at 1080p or higher.");
+  renderFormatGroup(groups.subtitles, "Subtitle tracks", data.subtitles || [], "subtitles", "No subtitle tracks.");
+  groups.audio?.classList.remove("hidden");
+  groups.video?.classList.remove("hidden");
+  groups.subtitles?.classList.remove("hidden");
+  groups.combined?.classList.add("hidden");
+  groups.captions?.classList.add("hidden");
+  advancedFormatDetails?.classList.remove("hidden");
 }
 
 function defaultFormatCategory(data) {
@@ -912,8 +982,8 @@ function defaultFormatCategory(data) {
   return "subtitles";
 }
 
-function buildFormatPickerData(result) {
-  return window.UIOptionNormalizer.buildFormatPickerData(result);
+function buildPresetPickerData(result) {
+  return window.UIOptionNormalizer.buildPresetPickerData(result);
 }
 
 function showFormatCategory(category) {
@@ -1060,7 +1130,7 @@ function selectFormat(option) {
   document.querySelectorAll(`.format-row[data-selection-id="${cssEscape(selectionKeyForOption(option))}"]`).forEach((row) => {
     row.classList.add("is-selected");
   });
-  selectedFormatLabel.textContent = simpleFormatLabel(option, categoryForOption(option));
+  selectedFormatLabel.textContent = selectedPresetLabel(option);
   selectedFormatSummary.textContent = formatSelectionSummary(option);
   renderOutputFormatChoices(option);
   downloadResult.classList.add("hidden");
@@ -1109,12 +1179,17 @@ function resetDownloadSelection() {
   activeFormatCategory = null;
   formatPicker.classList.add("hidden");
   formatPickerEmpty.classList.remove("hidden");
+  presetList.innerHTML = "";
+  advancedFormatDetails?.classList.add("hidden");
   Object.values(groups).forEach((group) => group?.classList.add("hidden"));
   updateFormatTabs();
 }
 
 function renderOutputFormatChoices(option) {
-  const choices = OUTPUT_FORMAT_CHOICES[option.type] || OUTPUT_FORMAT_CHOICES[categoryForOption(option)] || [];
+  const presetFormat = option.preset_output_format;
+  const choices = presetFormat
+    ? [[presetFormat, String(presetFormat).toUpperCase()]]
+    : OUTPUT_FORMAT_CHOICES[option.type] || OUTPUT_FORMAT_CHOICES[categoryForOption(option)] || [];
   downloadOutputFormatSelect.innerHTML = "";
   choices.forEach(([value, label], index) => {
     const item = document.createElement("option");
@@ -1553,6 +1628,10 @@ function updateFlowStep(activeStep) {
     step.classList.toggle("is-active", stepIndex === activeIndex);
     step.classList.toggle("is-done", stepIndex >= 0 && stepIndex < activeIndex);
   });
+}
+
+function selectedPresetLabel(option) {
+  return option.preset_label || simpleFormatLabel(option, categoryForOption(option));
 }
 
 function simpleFormatLabel(option, category) {

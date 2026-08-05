@@ -24,6 +24,29 @@
     return { audio, video, subtitles };
   }
 
+  function buildPresetPickerData(result) {
+    const source = buildFormatPickerData(result);
+    const bestVideo = chooseBestVideo(source.video);
+    const fullHdVideo = chooseVideoByQuality(source.video, 1080);
+    const smallerVideo = chooseSmallerVideo(source.video);
+    const audioM4a = chooseAudioForContainer(source.audio, "m4a") || chooseBestAudio(source.audio);
+    const audioMp3 = chooseBestAudio(source.audio);
+    const subtitles = chooseBestSubtitle(source.subtitles);
+
+    return {
+      presets: [
+        videoPreset("best_video", "Best Video", "Highest quality available", bestVideo),
+        videoPreset("video_1080p", "1080p", "Standard full HD video", fullHdVideo),
+        videoPreset("smaller_video", "Smaller Video", "Smallest available video at 1080p or higher", smallerVideo),
+        audioPreset("audio_m4a", "Audio M4A", "Good quality, Apple-friendly audio", audioM4a, "m4a"),
+        audioPreset("audio_mp3", "Audio MP3", "Most compatible audio file", audioMp3, "mp3"),
+        subtitlePreset("subtitles", "Subtitles", "Save available subtitles", subtitles),
+        unavailablePreset("archive_pack", "Archive Pack", "Planned: media, subtitles, metadata, and transcript together."),
+      ],
+      source,
+    };
+  }
+
   function dedupeMediaOptions(options, keyBuilder, category) {
     const byKey = new Map();
     toArray(options).forEach((option) => {
@@ -42,6 +65,172 @@
       byKey.set(key, mergeSubtitleOption(current, option));
     });
     return Array.from(byKey.values());
+  }
+
+  function videoPreset(id, label, description, option) {
+    if (!option) {
+      return unavailablePreset(id, label, "No suitable video option found.");
+    }
+    const outputFormat = preferredVideoOutputFormat(option, id === "best_video" ? "mkv" : "mp4");
+    return {
+      ...option,
+      selection_id: `preset:${id}`,
+      preset_id: id,
+      preset_label: label,
+      preset_description: description,
+      preset_output_format: outputFormat,
+      preset_available: true,
+      preset_detail: compactMediaDetail(option),
+    };
+  }
+
+  function audioPreset(id, label, description, option, outputFormat) {
+    if (!option) {
+      return unavailablePreset(id, label, "No audio option found.");
+    }
+    return {
+      ...option,
+      selection_id: `preset:${id}`,
+      preset_id: id,
+      preset_label: label,
+      preset_description: description,
+      preset_output_format: outputFormat,
+      preset_available: true,
+      preset_detail: compactMediaDetail(option),
+      type: "audio",
+    };
+  }
+
+  function subtitlePreset(id, label, description, option) {
+    if (!option) {
+      return unavailablePreset(id, label, "No subtitles found.");
+    }
+    return {
+      ...option,
+      selection_id: `preset:${id}`,
+      preset_id: id,
+      preset_label: label,
+      preset_description: description,
+      preset_output_format: "srt",
+      preset_available: true,
+      preset_detail: compactSubtitleDetail(option),
+      type: "subtitles",
+    };
+  }
+
+  function unavailablePreset(id, label, reason) {
+    return {
+      selection_id: `preset:${id}`,
+      preset_id: id,
+      preset_label: label,
+      preset_description: reason,
+      preset_available: false,
+      type: id === "subtitles" ? "subtitles" : "unavailable",
+    };
+  }
+
+  function chooseBestVideo(options) {
+    return [...toArray(options)].sort((a, b) => {
+      const qualityDiff = videoQualityNumber(b) - videoQualityNumber(a);
+      if (qualityDiff !== 0) {
+        return qualityDiff;
+      }
+      return compareOptionScore(a, b, "video");
+    })[0] || null;
+  }
+
+  function chooseVideoByQuality(options, targetQuality) {
+    return [...toArray(options)]
+      .filter((option) => videoQualityNumber(option) === targetQuality)
+      .sort((a, b) => videoPreferenceScore(b) - videoPreferenceScore(a))[0] || null;
+  }
+
+  function chooseSmallerVideo(options) {
+    const candidates = toArray(options).filter((option) => videoQualityNumber(option) >= MIN_VIDEO_QUALITY);
+    return candidates.sort((a, b) => {
+      const aSize = Number(a.filesize || a.filesize_approx || Number.MAX_SAFE_INTEGER);
+      const bSize = Number(b.filesize || b.filesize_approx || Number.MAX_SAFE_INTEGER);
+      if (aSize !== bSize) {
+        return aSize - bSize;
+      }
+      return videoQualityNumber(a) - videoQualityNumber(b);
+    })[0] || null;
+  }
+
+  function chooseBestAudio(options) {
+    return [...toArray(options)].sort((a, b) => compareOptionScore(a, b, "audio"))[0] || null;
+  }
+
+  function chooseAudioForContainer(options, container) {
+    return [...toArray(options)]
+      .filter((option) => normalizedContainer(option) === container)
+      .sort((a, b) => compareOptionScore(a, b, "audio"))[0] || null;
+  }
+
+  function chooseBestSubtitle(options) {
+    return [...toArray(options)].sort((a, b) => {
+      const manualDiff = Number(b.subtitle_type === "manual") - Number(a.subtitle_type === "manual");
+      if (manualDiff !== 0) {
+        return manualDiff;
+      }
+      return String(a.language || "").localeCompare(String(b.language || ""));
+    })[0] || null;
+  }
+
+  function compareOptionScore(a, b, category) {
+    const aScore = optionScore(a, category);
+    const bScore = optionScore(b, category);
+    for (let index = 0; index < aScore.length; index += 1) {
+      if (bScore[index] !== aScore[index]) {
+        return bScore[index] - aScore[index];
+      }
+    }
+    return 0;
+  }
+
+  function videoPreferenceScore(option) {
+    return [
+      normalizedContainer(option) === "mp4" ? 4 : 0,
+      option.type === "combined" ? 2 : 0,
+      hasKnownSize(option) ? 1 : 0,
+      option.is_default_recommended ? 1 : 0,
+    ].reduce((total, value) => total + value, 0);
+  }
+
+  function preferredVideoOutputFormat(option, fallback) {
+    const container = normalizedContainer(option);
+    if (["mp4", "webm"].includes(container)) {
+      return container === "webm" && fallback === "mkv" ? "mkv" : container;
+    }
+    return fallback;
+  }
+
+  function compactMediaDetail(option) {
+    return [
+      normalizedContainer(option).toUpperCase(),
+      videoQualityNumber(option) > 0 ? `${videoQualityNumber(option)}p` : "",
+      readableSize(option.filesize || option.filesize_approx),
+    ].filter(Boolean).join(" · ");
+  }
+
+  function compactSubtitleDetail(option) {
+    return [
+      String(option.language || "all").toUpperCase(),
+      option.subtitle_type === "automatic" ? "Auto captions" : "Manual subtitles",
+    ].filter(Boolean).join(" · ");
+  }
+
+  function readableSize(size) {
+    const numericSize = Number(size || 0);
+    if (!Number.isFinite(numericSize) || numericSize <= 0) {
+      return "";
+    }
+    const mib = 1024 * 1024;
+    const kib = 1024;
+    if (numericSize >= mib) {
+      return `${(numericSize / mib).toFixed(numericSize >= 10 * mib ? 0 : 2)} MB`;
+    }
+    return `${(numericSize / kib).toFixed(0)} KB`;
   }
 
   function normalizeSubtitleOptions(options, fallbackType) {
@@ -194,6 +383,7 @@
 
   const api = {
     buildFormatPickerData,
+    buildPresetPickerData,
     dedupeMediaOptions,
     dedupeSubtitleOptions,
     normalizeSubtitleOptions,

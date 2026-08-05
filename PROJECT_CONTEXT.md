@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation; Commercial Block 3 issue #9 completed for preset-based output selection.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -76,11 +76,11 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
-Udemy Course Offline Export initial implementation - done.
+Commercial Block 3: Preset Output Selection - done.
 
-Result: the app has Course mode plus `POST /udemy/analyze` and `POST /udemy/download`. It uses `yt-dlp --cookies-from-browser chrome` by default, with manual `cookies.txt` only as an advanced fallback. It does not store passwords/cookies and does not implement DRM/key/CAPTCHA/paywall bypass.
+Result: the public URL output picker now shows presets instead of raw technical stream rows: `Best Video`, `1080p`, `Smaller Video`, `Audio M4A`, `Audio MP3`, `Subtitles`, and disabled planned `Archive Pack`. Internal `format_id` values are still preserved for `/download`, and technical stream rows are available only under `Advanced details`.
 
-User testing showed that some clean Udemy `/course/<slug>/` URLs can fail in `yt-dlp` with `Unable to extract course id`, while the URL from an opened course lecture/player can return the full course playlist. The UI must preserve pasted lecture/player URLs and not rewrite them into clean course URLs.
+Udemy Course Offline Export remains completed as an internal/experimental feature. The UI must preserve pasted Udemy lecture/player URLs and not rewrite them into clean course URLs.
 
 Desktop command:
 
@@ -94,7 +94,7 @@ Udemy command path is documented in `docs/UDEMY_COURSE_EXPORT.md`.
 
 ## Planned Next Block
 
-Commercial Foundation and Commercial Block 2 Errors + Diagnostics Foundation are completed. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
+Commercial Foundation, Commercial Block 2 Errors + Diagnostics Foundation, and Commercial Block 3 Preset Output Selection are completed. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
 
 Recommended next user-approved commercial block:
 
@@ -102,7 +102,7 @@ Recommended next user-approved commercial block:
 Public Beta Readiness
 ```
 
-Candidate issues: normalized user-facing errors, diagnostics bundle, localhost security hardening, preset-based output selection, SQLite-backed jobs/history, and output templates.
+Candidate issues: localhost security hardening, SQLite-backed jobs/history, output templates, production packaging foundations, and beta-ready QA/documentation.
 
 Do not start the next block until the user explicitly confirms.
 
@@ -111,7 +111,7 @@ Do not start the next block until the user explicitly confirms.
 - Batch processing.
 - Cookies/login manual mode.
 - AI summary API.
-- Presets.
+- Presets are implemented for the main URL output selector; saved presets and Archive Pack execution remain later.
 - History/search.
 - Advanced settings.
 - Output retention policy.
@@ -162,6 +162,7 @@ The dev `.app` can also be copied to `/Applications`; it remains tied to this pr
 ## Important Existing Behavior
 
 - UI is simplified into a compact downloader/file-manager style.
+- URL output selection now uses public presets instead of raw technical stream rows.
 - Final UI cleanup hides development-oriented sidebar areas: visible backend status, MVP flow checklist, repeated helper copy, and Recent results.
 - URL downloads default to `~/Downloads/Universal Media Extractor`.
 - The download card has editable `Save to` and `Format` controls.
@@ -170,8 +171,9 @@ The dev `.app` can also be copied to `/Applications`; it remains tied to this pr
 - Subtitles output downloads subtitles/captions and should not show transcription as the next action.
 - Transcription requires an audio file or a video file with an audio track.
 - Transcript output saves one selected format per run: `TXT`, `Markdown`, or `JSON`.
-- Video options below `1080p` are hidden in the main UI.
-- User-facing video and subtitle options are deduplicated before rendering.
+- Technical stream rows are hidden from the main UI and available under `Advanced details`.
+- Video options below `1080p` are hidden in advanced details.
+- User-facing video and subtitle options are deduplicated before preset construction.
 - Recent results work for the configured output base.
 - Safe delete is constrained to managed output folders.
 - `proof/` is development evidence and is not indexed as user output.
@@ -218,3 +220,10 @@ These documents close GitHub issues #1-#5 and define the public product boundary
 - `docs/COMMERCIAL_BLOCK_2_ERRORS_DIAGNOSTICS.md`
 
 This document closes GitHub issues #6-#7 and defines the first public-beta diagnostics boundary.
+
+
+## Commercial Block 3 Docs
+
+- `docs/COMMERCIAL_BLOCK_3_PRESET_OUTPUT_SELECTION.md`
+
+This document closes GitHub issue #9 and defines the first public preset-based output selection layer.

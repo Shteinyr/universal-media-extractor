@@ -139,3 +139,10 @@
 - Diagnostics bundles are local JSON responses only; they do not upload support data.
 - Diagnostics must exclude cookies, tokens, passwords, transcripts, full URLs, and local filesystem paths by default.
 - Commercial Block 2 intentionally does not start payments, stores, signing, packaging, SQLite jobs/history, batch, licensing, or roadmap changes.
+
+## 2026-08-05 - Preset-Based Output Selection
+
+- Public URL output selection should use clear presets instead of raw technical `yt-dlp` format rows.
+- The main UI should hide `format_id`, codec strings, fps details, and duplicate stream rows by default.
+- Internal download behavior should still preserve the selected `format_id` for `/download`.
+- `Archive Pack` is allowed as a visible disabled planned preset, but real Archive Pack execution requires later queue/batch/history work and is not part of Commercial Block 3.

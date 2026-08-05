@@ -35,7 +35,7 @@ Current setup:
 - 40 roadmap issues created.
 - All roadmap issues were added to the Project.
 - Project fields were populated through `gh project item-edit`, with `Roadmap Status=Backlog` for all initial items.
-- Commercial Foundation issues #1-#5 are now completed and should be tracked as `Done`.
+- Commercial Foundation issues #1-#5, Commercial Block 2 issues #6-#7, and Commercial Block 3 issue #9 are now completed and should be tracked as `Done`.
 
 ## Recommended GitHub Project Fields
 
@@ -450,3 +450,20 @@ Evidence files:
 API evidence:
 
 - `GET /diagnostics/jobs/{job_id}` returns a local redacted diagnostics JSON bundle.
+
+## Commercial Block 3 Completion
+
+Completed issue:
+
+- `#9 [P0] Replace technical format selection with presets`
+
+Result:
+
+- Public URL output selection now uses presets instead of raw technical streams.
+- Presets: `Best Video`, `1080p`, `Smaller Video`, `Audio M4A`, `Audio MP3`, `Subtitles`, and disabled planned `Archive Pack`.
+- Technical stream details are hidden by default and available through `Advanced details`.
+- Existing internal `/download` behavior still receives the selected `format_id`.
+
+Documentation:
+
+- `docs/COMMERCIAL_BLOCK_3_PRESET_OUTPUT_SELECTION.md`

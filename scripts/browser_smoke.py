@@ -8,11 +8,12 @@ Default mode performs analysis only and does not download or transcribe.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 import time
 from pathlib import Path
 
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
+from playwright.sync_api import Error as PlaywrightError, Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
 
 DEFAULT_BASE_URL = "http://127.0.0.1:8000/"
@@ -26,7 +27,7 @@ def main() -> int:
     proof_dir.mkdir(parents=True, exist_ok=True)
 
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=not args.headed)
+        browser = launch_browser(playwright, headless=not args.headed)
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
         try:
             run_analysis_smoke(page, args.base_url, args.url, proof_dir)
@@ -37,6 +38,15 @@ def main() -> int:
 
     print(f"Browser smoke completed. Screenshots: {proof_dir.resolve()}")
     return 0
+
+
+def launch_browser(playwright, *, headless: bool):
+    try:
+        return playwright.chromium.launch(headless=headless)
+    except PlaywrightError as exc:
+        if "Executable doesn't exist" not in str(exc):
+            raise
+        return playwright.chromium.launch(channel="chrome", headless=headless)
 
 
 def parse_args() -> argparse.Namespace:
@@ -68,22 +78,20 @@ def run_analysis_smoke(page: Page, base_url: str, source_url: str, proof_dir: Pa
     page.locator("#analyze-button").click()
     page.locator("#media-title").get_by_text("Showreel", exact=True).wait_for(timeout=90_000)
 
-    page.locator("#format-tab-audio").click()
-    assert_visible_text(page, "M4A")
-    page.locator("#format-tab-video").click()
+    assert_visible_text(page, "Best Video")
     assert_visible_text(page, "1080p")
-    page.locator("#format-tab-subtitles").click()
-    assert_visible_text(page, "No subtitles found.")
-    page.locator("#format-tab-audio").click()
+    assert_visible_text(page, "Smaller Video")
+    assert_visible_text(page, "Audio M4A")
+    assert_visible_text(page, "Audio MP3")
+    assert_visible_text(page, "Subtitles")
+    assert_visible_text(page, "Archive Pack")
 
     page.screenshot(path=proof_dir / "ui_analyze_result.png", full_page=True)
 
 
 def run_full_flow(page: Page, proof_dir: Path) -> None:
-    page.locator("#format-tab-audio").click()
-    first_audio = page.locator("#audio-group .format-row").first
+    first_audio = page.get_by_role("button", name=re.compile("Audio M4A"))
     first_audio.click()
-    page.locator("#rights-checkbox").check()
     page.locator("#download-button").click()
     wait_for_status_text(page, "#download-result", "Status: succeeded", timeout_ms=240_000)
     page.screenshot(path=proof_dir / "ui_download_result.png", full_page=True)
