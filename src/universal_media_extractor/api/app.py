@@ -141,7 +141,7 @@ def create_app(
         response = await call_next(request)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "no-referrer")
-        if request.url.path in {"/config"} or request.url.path.startswith("/diagnostics/"):
+        if request.url.path in {"/config"} or request.url.path.startswith(("/diagnostics/", "/static/")):
             response.headers.setdefault("Cache-Control", "no-store")
         return response
 

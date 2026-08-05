@@ -119,6 +119,7 @@ let activeCourseDownloadJobId = null;
 let activeFormatCategory = null;
 let appConfig = { course_mode_enabled: true, public_product_mode: false, session_token: "" };
 let sessionToken = "";
+let appConfigPromise = null;
 const DEFAULT_DOWNLOAD_OUTPUT_DIR = "~/Downloads/Universal Media Extractor";
 const DEFAULT_UDEMY_OUTPUT_DIR = "~/Downloads/Universal Media Extractor/Udemy";
 const SECURITY_HEADER_NAME = "X-UME-Session-Token";
@@ -653,7 +654,7 @@ revealOutputButton?.addEventListener("click", () => {
   revealOutputPath(latestTranscriptResult?.output_dir || latestDownloadResult?.output_dir || "");
 });
 
-initializeAppConfig();
+appConfigPromise = initializeAppConfig();
 
 if (recentCard && !recentCard.classList.contains("hidden")) {
   loadRecentOutputs();
@@ -673,7 +674,14 @@ async function initializeAppConfig() {
   applyFeatureConfig();
 }
 
-function apiFetch(path, options = {}) {
+async function ensureAppConfigLoaded() {
+  if (!sessionToken && appConfigPromise) {
+    await appConfigPromise;
+  }
+}
+
+async function apiFetch(path, options = {}) {
+  await ensureAppConfigLoaded();
   const headers = new Headers(options.headers || {});
   if (sessionToken) {
     headers.set(SECURITY_HEADER_NAME, sessionToken);

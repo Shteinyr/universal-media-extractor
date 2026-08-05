@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-05 - Local Session Token UI Race Fix
+
+- Fixed a frontend race where protected API calls could run before the UI finished loading `/config` and receiving the local session token.
+- Marked `/static/...` responses as `Cache-Control: no-store` so local beta UI updates do not leave stale JavaScript in the browser.
+- Ran `node --check src/universal_media_extractor/static/app.js` and `.venv/bin/python -m pytest -q`; result: 196 passed.
+
 ## 2026-08-05 - Beta Website Download Flow
 
 - Created `docs/BETA_WEBSITE_DOWNLOAD_FLOW.md` with public positioning, landing page sections, download CTA states, macOS/Windows availability copy, early-access messaging, limitations, privacy/no-cloud copy, and support diagnostics copy.

@@ -200,6 +200,7 @@ def test_static_javascript_is_available(tmp_path):
     assert "X-UME-Session-Token" in response.text
     assert "apiFetch" in response.text
     assert "session_token" in response.text
+    assert response.headers["cache-control"] == "no-store"
     assert "Copy diagnostics" in response.text
     assert "/diagnostics/jobs/" in response.text
 
