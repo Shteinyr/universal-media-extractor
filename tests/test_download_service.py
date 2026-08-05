@@ -71,6 +71,7 @@ def test_download_service_builds_safe_ytdlp_command(monkeypatch, tmp_path):
     assert "-f" in calls["command"]
     assert "140" in calls["command"]
     assert "--simulate" not in calls["command"]
+    assert "--windows-filenames" in calls["command"]
     assert calls["kwargs"]["shell"] is False
     assert result.output_dir is not None
     assert Path(result.output_dir).name == "Showreel"
@@ -79,6 +80,58 @@ def test_download_service_builds_safe_ytdlp_command(monkeypatch, tmp_path):
     assert str(Path(result.output_dir) / "%(title).200B [%(id)s].%(ext)s") in calls["command"]
     assert Path(result.metadata_path).name == "download_result.json"
     assert Path(result.log_path).name == "download.log"
+
+
+def test_download_service_passes_output_template_and_duplicate_policy(monkeypatch, tmp_path):
+    def fake_popen(command, **kwargs):
+        return FakePopen(command, **kwargs)
+
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service.subprocess.Popen",
+        fake_popen,
+    )
+
+    request = DownloadRequest(
+        source_url="https://youtu.be/UUdxAp3kuKA",
+        format_id="140",
+        mode="audio",
+        user_confirmed_rights=True,
+        output_base_dir=str(tmp_path),
+        source_title="Showreel",
+        output_template="{source} - {channel} - {date} - {playlist_index} - {title}",
+        duplicate_policy="rename",
+        channel_name="Demo Channel",
+        playlist_index=3,
+    )
+
+    result = DownloadService().download_media(request)
+
+    assert result.status == "succeeded"
+    assert result.output_dir is not None
+    assert "youtu.be" in Path(result.output_dir).name
+    assert "Demo Channel" in Path(result.output_dir).name
+    assert "003" in Path(result.output_dir).name
+    assert "Showreel" in Path(result.output_dir).name
+
+
+def test_download_service_duplicate_policy_skip_does_not_run_ytdlp(monkeypatch, tmp_path):
+    (tmp_path / "Showreel").mkdir()
+
+    def fail_popen(*args, **kwargs):
+        raise AssertionError("subprocess.Popen must not be called")
+
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service.subprocess.Popen",
+        fail_popen,
+    )
+
+    request = _request(tmp_path)
+    request.duplicate_policy = "skip"
+    result = DownloadService().download_media(request)
+
+    assert result.status == "skipped"
+    assert result.output_dir == str((tmp_path / "Showreel").resolve())
+    assert result.downloaded_files == []
 
 
 def test_download_service_does_not_run_without_confirmation(monkeypatch, tmp_path):

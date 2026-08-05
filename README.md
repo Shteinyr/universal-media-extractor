@@ -1,10 +1,10 @@
 # Universal Media Extractor & Transcriber
 
-Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, Commercial Block 2, Commercial Block 3, Commercial Block 4, and Commercial Block 5 are completed.
+Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, Commercial Block 2, Commercial Block 3, Commercial Block 4, Commercial Block 5, and Commercial Block 6 are completed.
 
 This project is evaluating whether a local web app can accept a URL or local audio/video file, analyze available media variants, extract or download selected outputs, transcribe audio locally, and save structured results without paid APIs or cloud services.
 
-Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, preset-based output selection, selected-output download, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, SQLite-backed persistent job history, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, generated transcript result actions, and structured output folders. Chrome extension, packaged/signed `.app`, auth, database, stored credentials, online service behavior, batch processing, external queue, and AI summary are not implemented.
+Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, preset-based output selection, selected-output download, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, SQLite-backed persistent job history, output templates with duplicate handling, reveal-in-Finder output action, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, generated transcript result actions, and structured output folders. Chrome extension, packaged/signed `.app`, auth, database, stored credentials, online service behavior, batch processing, external queue, and AI summary are not implemented.
 
 The visible UI has been simplified for a more final user-facing surface: the sidebar now focuses on mode selection and input, while development-oriented status, flow checklist, helper copy, and Recent results are hidden from the main screen.
 
@@ -28,6 +28,7 @@ Commercial foundation docs:
 - `docs/COMMERCIAL_BLOCK_3_PRESET_OUTPUT_SELECTION.md`
 - `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`
 - `docs/COMMERCIAL_BLOCK_5_SQLITE_JOBS_HISTORY.md`
+- `docs/COMMERCIAL_BLOCK_6_OUTPUT_TEMPLATES_DUPLICATES.md`
 
 Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1`. In that mode, internal/experimental Course Mode is hidden from the static UI by default.
 
@@ -43,6 +44,8 @@ Diagnostics are redacted by default: no cookies, tokens, transcripts, full URLs,
 Commercial Block 4 adds localhost API hardening. The static UI receives a random in-memory session token from `/config` and sends it through `X-UME-Session-Token` for protected API calls. The API rejects non-local origins/hosts, uses a strict CORS allowlist, and caps local uploads. Details are documented in `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`.
 
 Commercial Block 5 adds SQLite-backed persistent jobs and local job history. Jobs now survive restart, interrupted active jobs recover to a clear failed state, failed jobs can be retried, and terminal history can be cleared without deleting downloaded files. Details are documented in `docs/COMMERCIAL_BLOCK_5_SQLITE_JOBS_HISTORY.md`.
+
+Commercial Block 6 adds output templates, duplicate handling, cross-platform-safe naming, and reveal-in-Finder/Explorer for managed output folders. Details are documented in `docs/COMMERCIAL_BLOCK_6_OUTPUT_TEMPLATES_DUPLICATES.md`.
 
 Durable project context is recorded in `PROJECT_CONTEXT.md`. Read it before large tasks and update it after completed large blocks.
 

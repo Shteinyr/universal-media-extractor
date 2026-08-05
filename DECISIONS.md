@@ -163,3 +163,14 @@
 - Queued/running jobs found on startup are not resumed automatically; they recover to a clear failed, recoverable `interrupted` state.
 - Retry creates a new job with the original payload and links it through `retry_of_job_id`.
 - Clearing history removes terminal job records only and must not delete output files.
+
+
+## 2026-08-05 - Output Templates And Duplicate Handling
+
+- Public beta URL downloads should default to readable title-based output folders.
+- Advanced naming should use a limited safe template vocabulary: `{source}`, `{channel}`, `{date}`, `{title}`, `{project}`, and `{playlist_index}`.
+- User-facing output folder names must be sanitized for macOS and Windows.
+- Duplicate behavior defaults to `rename` to avoid accidental data loss.
+- `skip` must not run `yt-dlp` when the target output already exists.
+- `overwrite` is explicit and only applies inside the managed output base.
+- Revealing folders is limited to managed direct output folders and uses OS commands with `shell=False`.

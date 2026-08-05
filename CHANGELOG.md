@@ -539,3 +539,15 @@
 - Verified with targeted API/job tests; result: 57 passed.
 - Verified with `.venv/bin/python -m pytest -q`; result: 129 passed.
 - Verified static JS with `node --check src/universal_media_extractor/static/app.js`.
+
+
+## 2026-08-05 - Commercial Block 6 Output Templates And Duplicate Handling
+
+- Added `DownloadRequest.output_template`, `duplicate_policy`, `project_name`, `channel_name`, and `playlist_index`.
+- Added output folder template rendering with `{source}`, `{channel}`, `{date}`, `{title}`, `{project}`, and `{playlist_index}` tokens.
+- Added macOS/Windows-safe output folder sanitization and `--windows-filenames` for `yt-dlp` downloads.
+- Added duplicate handling: `rename`, `skip`, and `overwrite`.
+- Added `POST /outputs/{output_id}/reveal` for managed output folders.
+- Added compact UI controls for name template, duplicate behavior, and Reveal in Finder.
+- Added regression tests for templates, duplicate policies, safe reveal, and download command safety.
+- Created `docs/COMMERCIAL_BLOCK_6_OUTPUT_TEMPLATES_DUPLICATES.md`.

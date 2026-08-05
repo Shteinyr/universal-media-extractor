@@ -42,6 +42,8 @@ const selectedFormatSummary = document.querySelector("#selected-format-summary")
 const rightsCheckbox = document.querySelector("#rights-checkbox");
 const downloadOutputDirInput = document.querySelector("#download-output-dir");
 const downloadOutputFormatSelect = document.querySelector("#download-output-format");
+const downloadOutputTemplateInput = document.querySelector("#download-output-template");
+const downloadDuplicatePolicySelect = document.querySelector("#download-duplicate-policy");
 const downloadButton = document.querySelector("#download-button");
 const cancelDownloadButton = document.querySelector("#cancel-download-button");
 const downloadResult = document.querySelector("#download-result");
@@ -58,6 +60,7 @@ const outputDirLabel = document.querySelector("#output-dir-label");
 const copyTranscriptButton = document.querySelector("#copy-transcript-button");
 const copySummaryButton = document.querySelector("#copy-summary-button");
 const copyOutputButton = document.querySelector("#copy-output-button");
+const revealOutputButton = document.querySelector("#reveal-output-button");
 const transcriptPreviewCard = document.querySelector("#transcript-preview-card");
 const transcriptPreview = document.querySelector("#transcript-preview");
 const localFilePanel = document.querySelector("#local-file-panel");
@@ -297,6 +300,9 @@ downloadButton.addEventListener("click", async () => {
         output_base_dir: downloadOutputDirInput.value.trim() || DEFAULT_DOWNLOAD_OUTPUT_DIR,
         source_title: currentAnalyzeResult.title || mediaTitle.textContent || null,
         output_format: selectedFormat.preset_output_format || downloadOutputFormatSelect.value || null,
+        output_template: downloadOutputTemplateInput?.value?.trim() || "{title}",
+        duplicate_policy: downloadDuplicatePolicySelect?.value || "rename",
+        channel_name: currentAnalyzeResult.uploader?.channel_name || currentAnalyzeResult.uploader?.name || null,
       }),
     });
 
@@ -557,6 +563,10 @@ copySummaryButton.addEventListener("click", () => {
 
 copyOutputButton.addEventListener("click", () => {
   copyText(latestTranscriptResult?.output_dir || latestDownloadResult?.output_dir || "", "Output path copied.");
+});
+
+revealOutputButton?.addEventListener("click", () => {
+  revealOutputPath(latestTranscriptResult?.output_dir || latestDownloadResult?.output_dir || "");
 });
 
 initializeAppConfig();
@@ -1164,6 +1174,12 @@ function resetDownloadSelection() {
   rightsCheckbox.checked = true;
   downloadOutputDirInput.value = DEFAULT_DOWNLOAD_OUTPUT_DIR;
   downloadOutputFormatSelect.innerHTML = "";
+  if (downloadOutputTemplateInput) {
+    downloadOutputTemplateInput.value = "{title}";
+  }
+  if (downloadDuplicatePolicySelect) {
+    downloadDuplicatePolicySelect.value = "rename";
+  }
   selectedFormatLabel.textContent = "No format selected";
   selectedFormatSummary.textContent = "Select a format row to continue.";
   downloadButton.disabled = true;
@@ -1189,6 +1205,9 @@ function resetDownloadSelection() {
   copySummaryButton.disabled = true;
   copySummaryButton.classList.add("hidden");
   copyOutputButton.disabled = true;
+  if (revealOutputButton) {
+    revealOutputButton.disabled = true;
+  }
   activeDownloadJobId = null;
   activeTranscribeJobId = null;
   activeFormatCategory = null;
@@ -1299,6 +1318,13 @@ function renderDownloadResult(result) {
     downloadResult.appendChild(output);
   }
 
+  if (result.output_dir) {
+    copyOutputButton.disabled = false;
+    if (revealOutputButton) {
+      revealOutputButton.disabled = false;
+    }
+  }
+
   const files = result.downloaded_files || [];
   if (files.length > 0) {
     const list = document.createElement("ul");
@@ -1352,6 +1378,9 @@ function renderCourseDownloadResult(result) {
     output.textContent = `Output: ${result.output_dir}`;
     courseDownloadResult.appendChild(output);
     copyOutputButton.disabled = false;
+    if (revealOutputButton) {
+      revealOutputButton.disabled = false;
+    }
   }
 
   const files = result.downloaded_files || [];
@@ -1548,6 +1577,9 @@ function renderFilesResult(result) {
   copySummaryButton.disabled = !result.summary_prompt_text;
   copySummaryButton.classList.toggle("hidden", !result.summary_prompt_text);
   copyOutputButton.disabled = !(result.output_dir || latestDownloadResult?.output_dir);
+  if (revealOutputButton) {
+    revealOutputButton.disabled = !(result.output_dir || latestDownloadResult?.output_dir);
+  }
 }
 
 function selectedTranscriptPath(result) {
@@ -1606,16 +1638,42 @@ function renderRecentOutputs(outputs) {
     copyButton.addEventListener("click", () => {
       copyText(output.output_dir, "Output path copied.");
     });
+    const revealButton = document.createElement("button");
+    revealButton.type = "button";
+    revealButton.className = "small-button";
+    revealButton.textContent = "Reveal";
+    revealButton.addEventListener("click", () => revealOutputPath(output.output_dir));
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.className = "danger-button";
     deleteButton.textContent = "Delete";
     deleteButton.addEventListener("click", () => deleteRecentOutput(output.output_id));
-    actions.append(copyButton, deleteButton);
+    actions.append(copyButton, revealButton, deleteButton);
 
     row.append(title, meta, badges, actions);
     recentResultsList.appendChild(row);
   });
+}
+
+async function revealOutputPath(outputDir) {
+  if (!outputDir) {
+    apiStatus.textContent = "Output path unavailable.";
+    return;
+  }
+  const outputId = fileName(outputDir);
+  try {
+    const response = await apiFetch("/outputs/" + encodeURIComponent(outputId) + "/reveal", {
+      method: "POST",
+    });
+    if (!response.ok) {
+      apiStatus.textContent = await readErrorMessage(response);
+      return;
+    }
+    const result = await response.json();
+    apiStatus.textContent = result.message || "Reveal requested.";
+  } catch (error) {
+    apiStatus.textContent = normalizeNetworkError(error);
+  }
 }
 
 async function deleteRecentOutput(outputId) {

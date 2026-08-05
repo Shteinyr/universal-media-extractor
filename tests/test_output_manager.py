@@ -1,4 +1,12 @@
-from universal_media_extractor.services.output_manager import OutputManager
+import sys
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from universal_media_extractor.services.output_manager import OutputManager, render_output_template
 
 
 def test_output_manager_creates_analysis_output_dir(tmp_path):
@@ -19,12 +27,92 @@ def test_output_manager_creates_download_output_structure(tmp_path):
 
     assert output_dir.exists()
     assert output_dir.parent == tmp_path.resolve()
-    assert output_dir.name == "My_Video"
+    assert output_dir.name == "My Video"
     assert (output_dir / ".metadata").is_dir()
     assert (output_dir / ".logs").is_dir()
     assert not (output_dir / "media").exists()
     assert not (output_dir / "metadata").exists()
     assert not (output_dir / "logs").exists()
+
+
+def test_render_output_template_supports_public_tokens_and_safe_names():
+    rendered = render_output_template(
+        "{project} / {source} / {channel} / {date} / {playlist_index} / {title}",
+        {
+            "project": "Client:Course",
+            "source": "youtube.com",
+            "channel": "Channel<Name>",
+            "date": "2026-08-05",
+            "playlist_index": "007",
+            "title": "CON",
+        },
+    )
+
+    assert rendered == "Client Course - youtube.com - Channel Name - 2026-08-05 - 007 - CON"
+    assert all(char not in rendered for char in r'<>:"/\|?*')
+
+
+def test_download_output_template_uses_context_tokens(tmp_path):
+    output_dir = OutputManager().create_download_output_dir(
+        tmp_path,
+        source_id="abc123",
+        source_title="Episode: Intro/Setup",
+        source_url="https://www.youtube.com/watch?v=abc123",
+        output_template="{project} - {source} - {channel} - {date} - {playlist_index} - {title}",
+        project_name="Training",
+        channel_name="Creator/Channel",
+        playlist_index=7,
+    )
+
+    assert output_dir.exists()
+    assert output_dir.parent == tmp_path.resolve()
+    assert "Training" in output_dir.name
+    assert "youtube.com" in output_dir.name
+    assert "Creator - Channel" in output_dir.name
+    assert "007" in output_dir.name
+    assert "Episode Intro - Setup" in output_dir.name
+
+
+def test_download_output_duplicate_policy_renames_by_default(tmp_path):
+    first = OutputManager().create_download_output_dir(tmp_path, source_title="Showreel")
+    second = OutputManager().create_download_output_dir(tmp_path, source_title="Showreel")
+
+    assert first.name == "Showreel"
+    assert second.name == "Showreel 2"
+
+
+def test_download_output_duplicate_policy_skips_existing(tmp_path):
+    OutputManager().create_download_output_dir(tmp_path, source_title="Showreel")
+
+    with pytest.raises(FileExistsError):
+        OutputManager().create_download_output_dir(
+            tmp_path,
+            source_title="Showreel",
+            duplicate_policy="skip",
+        )
+
+
+def test_download_output_duplicate_policy_overwrites_existing(tmp_path):
+    first = OutputManager().create_download_output_dir(tmp_path, source_title="Showreel")
+    marker = first / "old.txt"
+    marker.write_text("old", encoding="utf-8")
+
+    second = OutputManager().create_download_output_dir(
+        tmp_path,
+        source_title="Showreel",
+        duplicate_policy="overwrite",
+    )
+
+    assert second == first
+    assert not marker.exists()
+    assert (second / ".metadata").is_dir()
+    assert (second / ".logs").is_dir()
+
+
+def test_download_output_reserved_windows_name_is_made_safe(tmp_path):
+    output_dir = OutputManager().create_download_output_dir(tmp_path, source_title="CON")
+
+    assert output_dir.name == "CON_file"
 
 
 def test_output_manager_ensures_transcription_output_structure(tmp_path):

@@ -15,6 +15,7 @@ from universal_media_extractor.models.analyze import (
 
 
 DownloadMode = Literal["audio", "video", "combined", "subtitles"]
+DuplicatePolicy = Literal["rename", "skip", "overwrite"]
 DownloadStatus = Literal[
     "queued",
     "running",
@@ -22,6 +23,7 @@ DownloadStatus = Literal[
     "failed",
     "cancelled",
     "blocked",
+    "skipped",
 ]
 
 
@@ -35,6 +37,11 @@ class DownloadRequest(ContractModel):
     output_base_dir: str | None = Field(default=None)
     source_title: str | None = Field(default=None)
     output_format: str | None = Field(default=None)
+    output_template: str | None = Field(default=None, max_length=240)
+    duplicate_policy: DuplicatePolicy = "rename"
+    project_name: str | None = Field(default=None, max_length=120)
+    channel_name: str | None = Field(default=None, max_length=120)
+    playlist_index: int | None = Field(default=None, ge=0)
 
     @field_validator("source_url", mode="after")
     @classmethod
@@ -49,9 +56,9 @@ class DownloadRequest(ContractModel):
     def strip_format_id(cls, value: str) -> str:
         return value.strip()
 
-    @field_validator("source_title", mode="after")
+    @field_validator("source_title", "output_template", "project_name", "channel_name", mode="after")
     @classmethod
-    def strip_source_title(cls, value: str | None) -> str | None:
+    def strip_optional_text(cls, value: str | None) -> str | None:
         if value is None:
             return None
         stripped = value.strip()

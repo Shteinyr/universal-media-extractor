@@ -6,7 +6,7 @@ Universal Media Extractor & Transcriber is intended to be a local web app with a
 
 ## Current Stage
 
-Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Commercial Block 2 issues #6-#7 are completed. Commercial Block 3 issue #9 is completed. Commercial Block 4 issue #8 is completed. Commercial Block 5 issue #10 is completed. Recommended next work remains Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work.
+Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Commercial Block 2 issues #6-#7 are completed. Commercial Block 3 issue #9 is completed. Commercial Block 4 issue #8 is completed. Commercial Block 5 issue #10 is completed. Commercial Block 6 issue #11 is completed. Recommended next work remains Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work.
 
 ## Already Installed And Reported By User
 
@@ -99,6 +99,8 @@ Commercial Block 3 issue #9 replaces public technical format selection with pres
 Commercial Block 4 issue #8 hardens localhost security with a random UI/backend session token, strict local host/origin checks, explicit CORS policy, upload size limits, and preserved path/CLI/log safety boundaries. It is documented in `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`.
 
 Commercial Block 5 issue #10 replaces runtime-only app jobs with SQLite-backed local job history. Jobs survive restart, interrupted queued/running jobs recover to a failed recoverable state, failed jobs can be retried, and terminal history can be cleared without deleting output files. It is documented in `docs/COMMERCIAL_BLOCK_5_SQLITE_JOBS_HISTORY.md`.
+
+Commercial Block 6 issue #11 adds URL output folder templates, macOS/Windows-safe output names, duplicate policies (`rename`, `skip`, `overwrite`), and reveal-in-Finder/Explorer for managed outputs. It is documented in `docs/COMMERCIAL_BLOCK_6_OUTPUT_TEMPLATES_DUPLICATES.md`.
 
 
 `PROJECT_CONTEXT.md` now exists as the long-term project context file. Read it before large tasks and update it after completed large blocks.

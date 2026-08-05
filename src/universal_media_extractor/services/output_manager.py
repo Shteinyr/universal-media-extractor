@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
+from urllib.parse import urlparse
 
 from universal_media_extractor.models import (
     OutputDeleteResult,
@@ -24,7 +26,7 @@ class OutputManager:
         """Create a directory for analysis artifacts only."""
 
         base_path = base_dir.expanduser().resolve()
-        safe_source_id = _safe_path_part(source_id or "unknown")
+        safe_source_id = _safe_slug_part(source_id or "unknown")
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         unique_suffix = uuid4().hex[:8]
         dirname = f"analysis_{safe_source_id}_{timestamp}_{unique_suffix}"
@@ -41,15 +43,29 @@ class OutputManager:
         base_dir: Path,
         source_id: str | None = None,
         source_title: str | None = None,
+        *,
+        source_url: str | None = None,
+        output_template: str | None = None,
+        duplicate_policy: str = "rename",
+        project_name: str | None = None,
+        channel_name: str | None = None,
+        playlist_index: int | None = None,
     ) -> Path:
         """Create a user-facing directory for one download attempt."""
 
         base_path = base_dir.expanduser().resolve()
-        safe_name = _safe_path_part(source_title or source_id or "download")
-        dirname = safe_name
-        output_dir = (base_path / dirname).resolve()
-        if output_dir.exists():
-            output_dir = (base_path / f"{dirname} {uuid4().hex[:6]}").resolve()
+        dirname = render_output_template(
+            output_template or "{title}",
+            {
+                "source": _source_name(source_url, source_id),
+                "channel": channel_name or "",
+                "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                "title": source_title or source_id or "download",
+                "project": project_name or "",
+                "playlist_index": _format_playlist_index(playlist_index),
+            },
+        )
+        output_dir = _apply_duplicate_policy(base_path, dirname, duplicate_policy)
 
         if not output_dir.is_relative_to(base_path):
             raise ValueError("Output directory must stay inside base_dir.")
@@ -65,7 +81,7 @@ class OutputManager:
         """Create a structured directory for one local file workflow."""
 
         base_path = base_dir.expanduser().resolve()
-        safe_filename = _safe_path_part(Path(filename or "local_file").stem)
+        safe_filename = _safe_slug_part(Path(filename or "local_file").stem)
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         dirname = f"local_{timestamp}_{safe_filename}"
         output_dir = (base_path / dirname).resolve()
@@ -183,9 +199,77 @@ class OutputManager:
         )
 
 
+WINDOWS_RESERVED_NAMES = {
+    "CON",
+    "PRN",
+    "AUX",
+    "NUL",
+    *(f"COM{index}" for index in range(1, 10)),
+    *(f"LPT{index}" for index in range(1, 10)),
+}
+TEMPLATE_TOKEN_RE = re.compile(r"\{(source|channel|date|title|project|playlist_index)\}")
+UNSAFE_FILENAME_RE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+
+
+def render_output_template(template: str, context: dict[str, str]) -> str:
+    """Render a direct output folder name from supported template tokens."""
+
+    def replace(match: re.Match[str]) -> str:
+        return context.get(match.group(1), "")
+
+    rendered = TEMPLATE_TOKEN_RE.sub(replace, template.strip() or "{title}")
+    return _safe_path_part(rendered or context.get("title", "download"))
+
+
 def _safe_path_part(value: str) -> str:
+    normalized = value.replace("/", " - ").replace("\\", " - ")
+    normalized = UNSAFE_FILENAME_RE.sub(" ", normalized)
+    normalized = re.sub(r"\s+", " ", normalized).strip(" ._")
+    safe = normalized or "unknown"
+    if safe.upper() in WINDOWS_RESERVED_NAMES:
+        safe = f"{safe}_file"
+    return safe[:120].rstrip(" .") or "unknown"
+
+
+def _safe_slug_part(value: str) -> str:
     safe = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "_" for ch in value)
     return (safe.strip("_") or "unknown")[:80]
+
+
+def _apply_duplicate_policy(base_path: Path, dirname: str, duplicate_policy: str) -> Path:
+    output_dir = (base_path / dirname).resolve()
+    if not output_dir.exists():
+        return output_dir
+    if duplicate_policy == "skip":
+        raise FileExistsError(str(output_dir))
+    if duplicate_policy == "overwrite":
+        if output_dir == base_path or not output_dir.is_relative_to(base_path):
+            raise ValueError("Output directory must stay inside base_dir.")
+        if output_dir.is_dir():
+            shutil.rmtree(output_dir)
+        else:
+            output_dir.unlink()
+        return output_dir
+
+    stem = dirname
+    for index in range(2, 1000):
+        candidate = (base_path / f"{stem} {index}").resolve()
+        if not candidate.exists():
+            return candidate
+    return (base_path / f"{stem} {uuid4().hex[:8]}").resolve()
+
+
+def _source_name(source_url: str | None, source_id: str | None) -> str:
+    if source_url:
+        host = urlparse(source_url).netloc.lower()
+        return host.removeprefix("www.") or source_id or "source"
+    return source_id or "source"
+
+
+def _format_playlist_index(value: int | None) -> str:
+    if value is None:
+        return ""
+    return f"{value:03d}"
 
 
 def _resolve_output_id(outputs_base_dir: Path, output_id: str) -> Path:

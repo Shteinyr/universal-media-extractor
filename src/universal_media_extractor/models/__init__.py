@@ -14,6 +14,7 @@ from universal_media_extractor.models.analyze import (
 from universal_media_extractor.models.diagnostics import DiagnosticBundle, DiagnosticLog
 from universal_media_extractor.models.download import (
     DownloadMode,
+    DuplicatePolicy,
     DownloadRequest,
     DownloadResult,
     DownloadStatus,
@@ -32,6 +33,7 @@ from universal_media_extractor.models.local_file import (
 from universal_media_extractor.models.output import (
     OutputDeleteResult,
     OutputListResult,
+    OutputRevealResult,
     OutputSourceType,
     OutputSummary,
 )
@@ -61,6 +63,7 @@ __all__ = [
     "DiagnosticBundle",
     "DiagnosticLog",
     "DownloadMode",
+    "DuplicatePolicy",
     "DownloadRequest",
     "DownloadResult",
     "DownloadStatus",
@@ -77,6 +80,7 @@ __all__ = [
     "MediaOptions",
     "OutputDeleteResult",
     "OutputListResult",
+    "OutputRevealResult",
     "OutputSourceType",
     "OutputSummary",
     "SourceMediaKind",

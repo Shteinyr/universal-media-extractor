@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import os
 import secrets
+import subprocess
+import sys
 from pathlib import Path
 from threading import Thread
 from typing import Any, Callable
@@ -40,6 +42,7 @@ from universal_media_extractor.models import (
     LocalFileAnalyzeResult,
     OutputDeleteResult,
     OutputListResult,
+    OutputRevealResult,
     OutputSummary,
     UdemyCourseAnalyzeResult,
 )
@@ -323,6 +326,34 @@ def create_app(
         except FileNotFoundError:
             raise HTTPException(status_code=404, detail="Output not found.") from None
 
+
+    @app.post("/outputs/{output_id}/reveal", response_model=OutputRevealResult)
+    def reveal_output(output_id: str) -> OutputRevealResult:
+        output_manager: OutputManager = app.state.output_manager
+        try:
+            summary = output_manager.summarize_output(Path(app.state.output_base_dir), output_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from None
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="Output not found.") from None
+
+        output_dir = Path(summary.output_dir).expanduser().resolve()
+        try:
+            _reveal_output_path(output_dir)
+        except OSError as exc:
+            return OutputRevealResult(
+                output_id=output_id,
+                status="failed",
+                output_dir=str(output_dir),
+                message=f"Could not reveal output folder: {exc}",
+            )
+        return OutputRevealResult(
+            output_id=output_id,
+            status="opened",
+            output_dir=str(output_dir),
+            message="Output folder reveal requested.",
+        )
+
     @app.delete("/outputs/{output_id}", response_model=OutputDeleteResult)
     def delete_output(output_id: str) -> OutputDeleteResult:
         output_manager: OutputManager = app.state.output_manager
@@ -387,6 +418,23 @@ def create_app(
         return diagnostics_service.build_job_bundle(job, app_version=app.version)
 
     return app
+
+
+def _reveal_output_path(output_dir: Path) -> None:
+    if sys.platform == "darwin":
+        command = ["open", str(output_dir)]
+    elif sys.platform.startswith("win"):
+        command = ["explorer", str(output_dir)]
+    else:
+        command = ["xdg-open", str(output_dir)]
+    subprocess.run(
+        command,
+        check=False,
+        shell=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
 
 def _resolve_job_db_path(
     *,

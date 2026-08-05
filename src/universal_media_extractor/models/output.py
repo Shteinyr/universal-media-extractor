@@ -12,6 +12,7 @@ from universal_media_extractor.models.analyze import ContractModel
 
 OutputSourceType = Literal["url", "local_file", "unknown"]
 OutputDeleteStatus = Literal["deleted", "not_found", "blocked"]
+OutputRevealStatus = Literal["opened", "not_found", "blocked", "failed"]
 
 
 class OutputSummary(ContractModel):
@@ -42,5 +43,14 @@ class OutputDeleteResult(ContractModel):
 
     output_id: str
     status: OutputDeleteStatus
+    output_dir: str | None = Field(default=None)
+    message: str
+
+
+class OutputRevealResult(ContractModel):
+    """Result of asking the OS to reveal one output folder."""
+
+    output_id: str
+    status: OutputRevealStatus
     output_dir: str | None = Field(default=None)
     message: str

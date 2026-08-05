@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation; Commercial Block 3 issue #9 completed for preset-based output selection; Commercial Block 4 issue #8 completed for localhost security hardening; Commercial Block 5 issue #10 completed for SQLite-backed persistent jobs/history.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation; Commercial Block 3 issue #9 completed for preset-based output selection; Commercial Block 4 issue #8 completed for localhost security hardening; Commercial Block 5 issue #10 completed for SQLite-backed persistent jobs/history; Commercial Block 6 issue #11 completed for output templates and duplicate handling.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -77,7 +77,11 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
-Commercial Block 5: SQLite Jobs And History - done.
+Commercial Block 6: Output Templates And Duplicate Handling - done.
+
+Result: URL downloads now support output folder templates with `{source}`, `{channel}`, `{date}`, `{title}`, `{project}`, and `{playlist_index}` tokens. User-facing folder names are sanitized for macOS/Windows. Duplicate behavior supports `rename`, `skip`, and `overwrite`; skip avoids running `yt-dlp`. Managed outputs can be revealed through `POST /outputs/{output_id}/reveal` and the UI exposes a Reveal action.
+
+Previous completed block: Commercial Block 5: SQLite Jobs And History - done.
 
 Result: job state now persists to local SQLite at `data/jobs.sqlite3`. Jobs survive restart, interrupted queued/running jobs recover to a failed recoverable state, failed jobs can be retried through `POST /jobs/{job_id}/retry`, and terminal history can be cleared through `DELETE /jobs/history` without deleting output files.
 
@@ -105,7 +109,7 @@ Recommended next user-approved commercial block:
 Public Beta Readiness
 ```
 
-Candidate issues: output templates, production packaging foundations, queue/batch foundation, and beta-ready QA/documentation.
+Candidate issues: production packaging foundations, queue/batch foundation, and beta-ready QA/documentation. Output templates and duplicate handling are completed in issue #11.
 
 Do not start the next block until the user explicitly confirms.
 
@@ -168,6 +172,7 @@ The dev `.app` can also be copied to `/Applications`; it remains tied to this pr
 - URL output selection now uses public presets instead of raw technical stream rows.
 - Final UI cleanup hides development-oriented sidebar areas: visible backend status, MVP flow checklist, repeated helper copy, and Recent results.
 - URL downloads default to `~/Downloads/Universal Media Extractor`.
+- URL downloads support output folder templates and duplicate policies: rename, skip, overwrite.
 - The download card has editable `Save to` and `Format` controls.
 - Video output downloads selected video together with best available audio into one final file.
 - Audio output downloads/extracts audio-only results.

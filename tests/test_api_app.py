@@ -1,3 +1,5 @@
+import importlib
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -10,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from universal_media_extractor.api.app import create_app
+
+api_app_module = importlib.import_module("universal_media_extractor.api.app")
 from universal_media_extractor.services.diagnostics_service import DiagnosticsService
 SECURITY_HEADER_NAME = "X-UME-Session-Token"
 
@@ -130,6 +134,9 @@ def test_static_index_is_available(tmp_path):
     assert "Whisper model" in response.text
     assert "Copy transcript" in response.text
     assert "Save to" in response.text
+    assert "Name template" in response.text
+    assert "If exists" in response.text
+    assert "Reveal in Finder" in response.text
     assert "~/Downloads/Universal Media Extractor" in response.text
     assert "Local file mode" in response.text
     assert "Analyze local file" in response.text
@@ -175,6 +182,9 @@ def test_static_javascript_is_available(tmp_path):
     assert "Downloads with audio" in response.text
     assert "DEFAULT_DOWNLOAD_OUTPUT_DIR" in response.text
     assert "output_base_dir" in response.text
+    assert "output_template" in response.text
+    assert "duplicate_policy" in response.text
+    assert "/reveal" in response.text
     assert "source_title" in response.text
     assert "downloadOutputFormatSelect" in response.text
     assert "MP4" in response.text
@@ -889,6 +899,43 @@ def test_output_detail_endpoint_returns_summary(tmp_path):
 
     assert response.status_code == 200
     assert response.json()["has_summary_prompt"] is True
+
+
+def test_reveal_output_endpoint_uses_os_open_without_shell(tmp_path, monkeypatch):
+    output_base = tmp_path / "outputs"
+    output_dir = output_base / "Showreel"
+    output_dir.mkdir(parents=True)
+    (output_dir / "clip.m4a").write_bytes(b"audio")
+    calls = {}
+
+    def fake_run(command, **kwargs):
+        calls["command"] = command
+        calls["kwargs"] = kwargs
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(api_app_module.subprocess, "run", fake_run)
+    client = _client(create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base))
+
+    response = client.post(f"/outputs/{output_dir.name}/reveal")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "opened"
+    assert body["output_dir"] == str(output_dir.resolve())
+    assert calls["kwargs"]["shell"] is False
+    assert str(output_dir.resolve()) in calls["command"]
+
+
+def test_reveal_output_endpoint_refuses_missing_output(tmp_path, monkeypatch):
+    def fail_run(*args, **kwargs):
+        raise AssertionError("subprocess.run must not be called")
+
+    monkeypatch.setattr(api_app_module.subprocess, "run", fail_run)
+    client = _client(create_app(raw_output_base_dir=tmp_path, output_base_dir=tmp_path / "outputs"))
+
+    response = client.post("/outputs/missing/reveal")
+
+    assert response.status_code == 404
 
 
 def test_delete_output_endpoint_deletes_dummy_output(tmp_path):

@@ -195,6 +195,18 @@
               Format
               <select id="download-output-format"></select>
             </label>
+            <label class="path-field" for="download-output-template">
+              Name template
+              <input id="download-output-template" type="text" value="{title}" autocomplete="off" spellcheck="false">
+            </label>
+            <label class="path-field" for="download-duplicate-policy">
+              If exists
+              <select id="download-duplicate-policy">
+                <option value="rename" selected>Rename copy</option>
+                <option value="skip">Skip</option>
+                <option value="overwrite">Overwrite</option>
+              </select>
+            </label>
             <input id="rights-checkbox" type="checkbox" checked hidden>
             <button id="download-button" type="button" disabled>Download selected</button>
             <button id="cancel-download-button" type="button" class="secondary-button hidden">Cancel download</button>
@@ -305,6 +317,7 @@
               <button id="copy-transcript-button" type="button" disabled>Copy transcript</button>
               <button id="copy-summary-button" type="button" class="hidden" disabled>Copy summary prompt</button>
               <button id="copy-output-button" type="button" disabled>Copy output path</button>
+              <button id="reveal-output-button" type="button" disabled>Reveal in Finder</button>
             </div>
             <div class="preview-card hidden" id="transcript-preview-card">
               <h3>Transcript preview</h3>

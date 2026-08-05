@@ -73,11 +73,25 @@ class DownloadService:
             if request.output_base_dir
             else DEFAULT_OUTPUT_BASE_DIR
         )
-        output_dir = self.output_manager.create_download_output_dir(
-            output_base_dir,
-            source_id=_source_id_from_url(request.source_url),
-            source_title=request.source_title,
-        )
+        try:
+            output_dir = self.output_manager.create_download_output_dir(
+                output_base_dir,
+                source_id=_source_id_from_url(request.source_url),
+                source_title=request.source_title,
+                source_url=request.source_url,
+                output_template=request.output_template,
+                duplicate_policy=request.duplicate_policy,
+                project_name=request.project_name,
+                channel_name=request.channel_name,
+                playlist_index=request.playlist_index,
+            )
+        except FileExistsError as exc:
+            return DownloadResult(
+                status="skipped",
+                source_url=request.source_url,
+                selected_format_id=request.format_id,
+                output_dir=str(exc.args[0]) if exc.args else None,
+            )
         metadata_dir = output_dir / ".metadata"
         log_path = output_dir / ".logs" / "download.log"
         request_path = metadata_dir / "download_request.json"
@@ -242,6 +256,7 @@ def _build_ytdlp_command(request: DownloadRequest, output_dir: Path) -> list[str
         "yt-dlp",
         "--no-playlist",
         "--newline",
+        "--windows-filenames",
         "-o",
         output_template,
     ]
