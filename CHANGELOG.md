@@ -592,3 +592,15 @@
 - Added `scripts/notarize_macos_dmg.py` for later signed DMG notarization, stapling, and Gatekeeper assessment.
 - Added `tests/test_notarize_macos_dmg.py`.
 - Documented that GitHub issues #13 and #14 remain open until Apple Developer ID signing/notarization can be completed with user-provided account access.
+
+## 2026-08-05 - Commercial Block 11 Founder Launch Surface
+
+- Created `site/index.html` and supporting static public pages for privacy, EULA, refund, limitations, and support.
+- Created `site/styles.css` for the founder launch page.
+- Created `docs/COMMERCIAL_BLOCK_11_FOUNDER_LAUNCH_SURFACE.md`.
+- Created `docs/FOUNDER_LAUNCH_SITE_COPY.md`.
+- Created `docs/BETA_ONBOARDING_COPY.md`.
+- Created `docs/PRICING_AND_PLANS.md`.
+- Created `docs/SUPPORT_PAGE_DRAFT.md`.
+- Added `tests/test_founder_launch_site.py`.
+- Kept checkout, license activation, Apple signing, Windows build, batch, AI summary, and new downloader features out of scope.

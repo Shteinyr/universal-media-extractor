@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Universal Media Extractor</title>
+    <meta
+      name="description"
+      content="A local media downloader, organizer, and transcriber for macOS and Windows."
+    >
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./index.html" aria-label="Universal Media Extractor home">
+        <span class="brand-mark" aria-hidden="true">UME</span>
+        <span>Universal Media Extractor</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#download">Download</a>
+        <a href="#plans">Plans</a>
+        <a href="./limitations.html">Limitations</a>
+        <a href="./support.html">Support</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Local Media Downloader & Organizer</p>
+          <h1>Save media locally. Keep it organized.</h1>
+          <p class="lead">
+            Analyze a link or local file, choose a clean output preset, save allowed media,
+            and create local transcripts when you need them.
+          </p>
+          <div class="hero-actions" aria-label="Primary actions">
+            <a class="button primary" href="#download">Join the beta</a>
+            <a class="button secondary" href="./limitations.html">View limitations</a>
+          </div>
+          <p class="trust-note">
+            No source media upload is required. Processing runs on your computer.
+          </p>
+        </div>
+
+        <div class="product-shot" aria-label="Product workflow preview">
+          <div class="window-bar">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="app-preview">
+            <aside>
+              <strong>Universal Media Extractor</strong>
+              <button>URL mode</button>
+              <button>Local file</button>
+            </aside>
+            <section>
+              <div class="media-card">
+                <div class="thumbnail"></div>
+                <div>
+                  <span class="pill">local</span>
+                  <h2>Clean output options</h2>
+                  <p>Video, audio, subtitles, or transcript.</p>
+                </div>
+              </div>
+              <div class="preset-grid">
+                <span>Best Video</span>
+                <span>Audio M4A</span>
+                <span>Subtitles</span>
+                <span>Transcript TXT</span>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="workflow-title">
+        <div class="section-heading">
+          <p class="eyebrow">Workflow</p>
+          <h2 id="workflow-title">From source to organized files</h2>
+        </div>
+        <div class="feature-grid">
+          <article>
+            <h3>Analyze before saving</h3>
+            <p>Inspect supported links and local files before download or transcription.</p>
+          </article>
+          <article>
+            <h3>Choose clean presets</h3>
+            <p>Pick video, audio, subtitles, or transcript outputs without raw technical format lists.</p>
+          </article>
+          <article>
+            <h3>Keep files local</h3>
+            <p>Save readable output folders on your machine with logs and metadata kept out of the way.</p>
+          </article>
+          <article>
+            <h3>Transcribe locally</h3>
+            <p>Use local Whisper to create TXT, Markdown, or JSON transcripts.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="split-section" id="download" aria-labelledby="download-title">
+        <div>
+          <p class="eyebrow">Beta downloads</p>
+          <h2 id="download-title">Desktop builds are being prepared</h2>
+          <p>
+            The product is moving toward signed macOS and Windows desktop releases. Public downloads
+            will appear here after packaging and release validation are complete.
+          </p>
+        </div>
+        <div class="download-cards">
+          <article>
+            <span class="platform">macOS</span>
+            <h3>Apple Silicon beta</h3>
+            <p>Planned after Developer ID signing and notarization.</p>
+            <a class="button secondary" href="https://github.com/Shteinyr/universal-media-extractor/releases">Check releases</a>
+          </article>
+          <article>
+            <span class="platform">Windows</span>
+            <h3>Windows beta</h3>
+            <p>Planned after the macOS beta path is stable.</p>
+            <a class="button secondary" href="https://github.com/Shteinyr/universal-media-extractor/issues">Follow progress</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="section warning" aria-labelledby="limits-title">
+        <div class="section-heading">
+          <p class="eyebrow">Important boundary</p>
+          <h2 id="limits-title">Use it only with media you have rights to process</h2>
+        </div>
+        <p>
+          Source support is best-effort and may change. Universal Media Extractor does not bypass
+          DRM, CAPTCHA, paywalls, login restrictions, regional restrictions, or access controls.
+        </p>
+      </section>
+
+      <section class="section" id="plans" aria-labelledby="plans-title">
+        <div class="section-heading">
+          <p class="eyebrow">Plans</p>
+          <h2 id="plans-title">Simple pricing draft</h2>
+        </div>
+        <div class="plan-grid">
+          <article>
+            <h3>Free</h3>
+            <strong>$0</strong>
+            <p>Try analysis and basic single-item local workflows.</p>
+          </article>
+          <article class="highlight">
+            <h3>Founder Pro</h3>
+            <strong>$24</strong>
+            <p>Early Pro access for supporters while the product matures.</p>
+          </article>
+          <article>
+            <h3>Pro</h3>
+            <strong>$39</strong>
+            <p>Full single-user local workflow, with $19/year compatibility renewal planned.</p>
+          </article>
+          <article>
+            <h3>Business</h3>
+            <strong>$99</strong>
+            <p>Business terms, more devices later, and priority support path.</p>
+          </article>
+        </div>
+        <p class="small-note">Checkout and license activation are not connected yet.</p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <nav aria-label="Footer navigation">
+        <a href="./privacy.html">Privacy</a>
+        <a href="./eula.html">EULA</a>
+        <a href="./refund.html">Refund Policy</a>
+        <a href="./limitations.html">Known Limitations</a>
+        <a href="./support.html">Support</a>
+      </nav>
+      <p>Universal Media Extractor. Local-first media workflows.</p>
+    </footer>
+  </body>
+</html>

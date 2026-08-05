@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation; Commercial Block 3 issue #9 completed for preset-based output selection; Commercial Block 4 issue #8 completed for localhost security hardening; Commercial Block 5 issue #10 completed for SQLite-backed persistent jobs/history; Commercial Block 6 issue #11 completed for output templates and duplicate handling; Commercial Blocks 7-10 completed/prepared for macOS packaging readiness up to the Apple Developer ID blocker.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-11 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, and founder launch surface.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -76,6 +76,12 @@ Commercial direction after GPT Pro strategy review:
 - Block 11. Desktop Wrapper - done.
 
 ## Latest Completed Block
+
+Commercial Block 11: Founder Launch Surface - done.
+
+Result: public static site, founder launch copy, beta onboarding copy, draft pricing/plans, and support page draft are prepared. GitHub issues #19, #20, and #21 can be closed once pushed and commented. No checkout, license activation, Apple signing, Windows build, or new downloader feature was added.
+
+Previous completed block:
 
 Commercial Block 10: macOS Public Release Prep - prepared.
 
@@ -292,3 +298,13 @@ This document closes GitHub issue #10 and defines the first public-beta persiste
 - Added signing/notarization/Gatekeeper troubleshooting guide.
 - Added `scripts/notarize_macos_dmg.py` for later DMG notarization command execution.
 - Issues #13 and #14 remain open because final acceptance is blocked by Apple Developer ID credentials and real notarization validation.
+
+## 2026-08-05 - Commercial Block 11 Founder Launch Surface
+
+- Added `site/` static public landing page with macOS/Windows beta sections, limitations, legal/support links, and plan summaries.
+- Added `docs/FOUNDER_LAUNCH_SITE_COPY.md`.
+- Added `docs/BETA_ONBOARDING_COPY.md`.
+- Added `docs/PRICING_AND_PLANS.md`.
+- Added `docs/SUPPORT_PAGE_DRAFT.md`.
+- Added `tests/test_founder_launch_site.py` for public site/copy regression coverage.
+- Kept payments, checkout, license activation, Apple signing, Windows build, batch, AI summary, and new downloader features out of scope.

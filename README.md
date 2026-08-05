@@ -1,10 +1,10 @@
 # Universal Media Extractor & Transcriber
 
-Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, and Commercial Blocks 2-10 are completed or prepared as far as possible without external Apple Developer ID access.
+Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, and Commercial Blocks 2-11 are completed or prepared as far as possible without external Apple/payment provider access.
 
 This project is evaluating whether a local web app can accept a URL or local audio/video file, analyze available media variants, extract or download selected outputs, transcribe audio locally, and save structured results without paid APIs or cloud services.
 
-Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, preset-based output selection, selected-output download, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, SQLite-backed persistent job history, output templates with duplicate handling, reveal-in-Finder output action, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, macOS production `.app` build foundation, macOS signing/notarization readiness docs/scripts, DMG readiness docs/scripts, generated transcript result actions, and structured output folders. Chrome extension, final signed/notarized public `.app`, auth, stored credentials, online service behavior, batch processing, external queue, and AI summary are not implemented.
+Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, preset-based output selection, selected-output download, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, SQLite-backed persistent job history, output templates with duplicate handling, reveal-in-Finder output action, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, macOS production `.app` build foundation, macOS signing/notarization readiness docs/scripts, DMG readiness docs/scripts, founder launch static site, beta onboarding copy, draft pricing/plans, generated transcript result actions, and structured output folders. Chrome extension, final signed/notarized public `.app`, checkout, license activation, auth, stored credentials, online service behavior, batch processing, external queue, and AI summary are not implemented.
 
 The visible UI has been simplified for a more final user-facing surface: the sidebar now focuses on mode selection and input, while development-oriented status, flow checklist, helper copy, and Recent results are hidden from the main screen.
 
@@ -37,6 +37,11 @@ Commercial foundation docs:
 - `docs/APPLE_DEVELOPER_ACCOUNT_SETUP.md`
 - `docs/MACOS_RELEASE_VALIDATION_CHECKLIST.md`
 - `docs/MACOS_SIGNING_NOTARIZATION_TROUBLESHOOTING.md`
+- `docs/COMMERCIAL_BLOCK_11_FOUNDER_LAUNCH_SURFACE.md`
+- `docs/FOUNDER_LAUNCH_SITE_COPY.md`
+- `docs/BETA_ONBOARDING_COPY.md`
+- `docs/PRICING_AND_PLANS.md`
+- `docs/SUPPORT_PAGE_DRAFT.md`
 
 Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1`. In that mode, internal/experimental Course Mode is hidden from the static UI by default.
 
@@ -160,6 +165,28 @@ Start here:
 - `docs/MACOS_SIGNING_NOTARIZATION_TROUBLESHOOTING.md`
 
 Do not ship the unsigned local DMG as a public release.
+
+## Founder Launch Static Site
+
+A first public-facing static site draft lives in:
+
+```text
+site/index.html
+```
+
+Preview locally:
+
+```bash
+python3 -m http.server 8767 --directory site
+```
+
+Open:
+
+```text
+http://127.0.0.1:8767/
+```
+
+The site includes the public positioning, macOS/Windows beta sections, visible limitations, support/legal links, and draft Free / Founder Pro / Pro / Business plans. It does not include payment checkout or license activation.
 
 ## Browser Smoke Test
 

@@ -6,7 +6,7 @@ Universal Media Extractor & Transcriber is intended to be a local web app with a
 
 ## Current Stage
 
-Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Commercial Block 2 issues #6-#7 are completed. Commercial Block 3 issue #9 is completed. Commercial Block 4 issue #8 is completed. Commercial Block 5 issue #10 is completed. Commercial Block 6 issue #11 is completed. Commercial Blocks 7-10 prepared macOS packaging/public release readiness up to the Apple Developer ID blocker. Recommended next work remains Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work.
+Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Commercial Block 2 issues #6-#7 are completed. Commercial Block 3 issue #9 is completed. Commercial Block 4 issue #8 is completed. Commercial Block 5 issue #10 is completed. Commercial Block 6 issue #11 is completed. Commercial Blocks 7-10 prepared macOS packaging/public release readiness up to the Apple Developer ID blocker. Commercial Block 11 prepared the founder launch surface around issues #19-#21. Recommended next work remains Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work.
 
 ## Already Installed And Reported By User
 
@@ -103,6 +103,8 @@ Commercial Block 5 issue #10 replaces runtime-only app jobs with SQLite-backed l
 Commercial Block 6 issue #11 adds URL output folder templates, macOS/Windows-safe output names, duplicate policies (`rename`, `skip`, `overwrite`), and reveal-in-Finder/Explorer for managed outputs. It is documented in `docs/COMMERCIAL_BLOCK_6_OUTPUT_TEMPLATES_DUPLICATES.md`.
 
 Commercial Block 10 prepares macOS public release docs and validation gates around issues #13/#14. It adds `docs/MACOS_PUBLIC_RELEASE_CHECKLIST.md`, `docs/APPLE_DEVELOPER_ACCOUNT_SETUP.md`, `docs/MACOS_RELEASE_VALIDATION_CHECKLIST.md`, `docs/MACOS_SIGNING_NOTARIZATION_TROUBLESHOOTING.md`, and `scripts/notarize_macos_dmg.py`. Issues #13/#14 remain open because real Developer ID signing/notarization and Gatekeeper validation require Apple Developer Program access and local Keychain credentials from the user.
+
+Commercial Block 11 prepares the public founder launch surface for issues #19-#21: static landing page in `site/`, `docs/FOUNDER_LAUNCH_SITE_COPY.md`, `docs/BETA_ONBOARDING_COPY.md`, `docs/PRICING_AND_PLANS.md`, and `docs/SUPPORT_PAGE_DRAFT.md`. No checkout, license activation, Apple signing, Windows build, or new product feature was added.
 
 
 `PROJECT_CONTEXT.md` now exists as the long-term project context file. Read it before large tasks and update it after completed large blocks.

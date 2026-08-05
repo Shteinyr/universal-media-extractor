@@ -203,3 +203,11 @@
 - Notary credentials must be stored in macOS Keychain through a profile such as `UME_NOTARY`; passwords and private keys must not be committed or shared in chat.
 - Issues #13 and #14 must remain open until real Developer ID signing, notarization, stapling, and Gatekeeper validation pass.
 - Udemy Course Mode remains hidden from public commercial builds unless separately approved.
+
+## 2026-08-05 - Founder Launch Surface
+
+- Public founder launch surface should use the existing safe positioning: `Local Media Downloader & Organizer for macOS and Windows`.
+- The first public site is a static no-checkout draft under `site/`.
+- Public site copy must show best-effort source limitations before download CTAs.
+- Udemy Course Mode must not be advertised on the public founder launch site.
+- Free / Founder Pro / Pro / Business terms remain drafts until payment provider approval and licensing design are complete.
