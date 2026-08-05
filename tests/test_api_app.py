@@ -132,7 +132,7 @@ def test_static_index_is_available(tmp_path):
     assert "Ready to analyze" in response.text
     assert "MVP flow" in response.text
     assert "Whisper model" in response.text
-    assert "Copy transcript" in response.text
+    assert "Copy text" in response.text
     assert "Save to" in response.text
     assert "Name template" in response.text
     assert "If exists" in response.text
@@ -145,7 +145,7 @@ def test_static_index_is_available(tmp_path):
     assert "Import URLs" in response.text
     assert "Start queue" in response.text
     assert "Analyze course" in response.text
-    assert "Udemy course export" in response.text
+    assert "Course export" in response.text
     assert "Chrome session" in response.text
     assert "Manual cookies.txt" in response.text
     assert "Recent results" in response.text
@@ -176,7 +176,7 @@ def test_static_javascript_is_available(tmp_path):
     assert "cancelDownloadButton" in response.text
     assert "cancelTranscribeButton" in response.text
     assert "progress_percent" in response.text
-    assert "Progress:" in response.text
+    assert "progress-track" in response.text
     assert "toggleCancelButton" in response.text
     assert "copySummaryButton" in response.text
     assert "selectedFormatSummary" in response.text
@@ -185,7 +185,7 @@ def test_static_javascript_is_available(tmp_path):
     assert "File required" in response.text
     assert "API unavailable" in response.text
     assert "canTranscribeSelectedFormat" in response.text
-    assert "Downloads with audio" in response.text
+    assert "humanStatusLabel" in response.text
     assert "DEFAULT_DOWNLOAD_OUTPUT_DIR" in response.text
     assert "output_base_dir" in response.text
     assert "output_template" in response.text

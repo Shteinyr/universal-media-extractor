@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-08-05 - Commercial Block 14 Public Beta UI Readiness
+
+- Polished the existing static UI toward a clearer public beta surface without adding product features or changing API contracts.
+- Reworked mode tabs into compact Link/File/Batch/Course choices and marked Course as internal/experimental.
+- Simplified empty/loading states, download/transcript result cards, batch queue labels, job/progress display, and primary error titles.
+- Updated browser smoke expectations and saved screenshots under `proof/commercial_block_14_ui_readiness/`.
+- Ran `node --check`, `python3 -m py_compile scripts/browser_smoke.py`, and `.venv/bin/python -m pytest -q`; result: 195 passed.
+
 ## 2026-08-05 - Commercial Block 12 Payment And Licensing Prep
 
 - Prepared Lemon Squeezy pre-approval request draft.

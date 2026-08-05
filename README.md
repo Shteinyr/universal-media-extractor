@@ -1,6 +1,6 @@
 # Universal Media Extractor & Transcriber
 
-Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, and Commercial Blocks 2-13 are completed or prepared as far as possible without external Apple/payment provider access.
+Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, and Commercial Blocks 2-14 are completed or prepared as far as possible without external Apple/payment provider access.
 
 This project is evaluating whether a local web app can accept a URL or local audio/video file, analyze available media variants, extract or download selected outputs, transcribe audio locally, and save structured results without paid APIs or cloud services.
 
@@ -49,6 +49,7 @@ Commercial foundation docs:
 - `docs/PAYMENT_LICENSING_USER_DECISIONS.md`
 
 - `docs/COMMERCIAL_BLOCK_13_BATCH_QUEUE_FOUNDATION.md`
+- `docs/COMMERCIAL_BLOCK_14_PUBLIC_BETA_UI_READINESS.md`
 
 Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1`. In that mode, internal/experimental Course Mode is hidden from the static UI by default.
 
@@ -205,6 +206,7 @@ Commercial Block 12 prepared the payment-provider and licensing documents withou
 - `docs/PAYMENT_LICENSING_USER_DECISIONS.md`
 
 - `docs/COMMERCIAL_BLOCK_13_BATCH_QUEUE_FOUNDATION.md`
+- `docs/COMMERCIAL_BLOCK_14_PUBLIC_BETA_UI_READINESS.md`
 
 Current decision: request Lemon Squeezy pre-approval first, keep Stripe as fallback, and do not implement checkout/webhooks/license activation until provider approval and user business details are ready.
 
@@ -777,9 +779,9 @@ Implemented:
 - transcription action after successful download;
 - generated-files card;
 - transcript preview;
-- `Copy transcript`;
-- `Copy summary prompt`;
-- `Copy output path`.
+- `Copy text`;
+- `Copy prompt`;
+- `Copy folder path`.
 
 The UI reuses existing endpoints:
 

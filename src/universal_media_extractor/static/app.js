@@ -893,7 +893,7 @@ function showBatchPanel() {
   loadingState.classList.add("hidden");
   emptyState.classList.add("hidden");
   resultContent.classList.remove("hidden");
-  renderSourceSummary({ title: "Batch queue", source_type: "url", extractor: "local queue" });
+  renderSourceSummary({ title: "Batch downloads", source_type: "url", extractor: "local" });
   formatPicker.classList.add("hidden");
   downloadPanel.classList.add("hidden");
   transcriptPanel.classList.add("hidden");
@@ -930,7 +930,8 @@ function renderBatchList(batch) {
     const title = document.createElement("strong");
     title.textContent = item.source_title || item.title || compactUrl(item.source_url);
     const meta = document.createElement("span");
-    meta.textContent = batch ? `${item.status}${item.job_id ? ` · ${item.job_id}` : ""}` : item.source_url;
+    meta.textContent = batch ? humanBatchItemMeta(item) : compactUrl(item.source_url);
+    meta.title = item.source_url || "";
     main.append(title, meta);
     row.append(checkbox, main);
     batchList.appendChild(row);
@@ -1020,31 +1021,27 @@ async function cancelActiveBatch() {
   }
 }
 
+
 function renderBatchStatus(batch) {
   batchPanel.classList.remove("hidden");
   batchResult.classList.remove("hidden");
   batchResult.innerHTML = "";
-  const title = document.createElement("strong");
-  title.textContent = `Queue: ${batch.status || "unknown"}`;
-  batchResult.appendChild(title);
+  const status = batch.status || "unknown";
+  batchResult.appendChild(statusHeading(`Queue ${humanStatusLabel(status).toLowerCase()}`, status));
+
   const summary = document.createElement("p");
   summary.className = "muted";
   summary.textContent = [
-    `${batch.succeeded_count || 0} done`,
-    `${batch.failed_count || 0} failed`,
-    `${batch.running_count || 0} running`,
-    `${batch.queued_count || 0} queued`,
+    `${batch.succeeded_count || 0} saved`,
+    batch.failed_count ? `${batch.failed_count} failed` : "",
+    batch.running_count ? `${batch.running_count} running` : "",
+    batch.queued_count ? `${batch.queued_count} waiting` : "",
     BATCH_PRESET_LABELS[batch.preset] || batch.preset,
   ].filter(Boolean).join(" · ");
   batchResult.appendChild(summary);
+
   renderBatchList(batch);
-  const notices = [...(batch.errors || []), ...(batch.warnings || [])];
-  notices.forEach((notice) => {
-    const item = document.createElement("p");
-    item.className = "muted";
-    item.textContent = `${notice.code || "notice"}: ${notice.message || "No details."}`;
-    batchResult.appendChild(item);
-  });
+  appendNoticeLines(batchResult, [...(batch.errors || []), ...(batch.warnings || [])]);
   batchRetryButton.classList.toggle("hidden", !(batch.failed_count > 0));
   batchCancelButton.classList.toggle("hidden", !["queued", "running"].includes(batch.status));
   if (["succeeded", "failed", "cancelled"].includes(batch.status)) {
@@ -1119,7 +1116,7 @@ function renderLocalAnalyzeResult(result) {
   emptyState.classList.add("hidden");
   resultContent.classList.remove("hidden");
   apiStatus.textContent = result.errors?.length
-    ? `Local analysis returned ${result.errors.length} error${result.errors.length === 1 ? "" : "s"}`
+    ? "Local file needs attention."
     : "Local file analyzed.";
 
   renderSourceSummary({
@@ -1150,7 +1147,7 @@ function renderCourseAnalyzeResponse(data) {
   emptyState.classList.add("hidden");
   resultContent.classList.remove("hidden");
   apiStatus.textContent = result.errors?.length
-    ? `Course analysis returned ${result.errors.length} error${result.errors.length === 1 ? "" : "s"}`
+    ? "Course analysis needs attention."
     : "Course analyzed.";
 
   renderSourceSummary({
@@ -1260,10 +1257,7 @@ function renderAnalyzeResponse(data) {
   loadingState.classList.add("hidden");
   emptyState.classList.add("hidden");
   resultContent.classList.remove("hidden");
-  apiStatus.textContent =
-    resultErrors.length > 0
-      ? `Analysis returned ${resultErrors.length} error${resultErrors.length === 1 ? "" : "s"}`
-      : `Last job ${data.job.job_id}: ${data.job.status}`;
+  apiStatus.textContent = resultErrors.length > 0 ? "Analysis needs attention." : "Analysis complete.";
 
   renderSourceSummary(result);
   renderFormatPicker(result);
@@ -1559,7 +1553,7 @@ function resetDownloadSelection() {
     downloadDuplicatePolicySelect.value = "rename";
   }
   selectedFormatLabel.textContent = "No format selected";
-  selectedFormatSummary.textContent = "Select a format row to continue.";
+  selectedFormatSummary.textContent = "Choose a preset to continue.";
   downloadButton.disabled = true;
   downloadButton.textContent = "Download selected";
   cancelDownloadButton.classList.add("hidden");
@@ -1681,22 +1675,102 @@ function nonTranscribableDownloadMessage() {
   return "This output cannot be transcribed.";
 }
 
+function statusClass(status) {
+  if (status === "succeeded") {
+    return "success";
+  }
+  if (["failed", "cancelled", "blocked"].includes(status)) {
+    return "failed";
+  }
+  return "running";
+}
+
+function humanStatusLabel(status) {
+  const labels = {
+    queued: "Queued",
+    running: "Working",
+    succeeded: "Saved",
+    failed: "Needs attention",
+    cancelled: "Cancelled",
+    blocked: "Blocked",
+  };
+  return labels[status] || "Working";
+}
+
+function humanStepLabel(step) {
+  const value = String(step || "queued")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  return value || "Queued";
+}
+
+function statusHeading(text, status) {
+  const title = document.createElement("strong");
+  title.className = `status-title ${statusClass(status)}`;
+  title.textContent = text;
+  return title;
+}
+
+function compactPathLine(label, value, { useFileName = false } = {}) {
+  const line = document.createElement("p");
+  const text = document.createElement("span");
+  text.className = "result-path";
+  text.textContent = useFileName ? fileName(value) : value;
+  text.title = value;
+  line.append(`${label}: `, text);
+  return line;
+}
+
+function appendNoticeLines(container, notices) {
+  notices.forEach((notice) => {
+    const item = document.createElement("p");
+    item.className = "muted";
+    item.textContent = notice.message || notice.suggested_user_action || humanNoticeTitle(notice.code);
+    if (notice.technical_details) {
+      item.title = notice.technical_details;
+    }
+    container.appendChild(item);
+  });
+}
+
+function humanNoticeTitle(code) {
+  const titles = {
+    unsupported_source: "Unsupported source",
+    login_required: "Sign-in required",
+    cookies_required: "Chrome session unavailable",
+    network_error: "Connection issue",
+    timeout: "Timed out",
+    ytdlp_not_found: "Media engine missing",
+    extractor_failed: "Source failed",
+    invalid_output: "Invalid analyzer output",
+    api_error: "Local API error",
+    api_unavailable: "Local API unavailable",
+    no_format_selected: "Choose an output first",
+    invalid_input_file: "Missing media file",
+    unknown_error: "Something went wrong",
+  };
+  return titles[code] || String(code || "Notice").replace(/_/g, " ");
+}
+
+function humanBatchItemMeta(item) {
+  const parts = [humanStatusLabel(item.status)];
+  if (item.error?.message) {
+    parts.push(item.error.message);
+  }
+  return parts.filter(Boolean).join(" · ");
+}
+
+
 function renderDownloadResult(result) {
   latestDownloadResult = result;
   downloadResult.classList.remove("hidden");
   downloadResult.innerHTML = "";
 
-  const title = document.createElement("strong");
-  title.textContent = `Status: ${result.status || "unknown"}`;
-  downloadResult.appendChild(title);
+  const status = result.status || "unknown";
+  downloadResult.appendChild(statusHeading(status === "succeeded" ? "Download saved" : `Download ${humanStatusLabel(status).toLowerCase()}`, status));
 
   if (result.output_dir) {
-    const output = document.createElement("p");
-    output.textContent = `Output: ${result.output_dir}`;
-    downloadResult.appendChild(output);
-  }
-
-  if (result.output_dir) {
+    downloadResult.appendChild(compactPathLine("Folder", result.output_dir, { useFileName: true }));
     copyOutputButton.disabled = false;
     if (revealOutputButton) {
       revealOutputButton.disabled = false;
@@ -1708,7 +1782,8 @@ function renderDownloadResult(result) {
     const list = document.createElement("ul");
     files.forEach((file) => {
       const item = document.createElement("li");
-      item.textContent = file;
+      item.textContent = fileName(file);
+      item.title = file;
       list.appendChild(item);
     });
     downloadResult.appendChild(list);
@@ -1729,32 +1804,24 @@ function renderDownloadResult(result) {
     }
   }
 
-  const notices = [...(result.errors || []), ...(result.warnings || [])];
-  notices.forEach((notice) => {
-    const item = document.createElement("p");
-    item.className = "muted";
-    item.textContent = `${notice.code || "notice"}: ${notice.message || "No details."}`;
-    downloadResult.appendChild(item);
-  });
+  appendNoticeLines(downloadResult, [...(result.errors || []), ...(result.warnings || [])]);
 
   if ((result.errors || []).length > 0) {
     updateFlowStep("download");
   }
 }
 
+
 function renderCourseDownloadResult(result) {
   latestDownloadResult = result;
   courseDownloadResult.classList.remove("hidden");
   courseDownloadResult.innerHTML = "";
 
-  const title = document.createElement("strong");
-  title.textContent = `Status: ${result.status || "unknown"}`;
-  courseDownloadResult.appendChild(title);
+  const status = result.status || "unknown";
+  courseDownloadResult.appendChild(statusHeading(status === "succeeded" ? "Course saved" : `Course ${humanStatusLabel(status).toLowerCase()}`, status));
 
   if (result.output_dir) {
-    const output = document.createElement("p");
-    output.textContent = `Output: ${result.output_dir}`;
-    courseDownloadResult.appendChild(output);
+    courseDownloadResult.appendChild(compactPathLine("Folder", result.output_dir, { useFileName: true }));
     copyOutputButton.disabled = false;
     if (revealOutputButton) {
       revealOutputButton.disabled = false;
@@ -1778,13 +1845,7 @@ function renderCourseDownloadResult(result) {
     courseDownloadResult.appendChild(list);
   }
 
-  const notices = [...(result.errors || []), ...(result.warnings || [])];
-  notices.forEach((notice) => {
-    const item = document.createElement("p");
-    item.className = "muted";
-    item.textContent = `${notice.code || "notice"}: ${notice.message || "No details."}`;
-    courseDownloadResult.appendChild(item);
-  });
+  appendNoticeLines(courseDownloadResult, [...(result.errors || []), ...(result.warnings || [])]);
 
   if ((result.errors || []).length === 0 && result.status === "succeeded") {
     updateFlowStep("result");
@@ -1792,37 +1853,38 @@ function renderCourseDownloadResult(result) {
   }
 }
 
+
 function renderJobStatus(container, job, label) {
   container.classList.remove("hidden");
   container.innerHTML = "";
 
-  const title = document.createElement("strong");
-  title.textContent = `${label} job: ${job.status || "unknown"}`;
-  container.appendChild(title);
+  const status = job.status || "queued";
+  container.appendChild(statusHeading(`${label}: ${humanStatusLabel(status)}`, status));
 
   const step = document.createElement("p");
-  step.textContent = `Step: ${job.current_step || job.status || "queued"}`;
+  step.className = "job-detail";
+  step.textContent = humanStepLabel(job.current_step || status);
   container.appendChild(step);
 
   if (Number.isFinite(job.progress_percent)) {
-    const progress = document.createElement("p");
-    progress.className = "muted";
-    progress.textContent = `Progress: ${Math.round(job.progress_percent)}%`;
-    container.appendChild(progress);
+    const track = document.createElement("div");
+    track.className = "progress-track";
+    const fill = document.createElement("div");
+    fill.className = "progress-fill";
+    fill.style.width = `${Math.max(0, Math.min(100, Math.round(job.progress_percent)))}%`;
+    track.appendChild(fill);
+    container.appendChild(track);
   }
 
   if (job.cancel_requested) {
     const cancel = document.createElement("p");
     cancel.className = "muted";
-    cancel.textContent = "Cancel requested. The active subprocess will be stopped when possible.";
+    cancel.textContent = "Cancel requested. Stopping when possible.";
     container.appendChild(cancel);
   }
 
   if (job.error) {
-    const error = document.createElement("p");
-    error.className = "muted";
-    error.textContent = `${job.error.code || "error"}: ${job.error.message || "Job failed."}`;
-    container.appendChild(error);
+    appendNoticeLines(container, [job.error]);
   }
 }
 
@@ -1890,31 +1952,21 @@ function setLocalTranscribeLoading(isLoading) {
   }
 }
 
+
 function renderTranscriptResult(result, container = transcriptResult) {
   latestTranscriptResult = result;
   container.classList.remove("hidden");
   container.innerHTML = "";
 
-  const title = document.createElement("strong");
-  title.textContent = `Status: ${result.status || "unknown"}`;
-  container.appendChild(title);
+  const status = result.status || "unknown";
+  container.appendChild(statusHeading(status === "succeeded" ? "Transcript saved" : `Transcript ${humanStatusLabel(status).toLowerCase()}`, status));
 
   const transcriptPath = selectedTranscriptPath(result);
   if (transcriptPath) {
-    const item = document.createElement("p");
-    item.className = "muted";
-    item.textContent = `Saved: ${fileName(transcriptPath)}`;
-    item.title = transcriptPath;
-    container.appendChild(item);
+    container.appendChild(compactPathLine("File", transcriptPath, { useFileName: true }));
   }
 
-  const notices = [...(result.errors || []), ...(result.warnings || [])];
-  notices.forEach((notice) => {
-    const item = document.createElement("p");
-    item.className = "muted";
-    item.textContent = `${notice.code || "notice"}: ${notice.message || "No details."}`;
-    container.appendChild(item);
-  });
+  appendNoticeLines(container, [...(result.errors || []), ...(result.warnings || [])]);
 
   if ((result.errors || []).length === 0 && result.status === "succeeded") {
     renderFilesResult(result);
@@ -1942,7 +1994,7 @@ function renderFilesResult(result) {
     const name = document.createElement("strong");
     name.textContent = label;
     const path = document.createElement("span");
-    path.textContent = label === "Folder" ? value : fileName(value);
+    path.textContent = fileName(value);
     path.title = value;
     row.append(name, path);
     filesList.appendChild(row);
@@ -2115,7 +2167,7 @@ function simpleFormatHelper(option, category) {
     return formats ? `Formats: ${formats}` : "";
   }
   if (category === "video" && option.type === "video") {
-    return "Downloads with audio";
+    return "";
   }
   return "";
 }
@@ -2248,6 +2300,7 @@ function suggestedActionForCode(code) {
   return actions[code] || "";
 }
 
+
 function renderNoticePanel(panel, list, notices) {
   list.innerHTML = "";
   panel.classList.toggle("hidden", notices.length === 0);
@@ -2256,14 +2309,14 @@ function renderNoticePanel(panel, list, notices) {
     const item = document.createElement("div");
     item.className = "notice-item";
 
-    const code = document.createElement("span");
-    code.className = "notice-code";
-    code.textContent = notice.code || notice.severity || "notice";
+    const title = document.createElement("span");
+    title.className = "notice-code";
+    title.textContent = humanNoticeTitle(notice.code || notice.severity);
 
     const message = document.createElement("div");
     message.textContent = notice.message || notice.suggested_user_action || "No details.";
 
-    item.append(code, message);
+    item.append(title, message);
     if (notice.suggested_user_action) {
       const action = document.createElement("p");
       action.className = "muted";

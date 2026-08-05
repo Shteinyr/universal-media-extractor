@@ -16,10 +16,22 @@
         </header>
 
         <div class="mode-tabs" role="tablist" aria-label="Input mode">
-          <button id="url-mode-button" type="button" class="mode-tab is-active" aria-pressed="true">URL mode</button>
-          <button id="local-mode-button" type="button" class="mode-tab" aria-pressed="false">Local file mode</button>
-          <button id="batch-mode-button" type="button" class="mode-tab" aria-pressed="false">Batch mode</button>
-          <button id="course-mode-button" type="button" class="mode-tab" aria-pressed="false">Course mode</button>
+          <button id="url-mode-button" type="button" class="mode-tab is-active" aria-label="URL mode" aria-pressed="true">
+            <span class="mode-tab-title">Link</span>
+            <span class="mode-tab-subtitle">one URL</span>
+          </button>
+          <button id="local-mode-button" type="button" class="mode-tab" aria-label="Local file mode" aria-pressed="false">
+            <span class="mode-tab-title">File</span>
+            <span class="mode-tab-subtitle">local media</span>
+          </button>
+          <button id="batch-mode-button" type="button" class="mode-tab" aria-label="Batch mode" aria-pressed="false">
+            <span class="mode-tab-title">Batch</span>
+            <span class="mode-tab-subtitle">URL list</span>
+          </button>
+          <button id="course-mode-button" type="button" class="mode-tab" aria-label="Course mode" aria-pressed="false">
+            <span class="mode-tab-title">Course</span>
+            <span class="mode-tab-subtitle">internal</span>
+          </button>
         </div>
 
         <form class="input-card" id="analyze-form">
@@ -93,7 +105,7 @@
               <option value="manual_cookies">Manual cookies.txt</option>
             </select>
           </label>
-          <p class="hint">Open Udemy in Chrome and make sure you are signed in.</p>
+          <p class="hint">Experimental internal mode. Open Udemy in Chrome and make sure you are signed in.</p>
           <div class="advanced-field hidden" id="course-manual-cookies-panel">
             <label class="path-field" for="course-cookies-path">
               Manual cookies.txt
@@ -136,14 +148,14 @@
       <section class="result-panel" aria-live="polite" aria-labelledby="result-title">
         <div class="empty-result" id="empty-state">
           <h2 id="result-title">Ready to analyze</h2>
-              <p>Paste a URL or choose a local file. The app will show clean output options without downloading first.</p>
+          <p>Paste a link, choose a file, or import URLs. Results stay local.</p>
         </div>
 
         <div class="loading-state hidden" id="loading-state" role="status" aria-live="polite">
           <div class="loader" aria-hidden="true"></div>
           <div>
             <h2>Analyzing...</h2>
-            <p>Waiting for the local API. No media download.</p>
+            <p>Working locally. No cloud upload.</p>
           </div>
         </div>
 
@@ -167,7 +179,7 @@
             <div class="group-header compact-header">
               <div>
                 <h3 id="format-picker-title">Choose preset</h3>
-                <p class="muted compact-copy">Clean outputs. Technical streams stay hidden.</p>
+                <p class="muted compact-copy">Clean outputs. Technical details stay hidden.</p>
               </div>
             </div>
             <p class="empty-line" id="format-picker-empty">Analyze a source to see presets.</p>
@@ -201,7 +213,7 @@
 
           <section class="download-card hidden" id="download-panel" aria-labelledby="download-title">
             <div class="group-header">
-              <h3 id="download-title">Download selected</h3>
+              <h3 id="download-title">Save selected output</h3>
               <span class="count" id="selected-format-label">No format selected</span>
             </div>
             <div class="selection-summary" id="selected-format-summary">
@@ -235,7 +247,7 @@
 
           <section class="download-card hidden" id="transcript-panel" aria-labelledby="transcript-title">
             <div class="group-header">
-              <h3 id="transcript-title">Transcript</h3>
+              <h3 id="transcript-title">Create transcript</h3>
               <span class="count" id="transcript-file-label">No file selected</span>
             </div>
             <label class="model-field" for="whisper-model">
@@ -293,7 +305,7 @@
 
           <section class="download-card hidden" id="batch-panel" aria-labelledby="batch-title">
             <div class="group-header">
-              <h3 id="batch-title">Batch queue</h3>
+              <h3 id="batch-title">Batch downloads</h3>
               <span class="count" id="batch-count">No URLs</span>
             </div>
             <div id="batch-import-summary" class="muted"></div>
@@ -310,7 +322,7 @@
                   <option value="archive_pack" disabled>Archive Pack - planned</option>
                 </select>
               </label>
-              <label class="model-field" for="batch-concurrency">Concurrency
+              <label class="model-field" for="batch-concurrency">Speed
                 <select id="batch-concurrency">
                   <option value="1" selected>1 at a time</option>
                   <option value="2">2 at a time</option>
@@ -331,7 +343,7 @@
 
           <section class="download-card hidden" id="course-panel" aria-labelledby="course-title">
             <div class="group-header">
-              <h3 id="course-title">Udemy course export</h3>
+              <h3 id="course-title">Course export</h3>
               <span class="count" id="course-lecture-count">No lectures loaded</span>
             </div>
             <div id="course-summary-list"></div>
@@ -367,14 +379,14 @@
 
           <section class="download-card hidden" id="files-panel" aria-labelledby="files-title">
             <div class="group-header">
-              <h3 id="files-title">Generated files</h3>
+              <h3 id="files-title">Saved files</h3>
               <span class="count" id="output-dir-label">No output yet</span>
             </div>
             <div id="files-list"></div>
             <div class="actions-row">
-              <button id="copy-transcript-button" type="button" disabled>Copy transcript</button>
-              <button id="copy-summary-button" type="button" class="hidden" disabled>Copy summary prompt</button>
-              <button id="copy-output-button" type="button" disabled>Copy output path</button>
+              <button id="copy-transcript-button" type="button" disabled>Copy text</button>
+              <button id="copy-summary-button" type="button" class="hidden" disabled>Copy prompt</button>
+              <button id="copy-output-button" type="button" disabled>Copy folder path</button>
               <button id="reveal-output-button" type="button" disabled>Reveal in Finder</button>
             </div>
             <div class="preview-card hidden" id="transcript-preview-card">

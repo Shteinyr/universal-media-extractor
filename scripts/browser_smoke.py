@@ -93,14 +93,14 @@ def run_full_flow(page: Page, proof_dir: Path) -> None:
     first_audio = page.get_by_role("button", name=re.compile("Audio M4A"))
     first_audio.click()
     page.locator("#download-button").click()
-    wait_for_status_text(page, "#download-result", "Status: succeeded", timeout_ms=240_000)
+    wait_for_status_text(page, "#download-result", "Download saved", timeout_ms=240_000)
     page.screenshot(path=proof_dir / "ui_download_result.png", full_page=True)
 
     page.locator("#whisper-model").select_option("tiny")
     page.locator("#transcribe-button").click()
-    wait_for_status_text(page, "#transcript-result", "Status: succeeded", timeout_ms=900_000)
-    assert_visible_text(page, "Generated files")
-    assert_visible_text(page, "Summary prompt")
+    wait_for_status_text(page, "#transcript-result", "Transcript saved", timeout_ms=900_000)
+    assert_visible_text(page, "Saved files")
+    assert_visible_text(page, "Copy prompt")
     page.screenshot(path=proof_dir / "ui_transcribe_result.png", full_page=True)
 
 
