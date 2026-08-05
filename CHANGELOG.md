@@ -8,6 +8,7 @@
 - Created user decision checklist required before real checkout or licensing implementation.
 - Added documentation regression tests for the payment/licensing prep docs.
 - Confirmed no checkout, provider API, webhook, license server, activation UI, or enforcement code was added.
+- Closed GitHub issues #22 and #23 and marked them Done in the commercial roadmap project.
 
 ## 2026-08-05 - Commercial Block 2 Errors And Diagnostics Foundation
 

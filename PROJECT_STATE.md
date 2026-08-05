@@ -106,7 +106,7 @@ Commercial Block 10 prepares macOS public release docs and validation gates arou
 
 Commercial Block 11 prepares the public founder launch surface for issues #19-#21: static landing page in `site/`, `docs/FOUNDER_LAUNCH_SITE_COPY.md`, `docs/BETA_ONBOARDING_COPY.md`, `docs/PRICING_AND_PLANS.md`, and `docs/SUPPORT_PAGE_DRAFT.md`. Issues #19, #20, and #21 are closed and marked Done in the project. No checkout, license activation, Apple signing, Windows build, or new product feature was added.
 
-Commercial Block 12 prepares payment provider pre-approval and licensing model drafts for issues #22-#23. It adds Lemon Squeezy pre-approval copy, Stripe fallback risk review, a 3-device/offline-grace licensing model draft, and a user decision checklist. No checkout, payment provider API, webhook, license server, or license enforcement code was added.
+Commercial Block 12 prepares payment provider pre-approval and licensing model drafts for issues #22-#23. It adds Lemon Squeezy pre-approval copy, Stripe fallback risk review, a 3-device/offline-grace licensing model draft, and a user decision checklist. Issues #22 and #23 are closed and marked Done. No checkout, payment provider API, webhook, license server, or license enforcement code was added.
 
 
 `PROJECT_CONTEXT.md` now exists as the long-term project context file. Read it before large tasks and update it after completed large blocks.

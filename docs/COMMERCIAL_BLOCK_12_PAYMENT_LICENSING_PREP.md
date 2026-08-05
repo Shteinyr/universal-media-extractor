@@ -4,8 +4,8 @@ Status: completed as planning/pre-approval package. No checkout, provider API in
 
 GitHub issues:
 
-- #22 `[P0] Prepare licensing model`
-- #23 `[P0] Prepare payment provider pre-approval`
+- #22 `[P0] Prepare licensing model` - closed / Done
+- #23 `[P0] Prepare payment provider pre-approval` - closed / Done
 
 ## Goal
 

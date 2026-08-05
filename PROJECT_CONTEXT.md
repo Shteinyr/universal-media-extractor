@@ -79,7 +79,7 @@ Commercial direction after GPT Pro strategy review:
 
 Commercial Block 12: Payment Provider Pre-Approval And Licensing Prep - done.
 
-Result: Lemon Squeezy pre-approval request, Stripe fallback risk review, licensing model draft, and user decision checklist are prepared. Issues #22 and #23 are ready to close after GitHub tracking update. No checkout, webhooks, license server, license activation UI, or license enforcement code was added.
+Result: Lemon Squeezy pre-approval request, Stripe fallback risk review, licensing model draft, and user decision checklist are prepared. Issues #22 and #23 are closed and marked Done in the GitHub Project. No checkout, webhooks, license server, license activation UI, or license enforcement code was added.
 
 Previous completed block:
 
