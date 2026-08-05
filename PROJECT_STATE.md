@@ -80,6 +80,8 @@ Commercial strategy docs:
 - `docs/COMMERCIALIZATION_EXECUTION_PLAN.md`
 - `docs/GITHUB_COMMERCIAL_BACKLOG.md`
 
+GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`. It contains 40 issues across 8 milestones.
+
 `PROJECT_CONTEXT.md` now exists as the long-term project context file. Read it before large tasks and update it after completed large blocks.
 
 Block 11 created `scripts/run_desktop.py` using `pywebview`. The launcher starts the existing FastAPI app locally on `127.0.0.1`, opens the static UI in a desktop window, chooses the next local port if `8000` is busy, and shuts down its owned backend after the window closes. Browser mode through `scripts/run_api.py` remains unchanged.

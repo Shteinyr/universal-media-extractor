@@ -8,6 +8,7 @@
 - Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported and converted into an execution backlog.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
+- GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
 
 ## Product Goal
 

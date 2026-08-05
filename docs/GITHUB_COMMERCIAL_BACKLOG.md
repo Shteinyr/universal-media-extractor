@@ -13,28 +13,32 @@ Repository:
 Shteinyr/universal-media-extractor
 ```
 
-GitHub issue/project creation status:
+Repository URL:
 
-- GitHub connector returned `403 Resource not accessible by integration`.
-- Local `gh auth status` reports that the `Shteinyr` token is invalid.
-- GitHub Projects require a token with `project` scope.
+`https://github.com/Shteinyr/universal-media-extractor`
 
-Required before automatic GitHub project/issue creation:
+GitHub Project:
 
-```bash
-gh auth login -h github.com
-gh auth refresh -s project
-```
+`Universal Media Extractor Commercial Roadmap`
 
-After re-authentication, create a GitHub Project:
+Project URL:
 
-```bash
-gh project create --owner Shteinyr --title "Universal Media Extractor Commercial Roadmap"
-```
+`https://github.com/users/Shteinyr/projects/7`
+
+Created on 2026-08-05 using local `/opt/homebrew/bin/gh`.
+
+Current setup:
+
+- GitHub Project created and linked to the repository.
+- 8 milestones created.
+- Priority/Track/Release/Roadmap Status fields created.
+- 40 roadmap issues created.
+- All roadmap issues were added to the Project.
+- Project fields were populated through `gh project item-edit`, with `Roadmap Status=Backlog` for all initial items.
 
 ## Recommended GitHub Project Fields
 
-Status:
+Roadmap Status:
 
 - Backlog
 - Ready
@@ -42,6 +46,8 @@ Status:
 - Review
 - Done
 - Blocked
+
+GitHub default Status remains available as `Todo / In Progress / Done`, but roadmap tracking uses `Roadmap Status`.
 
 Priority:
 

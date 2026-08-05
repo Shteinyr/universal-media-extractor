@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-08-05 - GitHub Commercial Roadmap Setup
+
+- Created GitHub Project: `https://github.com/users/Shteinyr/projects/7`.
+- Linked the Project to `Shteinyr/universal-media-extractor`.
+- Created 8 commercial roadmap milestones.
+- Created roadmap labels for priority, track, and release.
+- Created 40 roadmap issues from the commercial plan.
+- Added all 40 issues to the Project.
+- Created and populated Project fields: `Priority`, `Track`, `Release`, and `Roadmap Status`.
+
 ## 2026-08-05 - Commercial Strategy Import
 
 - Saved the GPT Pro strategy document into `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.

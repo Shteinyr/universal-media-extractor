@@ -14,6 +14,8 @@ Roadmap v2 is recorded in `docs/ROADMAP_V2.md`. Blocks 1-11 are completed. A GPT
 
 Commercial direction: move toward a paid local desktop utility for macOS and Windows. The recommended public positioning is “Local Media Downloader & Organizer,” not “universal downloader for every site.” Udemy Course mode should stay internal/experimental unless separately approved for public release.
 
+GitHub commercial roadmap board: [https://github.com/users/Shteinyr/projects/7](https://github.com/users/Shteinyr/projects/7).
+
 Durable project context is recorded in `PROJECT_CONTEXT.md`. Read it before large tasks and update it after completed large blocks.
 
 ## Quick Start

@@ -298,9 +298,10 @@ Recommended GitHub issue groups:
 
 GitHub Project board status:
 
-- `gh` CLI token is currently invalid locally.
-- `gh project` requires a token with `project` scope.
-- Until re-authentication is done, track execution through GitHub issues and this document.
+- Project board created: `https://github.com/users/Shteinyr/projects/7`.
+- 40 roadmap issues created in `https://github.com/Shteinyr/universal-media-extractor`.
+- 8 milestones created.
+- Project fields `Priority`, `Track`, `Release`, and `Roadmap Status` are configured.
 
 ## Immediate Next Step
 
