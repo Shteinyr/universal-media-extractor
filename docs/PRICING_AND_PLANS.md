@@ -115,3 +115,16 @@ Do not build license enforcement until:
 - signed desktop builds exist;
 - activation/offline entitlement model is designed;
 - privacy policy/EULA language is reviewed.
+
+## Block 12 Payment/Licensing Prep
+
+Commercial Block 12 prepared the provider-review and licensing drafts, but payment remains disabled.
+
+Current planned order:
+
+1. Request Lemon Squeezy pre-approval using `docs/LEMON_SQUEEZY_PREAPPROVAL_REQUEST.md`.
+2. Keep Stripe as fallback using `docs/STRIPE_FALLBACK_RISK_REVIEW.md`.
+3. Confirm user/business decisions in `docs/PAYMENT_LICENSING_USER_DECISIONS.md`.
+4. Only after approval, design the actual checkout/license activation implementation.
+
+Licensing model draft: `docs/LICENSING_MODEL_DRAFT.md`.

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-08-05 - Commercial Block 12 Payment And Licensing Prep
+
+- Prepared Lemon Squeezy pre-approval request draft.
+- Prepared Stripe fallback risk review notes.
+- Prepared licensing model draft covering license keys, 3 devices, offline entitlement, grace period, device deactivation, and last eligible app version after update entitlement expiry.
+- Created user decision checklist required before real checkout or licensing implementation.
+- Added documentation regression tests for the payment/licensing prep docs.
+- Confirmed no checkout, provider API, webhook, license server, activation UI, or enforcement code was added.
+
 ## 2026-08-05 - Commercial Block 2 Errors And Diagnostics Foundation
 
 - Added normalized user-facing error categories for DRM, login/cookies, region restriction, private/deleted sources, missing formats, network, disk, permission, and outdated engines.

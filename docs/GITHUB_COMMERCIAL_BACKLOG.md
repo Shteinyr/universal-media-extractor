@@ -528,3 +528,15 @@ Documentation:
 - Status: readiness prepared, issue remains open.
 - Added DMG build script, tests, install/uninstall docs, checksum generation, and local unsigned DMG proof.
 - Current blocker: final public DMG must include a signed/notarized app, which depends on issue #13.
+
+## Commercial Block 12 Completion Notes
+
+Issues #22 and #23 are covered by:
+
+- `docs/COMMERCIAL_BLOCK_12_PAYMENT_LICENSING_PREP.md`
+- `docs/LEMON_SQUEEZY_PREAPPROVAL_REQUEST.md`
+- `docs/STRIPE_FALLBACK_RISK_REVIEW.md`
+- `docs/LICENSING_MODEL_DRAFT.md`
+- `docs/PAYMENT_LICENSING_USER_DECISIONS.md`
+
+Implementation remains intentionally blocked until provider approval and user business details are available.

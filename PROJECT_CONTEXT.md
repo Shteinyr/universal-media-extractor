@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-11 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, and founder launch surface.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-12 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -77,6 +77,12 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
+Commercial Block 12: Payment Provider Pre-Approval And Licensing Prep - done.
+
+Result: Lemon Squeezy pre-approval request, Stripe fallback risk review, licensing model draft, and user decision checklist are prepared. Issues #22 and #23 are ready to close after GitHub tracking update. No checkout, webhooks, license server, license activation UI, or license enforcement code was added.
+
+Previous completed block:
+
 Commercial Block 11: Founder Launch Surface - done.
 
 Result: public static site, founder launch copy, beta onboarding copy, draft pricing/plans, and support page draft are prepared. GitHub issues #19, #20, and #21 are closed and marked Done in the project. No checkout, license activation, Apple signing, Windows build, or new downloader feature was added.
@@ -123,7 +129,7 @@ Public Beta Readiness
 
 Candidate issues: production packaging foundations, queue/batch foundation, and beta-ready QA/documentation. Output templates and duplicate handling are completed in issue #11.
 
-Do not start the next block until the user explicitly confirms.
+Do not start the next block until the user explicitly confirms. Do not start checkout or licensing enforcement until payment provider approval and user business details are ready.
 
 ## Later / Optional
 

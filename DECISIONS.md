@@ -211,3 +211,10 @@
 - Public site copy must show best-effort source limitations before download CTAs.
 - Udemy Course Mode must not be advertised on the public founder launch site.
 - Free / Founder Pro / Pro / Business terms remain drafts until payment provider approval and licensing design are complete.
+## 2026-08-05 - Payment Provider And Licensing Prep
+
+- Lemon Squeezy is the preferred first payment-provider candidate because it supports digital software sales, merchant-of-record handling, and license keys with activation limits.
+- Stripe remains a fallback only and requires explicit risk review before any checkout integration.
+- Checkout, webhooks, license activation UI, license server, and enforcement code must not be implemented before provider approval and user business details are available.
+- Draft licensing model: license key, 3 active devices for Pro/Founder Pro, offline entitlement, 30-day grace period, deactivate-device behavior, and keeping the last eligible version after the update period expires.
+- Udemy Course Mode remains internal/experimental and hidden from public commercial builds/marketing during provider review.
