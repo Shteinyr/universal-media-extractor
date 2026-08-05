@@ -131,3 +131,11 @@
 - Public commercial builds can set `UME_PUBLIC_PRODUCT_MODE=1` to hide Course Mode in the static UI by default.
 - Legal, privacy, refund, and public limitation documents are product drafts and must be reviewed before paid public launch.
 - Next commercial work should come from the GitHub commercial roadmap, not ad hoc feature expansion.
+
+## 2026-08-05 - Commercial Block 2 Errors And Diagnostics
+
+- Public beta errors should lead with stable user-facing categories, not raw CLI text.
+- Technical CLI output may remain available as collapsible/redacted diagnostics.
+- Diagnostics bundles are local JSON responses only; they do not upload support data.
+- Diagnostics must exclude cookies, tokens, passwords, transcripts, full URLs, and local filesystem paths by default.
+- Commercial Block 2 intentionally does not start payments, stores, signing, packaging, SQLite jobs/history, batch, licensing, or roadmap changes.

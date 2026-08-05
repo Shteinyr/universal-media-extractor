@@ -29,6 +29,7 @@ from universal_media_extractor.api.schemas import (
     UdemyCourseDownloadRequest,
 )
 from universal_media_extractor.models import (
+    DiagnosticBundle,
     ErrorState,
     Job,
     LocalFileAnalyzeResult,
@@ -39,6 +40,7 @@ from universal_media_extractor.models import (
 )
 from universal_media_extractor.services import (
     AnalyzeService,
+    DiagnosticsService,
     DownloadService,
     JobService,
     LocalFileMetadataService,
@@ -66,6 +68,7 @@ def create_app(
     )
     app.state.analyze_service = AnalyzeService()
     app.state.download_service = DownloadService()
+    app.state.diagnostics_service = DiagnosticsService()
     app.state.transcription_service = TranscriptionService()
     app.state.udemy_course_service = UdemyCourseService()
     app.state.local_file_metadata_service = LocalFileMetadataService()
@@ -295,6 +298,15 @@ def create_app(
             return job_service.cancel_job(job_id)
         except KeyError:
             raise HTTPException(status_code=404, detail="Job not found.") from None
+
+    @app.get("/diagnostics/jobs/{job_id}", response_model=DiagnosticBundle)
+    def job_diagnostics(job_id: str) -> DiagnosticBundle:
+        job_service: JobService = app.state.job_service
+        diagnostics_service: DiagnosticsService = app.state.diagnostics_service
+        job = job_service.get_job(job_id)
+        if job is None:
+            raise HTTPException(status_code=404, detail="Job not found.")
+        return diagnostics_service.build_job_bundle(job, app_version=app.version)
 
     return app
 

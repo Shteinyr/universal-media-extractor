@@ -27,6 +27,14 @@ Commercial foundation docs:
 
 Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1`. In that mode, internal/experimental Course Mode is hidden from the static UI by default.
 
+Commercial Block 2 adds public-beta error and diagnostics foundations. Failed jobs can be inspected locally through:
+
+```text
+GET /diagnostics/jobs/{job_id}
+```
+
+Diagnostics are redacted by default: no cookies, tokens, transcripts, full URLs, or local paths. Details are documented in `docs/COMMERCIAL_BLOCK_2_ERRORS_DIAGNOSTICS.md`.
+
 Durable project context is recorded in `PROJECT_CONTEXT.md`. Read it before large tasks and update it after completed large blocks.
 
 ## Quick Start

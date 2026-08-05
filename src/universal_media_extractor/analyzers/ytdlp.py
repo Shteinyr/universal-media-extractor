@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from universal_media_extractor.error_mapping import compact_details, normalize_cli_error
 from universal_media_extractor.models import (
     AccessState,
     AnalyzeResult,
@@ -52,7 +53,7 @@ def analyze_url_with_ytdlp(
             ErrorState(
                 code="timeout",
                 message="yt-dlp analysis timed out.",
-                technical_details=_compact_details(getattr(exc, "stderr", None)),
+                technical_details=compact_details(getattr(exc, "stderr", None)),
                 recoverable=True,
                 suggested_user_action="Try again later or use a shorter/public source.",
             ),
@@ -116,56 +117,21 @@ def _save_raw_json(raw: dict[str, Any], raw_output_dir: Path) -> str:
 
 
 def _classify_ytdlp_error(stderr: str | None, returncode: int) -> ErrorState:
-    details = _compact_details(stderr)
     haystack = (stderr or "").lower()
-
     if "unsupported url" in haystack or "no suitable extractor" in haystack:
         return ErrorState(
             code="unsupported_source",
             message="This source is not supported by yt-dlp.",
-            technical_details=details,
+            technical_details=compact_details(stderr),
             recoverable=False,
             suggested_user_action="Use a supported public URL or choose a local file.",
         )
-    if "timed out" in haystack or "timeout" in haystack:
-        return ErrorState(
-            code="network_error",
-            message="yt-dlp reported a network timeout.",
-            technical_details=details,
-            recoverable=True,
-            suggested_user_action="Check network access and retry.",
-        )
-    if "unable to download webpage" in haystack or "network" in haystack:
-        return ErrorState(
-            code="network_error",
-            message="yt-dlp could not access the source.",
-            technical_details=details,
-            recoverable=True,
-            suggested_user_action="Check the URL and network access, then retry.",
-        )
-    if "login" in haystack or "sign in" in haystack or "private" in haystack:
-        return ErrorState(
-            code="login_required",
-            message="This source appears to require login or private access.",
-            technical_details=details,
-            recoverable=True,
-            suggested_user_action="Use a public URL or wait for future manual login/cookies support.",
-        )
-    if "cookies" in haystack or "cookie" in haystack:
-        return ErrorState(
-            code="cookies_required",
-            message="This source appears to require cookies.",
-            technical_details=details,
-            recoverable=True,
-            suggested_user_action="Use a public URL or wait for future manual cookies support.",
-        )
-
-    return ErrorState(
-        code="extractor_failed",
-        message="yt-dlp analysis failed.",
-        technical_details=details or f"yt-dlp exited with code {returncode}.",
-        recoverable=True,
-        suggested_user_action="Retry analysis or inspect the URL/source availability.",
+    return normalize_cli_error(
+        stderr or f"yt-dlp exited with code {returncode}.",
+        default_code="extractor_failed",
+        default_message="yt-dlp analysis failed.",
+        default_suggested_user_action="Retry analysis or inspect the URL/source availability.",
+        engine="yt-dlp",
     )
 
 
@@ -196,16 +162,6 @@ def _error_result(url: str, error: ErrorState) -> AnalyzeResult:
         raw_reference_path=None,
         analyzed_at=datetime.now(timezone.utc),
     )
-
-
-def _compact_details(value: Any, max_length: int = 1200) -> str | None:
-    if value is None:
-        return None
-    text = value.decode("utf-8", errors="replace") if isinstance(value, bytes) else str(value)
-    text = text.strip()
-    if not text:
-        return None
-    return text[:max_length]
 
 
 def _safe_filename(value: str) -> str:

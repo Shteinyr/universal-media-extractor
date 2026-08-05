@@ -11,6 +11,7 @@ from universal_media_extractor.models.analyze import (
     UploaderInfo,
     WarningState,
 )
+from universal_media_extractor.models.diagnostics import DiagnosticBundle, DiagnosticLog
 from universal_media_extractor.models.download import (
     DownloadMode,
     DownloadRequest,
@@ -52,6 +53,8 @@ from universal_media_extractor.models.udemy import (
 __all__ = [
     "AccessState",
     "AnalyzeResult",
+    "DiagnosticBundle",
+    "DiagnosticLog",
     "DownloadMode",
     "DownloadRequest",
     "DownloadResult",

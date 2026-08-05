@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from universal_media_extractor.error_mapping import normalize_cli_error
 from universal_media_extractor.models import (
     ErrorState,
     TranscriptionRequest,
@@ -324,12 +325,12 @@ def _run_command(
     _append_log(log_path, "stdout:\n" + stdout + "\n\nstderr:\n" + stderr + "\n")
     if process.returncode != 0:
         return CommandRunResult(
-            error=ErrorState(
-                code=failed_code,
-                message=failed_message,
-                technical_details=_compact_details(stderr),
-                recoverable=True,
-                suggested_user_action="Check the local media file and retry.",
+            error=normalize_cli_error(
+                stderr or stdout,
+                default_code=failed_code,
+                default_message=failed_message,
+                default_suggested_user_action="Check the local media file and retry.",
+                engine=command[0] if command[0] in {"ffmpeg", "whisper"} else "unknown",
             )
         )
     return CommandRunResult()

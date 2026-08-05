@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -58,6 +58,7 @@ Commercial direction after GPT Pro strategy review:
 - Python Playwright for manual/dev browser smoke checks.
 - `pywebview` for the local desktop wrapper.
 - Udemy course analyze/download service through `yt-dlp`.
+- Shared error normalization and local redacted diagnostics bundles for failed jobs.
 
 ## Completed Roadmap
 
@@ -93,7 +94,7 @@ Udemy command path is documented in `docs/UDEMY_COURSE_EXPORT.md`.
 
 ## Planned Next Block
 
-Commercial Foundation is completed. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
+Commercial Foundation and Commercial Block 2 Errors + Diagnostics Foundation are completed. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
 
 Recommended next user-approved commercial block:
 
@@ -210,3 +211,10 @@ The dev `.app` can also be copied to `/Applications`; it remains tied to this pr
 - `docs/PUBLIC_KNOWN_LIMITATIONS.md`
 
 These documents close GitHub issues #1-#5 and define the public product boundary for future website, packaging, and beta work.
+
+
+## Commercial Block 2 Docs
+
+- `docs/COMMERCIAL_BLOCK_2_ERRORS_DIAGNOSTICS.md`
+
+This document closes GitHub issues #6-#7 and defines the first public-beta diagnostics boundary.

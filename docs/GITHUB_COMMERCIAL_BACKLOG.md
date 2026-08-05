@@ -429,3 +429,24 @@ Implementation evidence for #3:
 - `GET /config` exposes `public_product_mode` and `course_mode_enabled`.
 - Static UI hides Course Mode when `course_mode_enabled=false`.
 - Public builds can set `UME_PUBLIC_PRODUCT_MODE=1`.
+
+
+## Commercial Block 2 Completion
+
+Completed issue set:
+
+- #6 `[P0] Normalize user-facing errors`
+- #7 `[P0] Add diagnostics bundle`
+
+Evidence files:
+
+- `src/universal_media_extractor/error_mapping.py`
+- `src/universal_media_extractor/models/diagnostics.py`
+- `src/universal_media_extractor/services/diagnostics_service.py`
+- `docs/COMMERCIAL_BLOCK_2_ERRORS_DIAGNOSTICS.md`
+- `tests/test_error_mapping.py`
+- `tests/test_diagnostics_service.py`
+
+API evidence:
+
+- `GET /diagnostics/jobs/{job_id}` returns a local redacted diagnostics JSON bundle.

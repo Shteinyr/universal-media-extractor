@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from universal_media_extractor.api.app import create_app
+from universal_media_extractor.services.diagnostics_service import DiagnosticsService
 from universal_media_extractor.models import (
     AccessState,
     AnalyzeResult,
@@ -268,6 +269,53 @@ def test_analyze_endpoint_marks_login_required_error_as_failed_job(tmp_path):
     assert body["job"]["status"] == "failed"
     assert body["job"]["error"]["code"] == "login_required"
     assert body["result"]["errors"][0]["suggested_user_action"] == "Use a public URL."
+
+
+def test_diagnostics_endpoint_returns_redacted_job_bundle(tmp_path):
+    app = create_app(raw_output_base_dir=tmp_path)
+    app.state.diagnostics_service = DiagnosticsService(
+        version_runner=lambda command: f"{command[0]} test-version"
+    )
+    job = app.state.job_service.create_job(
+        "download",
+        {"source_url": "https://example.test/private/video", "output_dir": str(tmp_path)},
+    )
+    error = ErrorState(
+        code="extractor_failed",
+        message="Failed.",
+        technical_details="ERROR: HTTP Error 404: Not Found at https://example.test/private/video",
+        recoverable=True,
+    )
+    app.state.job_service.fail_job(
+        job.job_id,
+        error,
+        result={
+            "status": "failed",
+            "source_url": "https://example.test/private/video",
+            "downloaded_files": [str(tmp_path / "video.mp4")],
+            "errors": [error.model_dump(mode="json")],
+        },
+    )
+    client = TestClient(app)
+
+    response = client.get(f"/diagnostics/jobs/{job.job_id}")
+
+    assert response.status_code == 200
+    body = response.json()
+    dumped = response.text
+    assert body["job_id"] == job.job_id
+    assert body["normalized_error"]["code"] == "private_or_deleted"
+    assert body["engine_versions"]["yt-dlp"] == "yt-dlp test-version"
+    assert "https://example.test/private/video" not in dumped
+    assert str(tmp_path) not in dumped
+
+
+def test_diagnostics_endpoint_returns_404_for_missing_job(tmp_path):
+    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+
+    response = client.get("/diagnostics/jobs/missing")
+
+    assert response.status_code == 404
 
 
 def test_analyze_endpoint_keeps_analyzer_errors_in_result_and_job(tmp_path):

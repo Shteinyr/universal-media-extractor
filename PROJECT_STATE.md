@@ -6,7 +6,7 @@ Universal Media Extractor & Transcriber is intended to be a local web app with a
 
 ## Current Stage
 
-Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Recommended next work is Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work.
+Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Commercial Block 2 issues #6-#7 are completed. Recommended next work remains Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work.
 
 ## Already Installed And Reported By User
 
@@ -91,6 +91,8 @@ Commercial Foundation issues #1-#5 are completed and documented in:
 - `docs/PRIVACY_POLICY_DRAFT.md`
 - `docs/REFUND_POLICY_DRAFT.md`
 - `docs/PUBLIC_KNOWN_LIMITATIONS.md`
+
+Commercial Block 2 issues #6-#7 add normalized errors and safe diagnostics, documented in `docs/COMMERCIAL_BLOCK_2_ERRORS_DIAGNOSTICS.md`.
 
 
 `PROJECT_CONTEXT.md` now exists as the long-term project context file. Read it before large tasks and update it after completed large blocks.
@@ -362,3 +364,5 @@ The development `.app` now uses a tiny compiled Mach-O launcher in `Contents/Mac
 - Follow `docs/ROADMAP_V2.md` unless the user explicitly changes it.
 - Treat Codex roadmap suggestions as recommendations only, not decisions.
 - Do not add AI summary API, Chrome extension, packaged desktop distribution, auth, database, cookies/login, online service behavior, batch processing, advanced download hardening, external queue, persistent local file library/history, automatic proof cleanup, output batch delete, output search/filtering, persistent job storage, or new roadmap blocks until explicitly authorized in a future block.
+
+- Diagnostics bundles now redact cookies, tokens, passwords, transcripts, full URLs, and local paths by default.

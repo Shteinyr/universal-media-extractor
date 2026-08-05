@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
+from universal_media_extractor.error_mapping import normalize_cli_error
 from universal_media_extractor.models import (
     ErrorState,
     UdemyCourseAnalyzeRequest,
@@ -570,7 +571,7 @@ def _error_from_output(stdout: str | bytes | None, stderr: str | bytes | None) -
     lowered = (details or "").lower()
     if "drm" in lowered or "encrypted" in lowered or "decryption" in lowered:
         return ErrorState(
-            code="extractor_failed",
+            code="drm_protected",
             message="This lecture appears protected.",
             technical_details=details,
             recoverable=False,
@@ -606,21 +607,22 @@ def _error_from_output(stdout: str | bytes | None, stderr: str | bytes | None) -
             recoverable=True,
             suggested_user_action="Open Chrome, sign in to Udemy, then retry. If macOS blocks Chrome cookies, use Advanced manual cookies.txt.",
         )
-    if "unable to extract" in lowered or "failed to extract" in lowered:
+    normalized = normalize_cli_error(
+        details,
+        default_code="extractor_failed",
+        default_message="Udemy course extraction failed.",
+        default_suggested_user_action="Retry later, or test a single lecture first. Details are saved in the proof/api artifact.",
+        engine="udemy",
+    )
+    if normalized.code == "engine_outdated":
         return ErrorState(
-            code="extractor_failed",
-            message="Udemy course extraction failed.",
+            code="engine_outdated",
+            message="Udemy course extraction may require a media engine update.",
             technical_details=details,
             recoverable=True,
-            suggested_user_action="Paste the Udemy lecture URL from the course player, open it in Chrome once, then retry. If it still fails, Udemy may have changed or restricted this course.",
+            suggested_user_action="Update yt-dlp and retry with the Udemy lecture URL from the course player.",
         )
-    return ErrorState(
-        code="extractor_failed",
-        message="Udemy course extraction failed.",
-        technical_details=details,
-        recoverable=True,
-        suggested_user_action="Retry later, or test a single lecture first. Details are saved in the proof/api artifact.",
-    )
+    return normalized
 
 
 def _parse_udemy_progress_line(line: str) -> tuple[str | None, float | None]:

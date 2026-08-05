@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-08-05 - Commercial Block 2 Errors And Diagnostics Foundation
+
+- Added normalized user-facing error categories for DRM, login/cookies, region restriction, private/deleted sources, missing formats, network, disk, permission, and outdated engines.
+- Added `src/universal_media_extractor/error_mapping.py` for shared CLI error normalization.
+- Added diagnostics bundle models and `DiagnosticsService`.
+- Added `GET /diagnostics/jobs/{job_id}` for inspectable local support bundles.
+- Redacted cookies, tokens, transcripts, full URLs, and local paths from diagnostics by default.
+- Added tests for error mapping, diagnostics redaction, and diagnostics API behavior.
+- Created `docs/COMMERCIAL_BLOCK_2_ERRORS_DIAGNOSTICS.md`.
+
 ## 2026-08-05 - Commercial Foundation
 
 - Completed the first commercial foundation work for issues #1-#5.

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import parse_qs, urlparse
 
+from universal_media_extractor.error_mapping import normalize_cli_error
 from universal_media_extractor.models import DownloadRequest, DownloadResult, ErrorState
 from universal_media_extractor.services.output_manager import OutputManager
 from universal_media_extractor.services.safety_service import SafetyService
@@ -213,12 +214,12 @@ class DownloadService:
                 output_dir,
                 log_path,
                 result_path,
-                ErrorState(
-                    code="extractor_failed",
-                    message="yt-dlp download failed.",
-                    technical_details=_compact_details(stdout_text),
-                    recoverable=True,
-                    suggested_user_action="Check that the selected format is still available and retry.",
+                normalize_cli_error(
+                    stdout_text,
+                    default_code="extractor_failed",
+                    default_message="yt-dlp download failed.",
+                    default_suggested_user_action="Check that the selected format is still available and retry.",
+                    engine="yt-dlp",
                 ),
                 downloaded_files=downloaded_files,
             )
