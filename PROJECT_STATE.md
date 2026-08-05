@@ -6,7 +6,7 @@ Universal Media Extractor & Transcriber is intended to be a local web app with a
 
 ## Current Stage
 
-Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Commercial Block 2 issues #6-#7 are completed. Commercial Block 3 issue #9 is completed. Commercial Block 4 issue #8 is completed. Commercial Block 5 issue #10 is completed. Commercial Block 6 issue #11 is completed. Commercial Blocks 7-10 prepared macOS packaging/public release readiness up to the Apple Developer ID blocker. Commercial Block 11 prepared the founder launch surface around issues #19-#21. Commercial Block 12 prepared payment provider pre-approval and licensing model docs for issues #22-#23. Recommended next work remains Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work. After Block 12, real checkout/licensing remains gated by provider approval and user business details.
+Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Commercial Block 2 issues #6-#7 are completed. Commercial Block 3 issue #9 is completed. Commercial Block 4 issue #8 is completed. Commercial Block 5 issue #10 is completed. Commercial Block 6 issue #11 is completed. Commercial Blocks 7-10 prepared macOS packaging/public release readiness up to the Apple Developer ID blocker. Commercial Block 11 prepared the founder launch surface around issues #19-#21. Commercial Block 12 prepared payment provider pre-approval and licensing model docs for issues #22-#23. Commercial Block 13 added batch queue foundation, playlist/clipboard/text import, controlled concurrency, and retry failed items for issues #25-#28. Issue #29 Archive Pack remains open/planned. Recommended next work remains Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work. After Block 12, real checkout/licensing remains gated by provider approval and user business details.
 
 ## Already Installed And Reported By User
 
@@ -108,6 +108,8 @@ Commercial Block 11 prepares the public founder launch surface for issues #19-#2
 
 Commercial Block 12 prepares payment provider pre-approval and licensing model drafts for issues #22-#23. It adds Lemon Squeezy pre-approval copy, Stripe fallback risk review, a 3-device/offline-grace licensing model draft, and a user decision checklist. Issues #22 and #23 are closed and marked Done. No checkout, payment provider API, webhook, license server, or license enforcement code was added.
 
+Commercial Block 13 adds batch queue foundation for issues #25-#28. It adds in-memory batch state, controlled concurrency, textarea/clipboard/text-file URL import, safe flat playlist analysis with item selection, child download jobs, batch status polling, queue cancellation request, and retry failed items. Archive Pack execution remains planned/disabled, so issue #29 stays open. It is documented in `docs/COMMERCIAL_BLOCK_13_BATCH_QUEUE_FOUNDATION.md`.
+
 
 `PROJECT_CONTEXT.md` now exists as the long-term project context file. Read it before large tasks and update it after completed large blocks.
 
@@ -121,6 +123,7 @@ Current MVP works for:
 
 - URL -> Analyze -> Download -> Transcribe -> Result.
 - Local file -> Analyze -> Transcribe -> Result.
+- Batch URL list -> Import/select -> Preset -> Download queue -> Retry failed.
 - Udemy course URL + Chrome session -> Analyze course -> Download course best-effort.
 - Udemy lecture/player URL + Chrome session -> Analyze course playlist -> Download course best-effort.
 

@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-12 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-13 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, and batch queue foundation.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -77,6 +77,12 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
+Commercial Block 13: Batch Queue Foundation + Playlist/Clipboard Import - done.
+
+Result: Batch mode supports textarea/clipboard/text-file URL import, safe flat playlist analysis with item selection, controlled concurrency, child download jobs, queue status polling, cancellation request, and retry failed items. Archive Pack remains planned/disabled and issue #29 stays open.
+
+Previous completed block:
+
 Commercial Block 12: Payment Provider Pre-Approval And Licensing Prep - done.
 
 Result: Lemon Squeezy pre-approval request, Stripe fallback risk review, licensing model draft, and user decision checklist are prepared. Issues #22 and #23 are closed and marked Done in the GitHub Project. No checkout, webhooks, license server, license activation UI, or license enforcement code was added.
@@ -119,7 +125,7 @@ Udemy command path is documented in `docs/UDEMY_COURSE_EXPORT.md`.
 
 ## Planned Next Block
 
-Commercial Foundation, Commercial Block 2 Errors + Diagnostics Foundation, Commercial Block 3 Preset Output Selection, Commercial Block 4 Localhost Security Hardening, and Commercial Block 5 SQLite Jobs And History are completed. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
+Commercial Blocks 1-13 are completed or prepared except for externally blocked Apple/payment work and the still-open Archive Pack execution issue. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
 
 Recommended next user-approved commercial block:
 
@@ -133,7 +139,8 @@ Do not start the next block until the user explicitly confirms. Do not start che
 
 ## Later / Optional
 
-- Batch processing.
+- Archive Pack execution.
+- Persistent parent batch history if needed.
 - Cookies/login manual mode.
 - AI summary API.
 - Presets are implemented for the main URL output selector; saved presets and Archive Pack execution remain later.

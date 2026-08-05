@@ -141,6 +141,9 @@ def test_static_index_is_available(tmp_path):
     assert "Local file mode" in response.text
     assert "Analyze local file" in response.text
     assert "Course mode" in response.text
+    assert "Batch mode" in response.text
+    assert "Import URLs" in response.text
+    assert "Start queue" in response.text
     assert "Analyze course" in response.text
     assert "Udemy course export" in response.text
     assert "Chrome session" in response.text
@@ -165,6 +168,9 @@ def test_static_javascript_is_available(tmp_path):
     assert "/udemy/analyze" in response.text
     assert "/udemy/download" in response.text
     assert "/outputs" in response.text
+    assert "/batch/import" in response.text
+    assert "/playlists/analyze" in response.text
+    assert "retry-failed" in response.text
     assert "/config" in response.text
     assert "/jobs/" in response.text
     assert "cancelDownloadButton" in response.text
@@ -1073,3 +1079,118 @@ def test_retry_job_endpoint_returns_404_for_missing_job(tmp_path):
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Job not found."}
+
+
+def test_batch_import_endpoint_parses_urls_without_network(tmp_path):
+    client = _client(create_app(raw_output_base_dir=tmp_path, job_db_path=tmp_path / "jobs.sqlite3"))
+
+    response = client.post(
+        "/batch/import",
+        json={"text": "https://example.test/a\ninvalid\nhttps://example.test/a\nhttps://example.test/b", "source": "textarea"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["urls"] == ["https://example.test/a", "https://example.test/b"]
+    assert body["duplicate_count"] == 1
+    assert body["invalid_lines"][0]["line_number"] == 2
+
+
+def test_batch_endpoint_runs_download_jobs_through_mock(tmp_path):
+    from universal_media_extractor.models import DownloadResult
+    from universal_media_extractor.services.batch_service import BatchService
+
+    app = create_app(raw_output_base_dir=tmp_path, job_db_path=tmp_path / "jobs.sqlite3")
+    calls = []
+
+    class FakeDownloadService:
+        def download_media(self, request, **kwargs):
+            calls.append((request, kwargs))
+            return DownloadResult(
+                job_id=kwargs.get("job_id"),
+                status="succeeded",
+                source_url=request.source_url,
+                selected_format_id=request.format_id,
+                output_dir=str(tmp_path / "outputs"),
+                downloaded_files=[str(tmp_path / "outputs" / "media" / "file.mp4")],
+            )
+
+    app.state.download_service = FakeDownloadService()
+    app.state.batch_service = BatchService(
+        job_service=app.state.job_service,
+        download_service=app.state.download_service,
+    )
+    client = _client(app)
+
+    response = client.post(
+        "/batch",
+        json={
+            "items": [{"source_url": "https://example.test/one"}],
+            "preset": "best_video",
+            "user_confirmed_rights": True,
+            "concurrency": 1,
+        },
+    )
+
+    assert response.status_code == 200
+    started = response.json()
+    final = _wait_for_terminal_batch(client, started["batch_id"])
+    assert final["status"] == "succeeded"
+    assert final["succeeded_count"] == 1
+    assert calls[0][0].mode == "combined"
+    assert calls[0][1]["job_id"] == final["items"][0]["job_id"]
+
+
+def test_batch_endpoint_requires_confirmation_without_starting_download(tmp_path):
+    client = _client(create_app(raw_output_base_dir=tmp_path, job_db_path=tmp_path / "jobs.sqlite3"))
+
+    response = client.post(
+        "/batch",
+        json={"items": [{"source_url": "https://example.test/one"}], "user_confirmed_rights": False},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "failed"
+    assert body["errors"][0]["code"] == "rights_confirmation_required"
+
+
+def test_playlist_analyze_endpoint_uses_service_without_download(tmp_path):
+    from universal_media_extractor.models import PlaylistAnalyzeResult, PlaylistItem
+
+    app = create_app(raw_output_base_dir=tmp_path, job_db_path=tmp_path / "jobs.sqlite3")
+
+    class FakePlaylistService:
+        def analyze_playlist(self, request, **kwargs):
+            return PlaylistAnalyzeResult(
+                source_url=request.source_url,
+                is_playlist=True,
+                title="Playlist",
+                item_count=2,
+                items=[
+                    PlaylistItem(item_id="1", title="One", url="https://example.test/1", playlist_index=1),
+                    PlaylistItem(item_id="2", title="Two", url="https://example.test/2", playlist_index=2),
+                ],
+            )
+
+    app.state.playlist_service = FakePlaylistService()
+    client = _client(app)
+
+    response = client.post("/playlists/analyze", json={"source_url": "https://example.test/list"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["is_playlist"] is True
+    assert body["items"][0]["title"] == "One"
+
+
+def _wait_for_terminal_batch(client: TestClient, batch_id: str, *, timeout: float = 2.0) -> dict:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        response = client.get(f"/batch/{batch_id}")
+        assert response.status_code == 200
+        body = response.json()
+        if body["status"] in {"succeeded", "failed", "cancelled"}:
+            return body
+        time.sleep(0.01)
+    raise AssertionError(f"Batch {batch_id} did not finish before timeout.")

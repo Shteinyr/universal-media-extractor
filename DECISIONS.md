@@ -218,3 +218,11 @@
 - Checkout, webhooks, license activation UI, license server, and enforcement code must not be implemented before provider approval and user business details are available.
 - Draft licensing model: license key, 3 active devices for Pro/Founder Pro, offline entitlement, 30-day grace period, deactivate-device behavior, and keeping the last eligible version after the update period expires.
 - Udemy Course Mode remains internal/experimental and hidden from public commercial builds/marketing during provider review.
+
+
+## 2026-08-05 - Batch Queue Foundation Boundary
+
+- Batch queue parent state remains in-memory for the first commercial batch foundation.
+- Child download jobs continue to use existing SQLite-backed `JobService`.
+- Batch concurrency is limited to 1-3 local workers to avoid overwhelming sources or the machine.
+- Archive Pack remains planned/disabled until a dedicated multi-output execution flow is approved.

@@ -18,6 +18,7 @@
         <div class="mode-tabs" role="tablist" aria-label="Input mode">
           <button id="url-mode-button" type="button" class="mode-tab is-active" aria-pressed="true">URL mode</button>
           <button id="local-mode-button" type="button" class="mode-tab" aria-pressed="false">Local file mode</button>
+          <button id="batch-mode-button" type="button" class="mode-tab" aria-pressed="false">Batch mode</button>
           <button id="course-mode-button" type="button" class="mode-tab" aria-pressed="false">Course mode</button>
         </div>
 
@@ -50,6 +51,25 @@
           <p class="hint" id="local-file-name">No file selected.</p>
           <button id="local-analyze-button" type="submit">Analyze local file</button>
           <p class="sr-only" id="local-input-hint">Files stay local and are copied into project outputs.</p>
+        </form>
+
+        <form class="input-card hidden" id="batch-form">
+          <label for="batch-url-input">URL list</label>
+          <textarea
+            id="batch-url-input"
+            name="urls"
+            rows="7"
+            placeholder="Paste one URL per line"
+            spellcheck="false"
+          ></textarea>
+          <div class="actions-row compact-actions">
+            <button id="batch-import-button" type="submit">Import URLs</button>
+            <button id="batch-paste-button" type="button" class="secondary-button">Paste</button>
+            <label class="file-import-button" for="batch-text-file-input">Text file</label>
+            <input id="batch-text-file-input" type="file" accept=".txt,text/plain" hidden>
+          </div>
+          <button id="playlist-analyze-button" type="button" class="secondary-button">Analyze playlist</button>
+          <p class="sr-only">Batch queue uses local yt-dlp jobs with controlled concurrency.</p>
         </form>
 
         <form class="input-card hidden" id="course-form">
@@ -269,6 +289,44 @@
             <button id="local-transcribe-button" type="button" disabled>Transcribe local file</button>
             <button id="cancel-local-transcribe-button" type="button" class="secondary-button hidden">Cancel local transcription</button>
             <div class="download-result hidden" id="local-transcript-result" role="status" aria-live="polite"></div>
+          </section>
+
+          <section class="download-card hidden" id="batch-panel" aria-labelledby="batch-title">
+            <div class="group-header">
+              <h3 id="batch-title">Batch queue</h3>
+              <span class="count" id="batch-count">No URLs</span>
+            </div>
+            <div id="batch-import-summary" class="muted"></div>
+            <div id="batch-list" class="batch-list"></div>
+            <div class="batch-controls">
+              <label class="model-field" for="batch-preset">Preset
+                <select id="batch-preset">
+                  <option value="best_video" selected>Best Video</option>
+                  <option value="video_1080p">1080p Video</option>
+                  <option value="smaller_video">Smaller Video</option>
+                  <option value="audio_m4a">Audio M4A</option>
+                  <option value="audio_mp3">Audio MP3</option>
+                  <option value="subtitles">Subtitles</option>
+                  <option value="archive_pack" disabled>Archive Pack - planned</option>
+                </select>
+              </label>
+              <label class="model-field" for="batch-concurrency">Concurrency
+                <select id="batch-concurrency">
+                  <option value="1" selected>1 at a time</option>
+                  <option value="2">2 at a time</option>
+                  <option value="3">3 at a time</option>
+                </select>
+              </label>
+              <label class="path-field" for="batch-output-dir">Save to
+                <input id="batch-output-dir" type="text" value="~/Downloads/Universal Media Extractor" autocomplete="off" spellcheck="false">
+              </label>
+            </div>
+            <div class="actions-row">
+              <button id="batch-start-button" type="button" disabled>Start queue</button>
+              <button id="batch-retry-button" type="button" class="secondary-button hidden">Retry failed</button>
+              <button id="batch-cancel-button" type="button" class="secondary-button hidden">Cancel queue</button>
+            </div>
+            <div class="download-result hidden" id="batch-result" role="status" aria-live="polite"></div>
           </section>
 
           <section class="download-card hidden" id="course-panel" aria-labelledby="course-title">

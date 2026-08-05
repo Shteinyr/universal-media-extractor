@@ -619,3 +619,22 @@
 
 - Closed GitHub issues #19, #20, and #21.
 - Set GitHub Project `Status=Done` and `Roadmap Status=Done` for issues #19, #20, and #21.
+
+
+## 2026-08-05 - Commercial Block 13 Batch Queue Foundation
+
+- Added batch queue models and an in-memory `BatchService`.
+- Added URL import from textarea, clipboard, and text files with invalid-line reporting and dedupe.
+- Added safe flat playlist analysis through `yt-dlp --simulate --flat-playlist --dump-single-json`.
+- Added batch API endpoints: `/batch/import`, `/playlists/analyze`, `/batch`, `/batch/{batch_id}`, `/batch/{batch_id}/retry-failed`, and `/batch/{batch_id}/cancel`.
+- Added Batch mode to the static UI with preset selection, concurrency, item selection, queue status, cancel, and retry failed.
+- Added tests for batch models, batch service behavior, API endpoints, and static UI strings.
+- Documented Archive Pack as planned/disabled rather than completed.
+- Created `docs/COMMERCIAL_BLOCK_13_BATCH_QUEUE_FOUNDATION.md`.
+
+
+## 2026-08-05 - Commercial Block 13 GitHub Tracking
+
+- Closed GitHub issues #25, #26, #27, and #28.
+- Set GitHub Project `Status=Done` and `Roadmap Status=Done` for issues #25-#28.
+- Commented on issue #29 and left it open because Archive Pack execution remains planned/disabled.

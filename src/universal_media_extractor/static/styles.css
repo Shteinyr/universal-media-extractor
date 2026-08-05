@@ -1091,3 +1091,107 @@ button:disabled {
     width: 100%;
   }
 }
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 118px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 10px;
+  font: 0.78rem/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+textarea:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.mode-tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.compact-actions {
+  display: grid;
+  grid-template-columns: 1fr 0.8fr 0.8fr;
+  gap: 8px;
+}
+
+.file-import-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-soft);
+  color: var(--text);
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.batch-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.batch-controls .path-field {
+  grid-column: 1 / -1;
+}
+
+.batch-list {
+  display: grid;
+  gap: 6px;
+  max-height: 320px;
+  overflow: auto;
+  margin-top: 10px;
+  padding-right: 2px;
+}
+
+.batch-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-soft);
+  padding: 8px;
+}
+
+.batch-row input {
+  margin-top: 2px;
+}
+
+.batch-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.batch-main strong,
+.batch-main span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.batch-main span {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+@media (max-width: 520px) {
+  .mode-tabs,
+  .compact-actions,
+  .batch-controls {
+    grid-template-columns: 1fr;
+  }
+}

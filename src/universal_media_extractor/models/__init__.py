@@ -11,6 +11,21 @@ from universal_media_extractor.models.analyze import (
     UploaderInfo,
     WarningState,
 )
+from universal_media_extractor.models.batch import (
+    Batch,
+    BatchCreateRequest,
+    BatchDownloadItemRequest,
+    BatchInvalidLine,
+    BatchItem,
+    BatchItemStatus,
+    BatchPreset,
+    BatchStatus,
+    BatchUrlImportRequest,
+    BatchUrlImportResult,
+    PlaylistAnalyzeRequest,
+    PlaylistAnalyzeResult,
+    PlaylistItem,
+)
 from universal_media_extractor.models.diagnostics import DiagnosticBundle, DiagnosticLog
 from universal_media_extractor.models.download import (
     DownloadMode,
@@ -60,6 +75,16 @@ from universal_media_extractor.models.udemy import (
 __all__ = [
     "AccessState",
     "AnalyzeResult",
+    "Batch",
+    "BatchCreateRequest",
+    "BatchDownloadItemRequest",
+    "BatchInvalidLine",
+    "BatchItem",
+    "BatchItemStatus",
+    "BatchPreset",
+    "BatchStatus",
+    "BatchUrlImportRequest",
+    "BatchUrlImportResult",
     "DiagnosticBundle",
     "DiagnosticLog",
     "DownloadMode",
@@ -83,6 +108,9 @@ __all__ = [
     "OutputRevealResult",
     "OutputSourceType",
     "OutputSummary",
+    "PlaylistAnalyzeRequest",
+    "PlaylistAnalyzeResult",
+    "PlaylistItem",
     "SourceMediaKind",
     "SubtitleOption",
     "TranscriptFormat",

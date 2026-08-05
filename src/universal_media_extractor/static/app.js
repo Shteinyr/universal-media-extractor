@@ -2,13 +2,19 @@ const API_BASE_URL = "";
 const form = document.querySelector("#analyze-form");
 const localFileForm = document.querySelector("#local-file-form");
 const courseForm = document.querySelector("#course-form");
+const batchForm = document.querySelector("#batch-form");
 const urlModeButton = document.querySelector("#url-mode-button");
 const localModeButton = document.querySelector("#local-mode-button");
+const batchModeButton = document.querySelector("#batch-mode-button");
 const courseModeButton = document.querySelector("#course-mode-button");
 const urlInput = document.querySelector("#url-input");
 const localFileInput = document.querySelector("#local-file-input");
 const localFileName = document.querySelector("#local-file-name");
 const localAnalyzeButton = document.querySelector("#local-analyze-button");
+const batchUrlInput = document.querySelector("#batch-url-input");
+const batchPasteButton = document.querySelector("#batch-paste-button");
+const batchTextFileInput = document.querySelector("#batch-text-file-input");
+const playlistAnalyzeButton = document.querySelector("#playlist-analyze-button");
 const courseUrlInput = document.querySelector("#course-url-input");
 const courseAuthSourceSelect = document.querySelector("#course-auth-source");
 const courseCookiesPathInput = document.querySelector("#course-cookies-path");
@@ -72,6 +78,17 @@ const localTranscriptFormat = document.querySelector("#local-transcript-format")
 const localTranscribeButton = document.querySelector("#local-transcribe-button");
 const cancelLocalTranscribeButton = document.querySelector("#cancel-local-transcribe-button");
 const localTranscriptResult = document.querySelector("#local-transcript-result");
+const batchPanel = document.querySelector("#batch-panel");
+const batchCount = document.querySelector("#batch-count");
+const batchImportSummary = document.querySelector("#batch-import-summary");
+const batchList = document.querySelector("#batch-list");
+const batchPresetSelect = document.querySelector("#batch-preset");
+const batchConcurrencySelect = document.querySelector("#batch-concurrency");
+const batchOutputDirInput = document.querySelector("#batch-output-dir");
+const batchStartButton = document.querySelector("#batch-start-button");
+const batchRetryButton = document.querySelector("#batch-retry-button");
+const batchCancelButton = document.querySelector("#batch-cancel-button");
+const batchResult = document.querySelector("#batch-result");
 const coursePanel = document.querySelector("#course-panel");
 const courseLectureCount = document.querySelector("#course-lecture-count");
 const courseSummaryList = document.querySelector("#course-summary-list");
@@ -89,6 +106,8 @@ const recentCard = document.querySelector(".recent-card");
 let currentAnalyzeResult = null;
 let currentLocalFileResult = null;
 let currentCourseResult = null;
+let currentBatchItems = [];
+let activeBatchId = null;
 let selectedFormat = null;
 let downloadedFileForTranscript = null;
 let latestDownloadResult = null;
@@ -103,6 +122,16 @@ let sessionToken = "";
 const DEFAULT_DOWNLOAD_OUTPUT_DIR = "~/Downloads/Universal Media Extractor";
 const DEFAULT_UDEMY_OUTPUT_DIR = "~/Downloads/Universal Media Extractor/Udemy";
 const SECURITY_HEADER_NAME = "X-UME-Session-Token";
+const BATCH_PRESET_LABELS = {
+  best_video: "Best Video",
+  video_1080p: "1080p Video",
+  smaller_video: "Smaller Video",
+  audio_m4a: "Audio M4A",
+  audio_mp3: "Audio MP3",
+  subtitles: "Subtitles",
+  archive_pack: "Archive Pack",
+};
+
 const OUTPUT_FORMAT_CHOICES = {
   audio: [
     ["m4a", "M4A"],
@@ -196,12 +225,67 @@ form.addEventListener("submit", async (event) => {
 
 urlModeButton.addEventListener("click", () => switchInputMode("url"));
 localModeButton.addEventListener("click", () => switchInputMode("local"));
+batchModeButton.addEventListener("click", () => switchInputMode("batch"));
 courseModeButton.addEventListener("click", () => switchInputMode("course"));
 
 localFileInput.addEventListener("change", () => {
   const file = localFileInput.files?.[0];
   localFileName.textContent = file ? `${file.name} · ${readableSize(file.size)}` : "No file selected.";
 });
+
+batchForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await importBatchUrls(batchUrlInput.value, "textarea");
+});
+
+batchPasteButton?.addEventListener("click", async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    batchUrlInput.value = text;
+    await importBatchUrls(text, "clipboard");
+  } catch (error) {
+    renderFatalError("Clipboard unavailable", "Paste URLs into the box manually, then click Import URLs.");
+  }
+});
+
+batchTextFileInput?.addEventListener("change", async () => {
+  const file = batchTextFileInput.files?.[0];
+  if (!file) {
+    return;
+  }
+  const text = await file.text();
+  batchUrlInput.value = text;
+  await importBatchUrls(text, "text_file");
+});
+
+playlistAnalyzeButton?.addEventListener("click", async () => {
+  const url = firstUrlFromText(batchUrlInput.value);
+  if (!url) {
+    renderFatalError("Playlist URL required", "Paste a playlist URL first.");
+    return;
+  }
+  setBatchLoading(true, "Analyzing playlist...");
+  try {
+    const response = await apiFetch("/playlists/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source_url: url }),
+    });
+    if (!response.ok) {
+      renderFatalError("Playlist analysis failed", await readErrorMessage(response));
+      return;
+    }
+    renderPlaylistAnalyzeResult(await response.json());
+  } catch (error) {
+    renderFatalError("API unavailable", normalizeNetworkError(error));
+  } finally {
+    setBatchLoading(false);
+  }
+});
+
+batchStartButton?.addEventListener("click", startBatchQueue);
+batchRetryButton?.addEventListener("click", retryFailedBatchItems);
+batchCancelButton?.addEventListener("click", cancelActiveBatch);
 
 localFileForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -645,23 +729,30 @@ function buildCourseAuthPayload(base = {}) {
 
 function switchInputMode(mode) {
   const isLocal = mode === "local";
+  const isBatch = mode === "batch";
   const isCourse = mode === "course";
-  urlModeButton.classList.toggle("is-active", !isLocal && !isCourse);
+  urlModeButton.classList.toggle("is-active", !isLocal && !isBatch && !isCourse);
   localModeButton.classList.toggle("is-active", isLocal);
+  batchModeButton.classList.toggle("is-active", isBatch);
   courseModeButton.classList.toggle("is-active", isCourse);
-  urlModeButton.setAttribute("aria-pressed", String(!isLocal && !isCourse));
+  urlModeButton.setAttribute("aria-pressed", String(!isLocal && !isBatch && !isCourse));
   localModeButton.setAttribute("aria-pressed", String(isLocal));
+  batchModeButton.setAttribute("aria-pressed", String(isBatch));
   courseModeButton.setAttribute("aria-pressed", String(isCourse));
-  form.classList.toggle("hidden", isLocal || isCourse);
+  form.classList.toggle("hidden", isLocal || isBatch || isCourse);
   localFileForm.classList.toggle("hidden", !isLocal);
+  batchForm.classList.toggle("hidden", !isBatch);
   courseForm.classList.toggle("hidden", !isCourse);
   resetDownloadSelection();
   resetLocalState();
+  resetBatchState(!isBatch);
   resetCourseState();
   emptyState.classList.remove("hidden");
   resultContent.classList.add("hidden");
   if (isLocal) {
     apiStatus.textContent = "Local file mode. Files stay on this machine.";
+  } else if (isBatch) {
+    apiStatus.textContent = "Batch mode. Import URLs, choose a preset, then start the queue.";
   } else if (isCourse) {
     apiStatus.textContent = "Course mode. Open Udemy in Chrome and sign in first.";
   } else {
@@ -738,6 +829,290 @@ function setCourseLoading(isLoading) {
   }
 }
 
+async function importBatchUrls(text, source) {
+  if (!text.trim()) {
+    renderFatalError("URLs required", "Paste one or more URLs first.");
+    batchUrlInput.focus();
+    return;
+  }
+  setBatchLoading(true, "Importing URLs...");
+  try {
+    const response = await apiFetch("/batch/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, source }),
+    });
+    if (!response.ok) {
+      renderFatalError("Import failed", await readErrorMessage(response));
+      return;
+    }
+    renderBatchImportResult(await response.json());
+  } catch (error) {
+    renderFatalError("API unavailable", normalizeNetworkError(error));
+  } finally {
+    setBatchLoading(false);
+  }
+}
+
+function renderBatchImportResult(result) {
+  currentBatchItems = (result.urls || []).map((url, index) => ({
+    source_url: url,
+    source_title: "",
+    playlist_index: index + 1,
+    selected: true,
+  }));
+  showBatchPanel();
+  batchImportSummary.textContent = [
+    `${currentBatchItems.length} URL${currentBatchItems.length === 1 ? "" : "s"} imported`,
+    result.duplicate_count ? `${result.duplicate_count} duplicate${result.duplicate_count === 1 ? "" : "s"} skipped` : "",
+    (result.invalid_lines || []).length ? `${result.invalid_lines.length} invalid line${result.invalid_lines.length === 1 ? "" : "s"}` : "",
+  ].filter(Boolean).join(" · ");
+  renderBatchList();
+}
+
+function renderPlaylistAnalyzeResult(result) {
+  if ((result.errors || []).length > 0) {
+    showBatchPanel();
+    renderErrors(result.errors || [], null);
+    return;
+  }
+  currentBatchItems = (result.items || [])
+    .filter((item) => item.url)
+    .map((item) => ({
+      source_url: item.url,
+      source_title: item.title || "",
+      playlist_index: item.playlist_index,
+      selected: item.selected !== false,
+    }));
+  showBatchPanel();
+  batchImportSummary.textContent = `${currentBatchItems.length} playlist item${currentBatchItems.length === 1 ? "" : "s"} found${result.title ? ` · ${result.title}` : ""}`;
+  renderBatchList();
+}
+
+function showBatchPanel() {
+  loadingState.classList.add("hidden");
+  emptyState.classList.add("hidden");
+  resultContent.classList.remove("hidden");
+  renderSourceSummary({ title: "Batch queue", source_type: "url", extractor: "local queue" });
+  formatPicker.classList.add("hidden");
+  downloadPanel.classList.add("hidden");
+  transcriptPanel.classList.add("hidden");
+  localFilePanel.classList.add("hidden");
+  coursePanel.classList.add("hidden");
+  warningsPanel.classList.add("hidden");
+  errorsPanel.classList.add("hidden");
+  batchPanel.classList.remove("hidden");
+  updateBatchControls();
+}
+
+function renderBatchList(batch) {
+  const items = batch?.items || currentBatchItems;
+  batchList.innerHTML = "";
+  batchCount.textContent = `${items.length} item${items.length === 1 ? "" : "s"}`;
+  if (!items.length) {
+    batchList.appendChild(emptyLine("No URLs imported."));
+    updateBatchControls();
+    return;
+  }
+  items.forEach((item, index) => {
+    const row = document.createElement("label");
+    row.className = "batch-row";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = item.selected !== false;
+    checkbox.disabled = Boolean(batch);
+    checkbox.addEventListener("change", () => {
+      currentBatchItems[index].selected = checkbox.checked;
+      updateBatchControls();
+    });
+    const main = document.createElement("div");
+    main.className = "batch-main";
+    const title = document.createElement("strong");
+    title.textContent = item.source_title || item.title || compactUrl(item.source_url);
+    const meta = document.createElement("span");
+    meta.textContent = batch ? `${item.status}${item.job_id ? ` · ${item.job_id}` : ""}` : item.source_url;
+    main.append(title, meta);
+    row.append(checkbox, main);
+    batchList.appendChild(row);
+  });
+}
+
+async function startBatchQueue() {
+  const selectedItems = currentBatchItems.filter((item) => item.selected !== false);
+  if (!selectedItems.length) {
+    renderBatchStatus({ status: "failed", errors: [{ code: "invalid_input_file", message: "Select at least one URL." }] });
+    return;
+  }
+  setBatchRunning(true);
+  try {
+    const response = await apiFetch("/batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: selectedItems,
+        preset: batchPresetSelect.value,
+        user_confirmed_rights: true,
+        output_base_dir: batchOutputDirInput.value.trim() || DEFAULT_DOWNLOAD_OUTPUT_DIR,
+        output_template: "{title}",
+        duplicate_policy: "rename",
+        concurrency: Number(batchConcurrencySelect.value || 1),
+      }),
+    });
+    if (!response.ok) {
+      renderBatchStatus({ status: "failed", errors: [{ code: "unknown_error", message: await readErrorMessage(response) }] });
+      return;
+    }
+    const batch = await response.json();
+    activeBatchId = batch.batch_id;
+    renderBatchStatus(batch);
+    const finalBatch = await pollBatch(batch.batch_id, renderBatchStatus);
+    renderBatchStatus(finalBatch);
+  } catch (error) {
+    renderBatchStatus({ status: "failed", errors: [{ code: "network_error", message: normalizeNetworkError(error) }] });
+  } finally {
+    setBatchRunning(false);
+  }
+}
+
+async function pollBatch(batchId, onUpdate) {
+  while (true) {
+    await delay(1000);
+    const response = await apiFetch(`/batch/${encodeURIComponent(batchId)}`);
+    if (!response.ok) {
+      throw new Error(await readErrorMessage(response));
+    }
+    const batch = await response.json();
+    onUpdate(batch);
+    if (["succeeded", "failed", "cancelled"].includes(batch.status)) {
+      return batch;
+    }
+  }
+}
+
+async function retryFailedBatchItems() {
+  if (!activeBatchId) {
+    return;
+  }
+  setBatchRunning(true);
+  try {
+    const response = await apiFetch(`/batch/${encodeURIComponent(activeBatchId)}/retry-failed`, { method: "POST" });
+    if (!response.ok) {
+      renderBatchStatus({ status: "failed", errors: [{ code: "unknown_error", message: await readErrorMessage(response) }] });
+      return;
+    }
+    const batch = await response.json();
+    renderBatchStatus(batch);
+    renderBatchStatus(await pollBatch(batch.batch_id, renderBatchStatus));
+  } catch (error) {
+    renderBatchStatus({ status: "failed", errors: [{ code: "network_error", message: normalizeNetworkError(error) }] });
+  } finally {
+    setBatchRunning(false);
+  }
+}
+
+async function cancelActiveBatch() {
+  if (!activeBatchId) {
+    return;
+  }
+  const response = await apiFetch(`/batch/${encodeURIComponent(activeBatchId)}/cancel`, { method: "POST" });
+  if (response.ok) {
+    renderBatchStatus(await response.json());
+  }
+}
+
+function renderBatchStatus(batch) {
+  batchPanel.classList.remove("hidden");
+  batchResult.classList.remove("hidden");
+  batchResult.innerHTML = "";
+  const title = document.createElement("strong");
+  title.textContent = `Queue: ${batch.status || "unknown"}`;
+  batchResult.appendChild(title);
+  const summary = document.createElement("p");
+  summary.className = "muted";
+  summary.textContent = [
+    `${batch.succeeded_count || 0} done`,
+    `${batch.failed_count || 0} failed`,
+    `${batch.running_count || 0} running`,
+    `${batch.queued_count || 0} queued`,
+    BATCH_PRESET_LABELS[batch.preset] || batch.preset,
+  ].filter(Boolean).join(" · ");
+  batchResult.appendChild(summary);
+  renderBatchList(batch);
+  const notices = [...(batch.errors || []), ...(batch.warnings || [])];
+  notices.forEach((notice) => {
+    const item = document.createElement("p");
+    item.className = "muted";
+    item.textContent = `${notice.code || "notice"}: ${notice.message || "No details."}`;
+    batchResult.appendChild(item);
+  });
+  batchRetryButton.classList.toggle("hidden", !(batch.failed_count > 0));
+  batchCancelButton.classList.toggle("hidden", !["queued", "running"].includes(batch.status));
+  if (["succeeded", "failed", "cancelled"].includes(batch.status)) {
+    loadRecentOutputs();
+  }
+}
+
+function setBatchLoading(isLoading, label = "Working...") {
+  if (isLoading) {
+    emptyState.classList.add("hidden");
+    resultContent.classList.add("hidden");
+    loadingState.classList.remove("hidden");
+    loadingState.querySelector("h2").textContent = label;
+  } else {
+    loadingState.querySelector("h2").textContent = "Analyzing...";
+  }
+}
+
+function setBatchRunning(isRunning) {
+  batchStartButton.disabled = isRunning || currentBatchItems.filter((item) => item.selected !== false).length === 0;
+  batchPresetSelect.disabled = isRunning;
+  batchConcurrencySelect.disabled = isRunning;
+  batchOutputDirInput.disabled = isRunning;
+  batchStartButton.textContent = isRunning ? "Running queue..." : "Start queue";
+}
+
+function updateBatchControls() {
+  batchStartButton.disabled = currentBatchItems.filter((item) => item.selected !== false).length === 0;
+}
+
+function resetBatchState(hidePanel = true) {
+  activeBatchId = null;
+  currentBatchItems = [];
+  batchUrlInput.value = "";
+  batchOutputDirInput.value = DEFAULT_DOWNLOAD_OUTPUT_DIR;
+  batchPresetSelect.value = "best_video";
+  batchConcurrencySelect.value = "1";
+  batchCount.textContent = "No URLs";
+  batchImportSummary.textContent = "";
+  batchList.innerHTML = "";
+  batchResult.classList.add("hidden");
+  batchResult.innerHTML = "";
+  batchRetryButton.classList.add("hidden");
+  batchCancelButton.classList.add("hidden");
+  batchStartButton.textContent = "Start queue";
+  batchStartButton.disabled = true;
+  batchPresetSelect.disabled = false;
+  batchConcurrencySelect.disabled = false;
+  batchOutputDirInput.disabled = false;
+  if (hidePanel) {
+    batchPanel.classList.add("hidden");
+  }
+}
+
+function firstUrlFromText(text) {
+  const match = String(text || "").match(/https?:\/\/[^\s<>"']+/);
+  return match ? match[0].replace(/[.,);\]]+$/, "") : "";
+}
+
+function compactUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.hostname}${parsed.pathname}`.slice(0, 90);
+  } catch {
+    return String(url || "").slice(0, 90);
+  }
+}
+
 function renderLocalAnalyzeResult(result) {
   currentLocalFileResult = result;
   loadingState.classList.add("hidden");
@@ -761,6 +1136,7 @@ function renderLocalAnalyzeResult(result) {
   downloadPanel.classList.add("hidden");
   transcriptPanel.classList.add("hidden");
   coursePanel.classList.add("hidden");
+  batchPanel.classList.add("hidden");
   localFilePanel.classList.toggle("hidden", (result.errors || []).length > 0);
   renderLocalMetadata(result);
   updateLocalTranscribeButtonState();
@@ -789,6 +1165,7 @@ function renderCourseAnalyzeResponse(data) {
   downloadPanel.classList.add("hidden");
   transcriptPanel.classList.add("hidden");
   localFilePanel.classList.add("hidden");
+  batchPanel.classList.add("hidden");
   renderWarnings(result.warnings || []);
   renderErrors(result.errors || [], null);
   renderCourseSummary(result);
@@ -893,6 +1270,7 @@ function renderAnalyzeResponse(data) {
   renderWarnings(result.warnings || []);
   renderErrors(resultErrors, data.job.error);
   coursePanel.classList.add("hidden");
+  batchPanel.classList.add("hidden");
   localFilePanel.classList.add("hidden");
   downloadPanel.classList.toggle("hidden", resultErrors.length > 0);
   updateFlowStep(resultErrors.length > 0 ? "analyze" : "select");
@@ -1964,6 +2342,7 @@ function renderFatalError(title, message) {
   renderWarnings([]);
   renderErrors([{ code: errorCodeFromTitle(title), message }], null);
   coursePanel.classList.add("hidden");
+  batchPanel.classList.add("hidden");
   localFilePanel.classList.add("hidden");
   resetDownloadSelection();
 }

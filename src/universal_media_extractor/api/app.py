@@ -33,6 +33,10 @@ from universal_media_extractor.api.schemas import (
     UdemyCourseDownloadRequest,
 )
 from universal_media_extractor.models import (
+    Batch,
+    BatchCreateRequest,
+    BatchUrlImportRequest,
+    BatchUrlImportResult,
     DiagnosticBundle,
     ErrorState,
     Job,
@@ -44,15 +48,19 @@ from universal_media_extractor.models import (
     OutputListResult,
     OutputRevealResult,
     OutputSummary,
+    PlaylistAnalyzeRequest,
+    PlaylistAnalyzeResult,
     UdemyCourseAnalyzeResult,
 )
 from universal_media_extractor.services import (
     AnalyzeService,
+    BatchService,
     DiagnosticsService,
     DownloadService,
     JobService,
     LocalFileMetadataService,
     OutputManager,
+    PlaylistService,
     TranscriptionService,
     UdemyCourseService,
 )
@@ -97,6 +105,11 @@ def create_app(
     app.state.job_service = JobService(app.state.job_db_path)
     app.state.session_token = session_token or secrets.token_urlsafe(32)
     app.state.max_upload_bytes = max_upload_bytes or DEFAULT_MAX_UPLOAD_BYTES
+    app.state.batch_service = BatchService(
+        job_service=app.state.job_service,
+        download_service=app.state.download_service,
+    )
+    app.state.playlist_service = PlaylistService()
 
     app.add_middleware(
         CORSMiddleware,
@@ -183,6 +196,54 @@ def create_app(
             error=final_error,
         )
         return AnalyzeResponse(job=job, result=result)
+
+    @app.post("/batch/import", response_model=BatchUrlImportResult)
+    def batch_import(request: BatchUrlImportRequest) -> BatchUrlImportResult:
+        batch_service: BatchService = app.state.batch_service
+        return batch_service.import_urls(request.text, source=request.source)
+
+    @app.post("/playlists/analyze", response_model=PlaylistAnalyzeResult)
+    def playlist_analyze(request: PlaylistAnalyzeRequest) -> PlaylistAnalyzeResult:
+        output_manager: OutputManager = app.state.output_manager
+        playlist_service: PlaylistService = app.state.playlist_service
+        raw_output_dir = output_manager.create_analysis_output_dir(
+            Path(app.state.raw_output_base_dir),
+            source_id=request.source_url,
+        )
+        return playlist_service.analyze_playlist(request, raw_output_dir=raw_output_dir)
+
+    @app.post("/batch", response_model=Batch)
+    def create_batch(request: BatchCreateRequest) -> Batch:
+        batch_service: BatchService = app.state.batch_service
+        if request.output_base_dir:
+            app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()
+        return batch_service.create_batch(request)
+
+    @app.get("/batch/{batch_id}", response_model=Batch)
+    def get_batch(batch_id: str) -> Batch:
+        batch_service: BatchService = app.state.batch_service
+        batch = batch_service.get_batch(batch_id)
+        if batch is None:
+            raise HTTPException(status_code=404, detail="Batch not found.")
+        return batch
+
+    @app.post("/batch/{batch_id}/retry-failed", response_model=Batch)
+    def retry_failed_batch_items(batch_id: str) -> Batch:
+        batch_service: BatchService = app.state.batch_service
+        try:
+            return batch_service.retry_failed_items(batch_id)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="Batch not found.") from None
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from None
+
+    @app.post("/batch/{batch_id}/cancel", response_model=Batch)
+    def cancel_batch(batch_id: str) -> Batch:
+        batch_service: BatchService = app.state.batch_service
+        try:
+            return batch_service.cancel_batch(batch_id)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="Batch not found.") from None
 
     @app.post("/download", response_model=Job)
     def download(request: DownloadRequest) -> Job:
