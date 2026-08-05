@@ -11,6 +11,17 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from universal_media_extractor.api.app import create_app
 from universal_media_extractor.services.diagnostics_service import DiagnosticsService
+SECURITY_HEADER_NAME = "X-UME-Session-Token"
+
+
+def _client(app):
+    return TestClient(
+        app,
+        base_url="http://127.0.0.1:8000",
+        headers={SECURITY_HEADER_NAME: app.state.session_token},
+    )
+
+
 from universal_media_extractor.models import (
     AccessState,
     AnalyzeResult,
@@ -54,7 +65,7 @@ def _wait_for_terminal_job(client: TestClient, job_id: str, *, timeout: float = 
 
 
 def test_health_endpoint_returns_local_only_status(tmp_path):
-    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path))
 
     response = client.get("/health")
 
@@ -69,23 +80,26 @@ def test_health_endpoint_returns_local_only_status(tmp_path):
 def test_config_endpoint_defaults_to_internal_course_mode(tmp_path, monkeypatch):
     monkeypatch.delenv("UME_PUBLIC_PRODUCT_MODE", raising=False)
     monkeypatch.delenv("UME_ENABLE_COURSE_MODE", raising=False)
-    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path))
 
     response = client.get("/config")
 
     assert response.status_code == 200
-    assert response.json() == {
+    body = response.json()
+    assert body == {
         "service": "universal-media-extractor",
         "mode": "local-only",
         "public_product_mode": False,
         "course_mode_enabled": True,
+        "session_token": body["session_token"],
     }
+    assert len(body["session_token"]) >= 32
 
 
 def test_config_endpoint_hides_course_mode_in_public_product_mode(tmp_path, monkeypatch):
     monkeypatch.setenv("UME_PUBLIC_PRODUCT_MODE", "1")
     monkeypatch.delenv("UME_ENABLE_COURSE_MODE", raising=False)
-    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path))
 
     response = client.get("/config")
 
@@ -96,7 +110,7 @@ def test_config_endpoint_hides_course_mode_in_public_product_mode(tmp_path, monk
 
 def test_config_endpoint_can_disable_course_mode_explicitly(tmp_path, monkeypatch):
     monkeypatch.setenv("UME_ENABLE_COURSE_MODE", "0")
-    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path))
 
     response = client.get("/config")
 
@@ -105,7 +119,7 @@ def test_config_endpoint_can_disable_course_mode_explicitly(tmp_path, monkeypatc
 
 
 def test_static_index_is_available(tmp_path):
-    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path))
 
     response = client.get("/")
 
@@ -130,7 +144,7 @@ def test_static_index_is_available(tmp_path):
 
 
 def test_static_javascript_is_available(tmp_path):
-    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path))
 
     response = client.get("/static/app.js")
 
@@ -166,10 +180,13 @@ def test_static_javascript_is_available(tmp_path):
     assert "MP4" in response.text
     assert "courseAuthSourceSelect" in response.text
     assert "cookies_path" in response.text
+    assert "X-UME-Session-Token" in response.text
+    assert "apiFetch" in response.text
+    assert "session_token" in response.text
 
 
 def test_static_option_normalizer_is_available(tmp_path):
-    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path))
 
     response = client.get("/static/option_normalizer.js")
 
@@ -177,6 +194,106 @@ def test_static_option_normalizer_is_available(tmp_path):
     assert "buildFormatPickerData" in response.text
     assert "dedupeSubtitleOptions" in response.text
     assert "MIN_VIDEO_QUALITY" in response.text
+
+
+def test_protected_endpoint_requires_session_token(tmp_path):
+    app = create_app(raw_output_base_dir=tmp_path, session_token="s" * 32)
+    client = TestClient(app, base_url="http://127.0.0.1:8000")
+
+    response = client.post(
+        "/analyze",
+        json={"source_type": "url", "url": "https://example.test/video"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Local session token is required."}
+
+
+def test_protected_endpoint_rejects_invalid_session_token(tmp_path):
+    app = create_app(raw_output_base_dir=tmp_path, session_token="s" * 32)
+    client = TestClient(
+        app,
+        base_url="http://127.0.0.1:8000",
+        headers={SECURITY_HEADER_NAME: "wrong"},
+    )
+
+    response = client.post(
+        "/analyze",
+        json={"source_type": "url", "url": "https://example.test/video"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Local session token is required."}
+
+
+def test_cross_origin_request_is_rejected_even_with_token(tmp_path):
+    app = create_app(raw_output_base_dir=tmp_path, session_token="s" * 32)
+    client = TestClient(
+        app,
+        base_url="http://127.0.0.1:8000",
+        headers={SECURITY_HEADER_NAME: app.state.session_token},
+    )
+
+    response = client.post(
+        "/analyze",
+        headers={"Origin": "https://evil.example"},
+        json={"source_type": "url", "url": "https://example.test/video"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Origin is not allowed."}
+
+
+def test_local_origin_request_with_token_is_allowed(tmp_path):
+    app = create_app(raw_output_base_dir=tmp_path, session_token="s" * 32)
+    calls = {"count": 0}
+
+    class FakeAnalyzeService:
+        def analyze_url(self, url, raw_output_dir=None):
+            calls["count"] += 1
+            return _analyze_result(url)
+
+    app.state.analyze_service = FakeAnalyzeService()
+    client = TestClient(
+        app,
+        base_url="http://127.0.0.1:8000",
+        headers={SECURITY_HEADER_NAME: app.state.session_token},
+    )
+
+    response = client.post(
+        "/analyze",
+        headers={"Origin": "http://127.0.0.1:8000"},
+        json={"source_type": "url", "url": "https://example.test/video"},
+    )
+
+    assert response.status_code == 200
+    assert calls["count"] == 1
+
+
+def test_cors_preflight_allows_only_local_origin(tmp_path):
+    app = create_app(raw_output_base_dir=tmp_path, session_token="s" * 32)
+    client = TestClient(app, base_url="http://127.0.0.1:8000")
+
+    allowed = client.options(
+        "/analyze",
+        headers={
+            "Origin": "http://127.0.0.1:8000",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type,x-ume-session-token",
+        },
+    )
+    rejected = client.options(
+        "/analyze",
+        headers={
+            "Origin": "https://evil.example",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type,x-ume-session-token",
+        },
+    )
+
+    assert allowed.status_code == 200
+    assert allowed.headers["access-control-allow-origin"] == "http://127.0.0.1:8000"
+    assert rejected.status_code == 403
 
 
 def test_analyze_endpoint_uses_service_and_returns_result(tmp_path):
@@ -190,7 +307,7 @@ def test_analyze_endpoint_uses_service_and_returns_result(tmp_path):
             return _analyze_result(url)
 
     app.state.analyze_service = FakeAnalyzeService()
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post(
         "/analyze",
@@ -216,7 +333,7 @@ def test_analyze_endpoint_rejects_empty_url_without_calling_service(tmp_path):
             return _analyze_result(url)
 
     app.state.analyze_service = FakeAnalyzeService()
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post("/analyze", json={"source_type": "url", "url": ""})
 
@@ -234,7 +351,7 @@ def test_analyze_endpoint_rejects_invalid_url_without_calling_service(tmp_path):
             return _analyze_result(url)
 
     app.state.analyze_service = FakeAnalyzeService()
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post("/analyze", json={"source_type": "url", "url": "not-a-url"})
 
@@ -257,7 +374,7 @@ def test_analyze_endpoint_marks_login_required_error_as_failed_job(tmp_path):
             return _analyze_result(url, errors=[error])
 
     app.state.analyze_service = FakeAnalyzeService()
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post(
         "/analyze",
@@ -296,7 +413,7 @@ def test_diagnostics_endpoint_returns_redacted_job_bundle(tmp_path):
             "errors": [error.model_dump(mode="json")],
         },
     )
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.get(f"/diagnostics/jobs/{job.job_id}")
 
@@ -311,7 +428,7 @@ def test_diagnostics_endpoint_returns_redacted_job_bundle(tmp_path):
 
 
 def test_diagnostics_endpoint_returns_404_for_missing_job(tmp_path):
-    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path))
 
     response = client.get("/diagnostics/jobs/missing")
 
@@ -331,7 +448,7 @@ def test_analyze_endpoint_keeps_analyzer_errors_in_result_and_job(tmp_path):
             return _analyze_result(url, errors=[error])
 
     app.state.analyze_service = FakeAnalyzeService()
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post(
         "/analyze",
@@ -353,7 +470,7 @@ def test_get_job_endpoint_returns_created_job(tmp_path):
             return _analyze_result(url)
 
     app.state.analyze_service = FakeAnalyzeService()
-    client = TestClient(app)
+    client = _client(app)
     analyze_response = client.post(
         "/analyze",
         json={"source_type": "url", "url": "https://example.test/video"},
@@ -367,7 +484,7 @@ def test_get_job_endpoint_returns_created_job(tmp_path):
 
 
 def test_get_job_endpoint_returns_404_for_missing_job(tmp_path):
-    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path))
 
     response = client.get("/jobs/missing")
 
@@ -376,7 +493,7 @@ def test_get_job_endpoint_returns_404_for_missing_job(tmp_path):
 
 
 def test_download_endpoint_requires_rights_confirmation(tmp_path):
-    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path))
 
     response = client.post(
         "/download",
@@ -416,7 +533,7 @@ def test_download_endpoint_uses_service_and_returns_result(tmp_path):
             )
 
     app.state.download_service = FakeDownloadService()
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post(
         "/download",
@@ -466,7 +583,7 @@ def test_transcribe_endpoint_uses_service_and_returns_result(tmp_path):
             )
 
     app.state.transcription_service = FakeTranscriptionService()
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post(
         "/transcribe",
@@ -491,7 +608,7 @@ def test_transcribe_endpoint_uses_service_and_returns_result(tmp_path):
 def test_cancel_job_endpoint_marks_queued_job_cancelled(tmp_path):
     app = create_app(raw_output_base_dir=tmp_path)
     job = app.state.job_service.create_job("download", {"format_id": "140"})
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post(f"/jobs/{job.job_id}/cancel")
 
@@ -503,7 +620,7 @@ def test_cancel_job_endpoint_marks_queued_job_cancelled(tmp_path):
 
 
 def test_cancel_job_endpoint_returns_404_for_missing_job(tmp_path):
-    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path))
 
     response = client.post("/jobs/missing/cancel")
 
@@ -530,7 +647,7 @@ def test_local_analyze_endpoint_saves_upload_and_returns_metadata(tmp_path):
             )
 
     app.state.local_file_metadata_service = FakeLocalFileMetadataService()
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post(
         "/local/analyze",
@@ -547,7 +664,7 @@ def test_local_analyze_endpoint_saves_upload_and_returns_metadata(tmp_path):
 
 
 def test_local_analyze_endpoint_rejects_empty_upload(tmp_path):
-    client = TestClient(create_app(raw_output_base_dir=tmp_path, output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path, output_base_dir=tmp_path))
 
     response = client.post(
         "/local/analyze",
@@ -556,6 +673,24 @@ def test_local_analyze_endpoint_rejects_empty_upload(tmp_path):
 
     assert response.status_code == 400
     assert response.json() == {"detail": "Uploaded file is empty."}
+
+
+def test_local_analyze_endpoint_rejects_upload_over_size_limit(tmp_path):
+    app = create_app(
+        raw_output_base_dir=tmp_path,
+        output_base_dir=tmp_path,
+        max_upload_bytes=3,
+    )
+    client = _client(app)
+
+    response = client.post(
+        "/local/analyze",
+        files={"file": ("large.wav", b"abcd", "audio/wav")},
+    )
+
+    assert response.status_code == 413
+    assert response.json() == {"detail": "Uploaded file is too large."}
+    assert not list(tmp_path.rglob("large.wav"))
 
 
 def test_local_transcribe_endpoint_uses_service_and_returns_job(tmp_path):
@@ -582,7 +717,7 @@ def test_local_transcribe_endpoint_uses_service_and_returns_job(tmp_path):
             )
 
     app.state.transcription_service = FakeTranscriptionService()
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post(
         "/local/transcribe",
@@ -607,7 +742,7 @@ def test_local_transcribe_endpoint_uses_service_and_returns_job(tmp_path):
 
 
 def test_local_transcribe_endpoint_rejects_missing_file(tmp_path):
-    client = TestClient(create_app(raw_output_base_dir=tmp_path, output_base_dir=tmp_path))
+    client = _client(create_app(raw_output_base_dir=tmp_path, output_base_dir=tmp_path))
 
     response = client.post(
         "/local/transcribe",
@@ -629,9 +764,7 @@ def test_local_transcribe_endpoint_rejects_file_outside_output_base(tmp_path):
     input_file.write_bytes(b"audio")
     output_base = tmp_path / "outputs"
     output_base.mkdir()
-    client = TestClient(
-        create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base)
-    )
+    client = _client(create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base))
 
     response = client.post(
         "/local/transcribe",
@@ -665,7 +798,7 @@ def test_udemy_analyze_endpoint_uses_service(tmp_path):
             )
 
     app.state.udemy_course_service = FakeUdemyCourseService()
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post(
         "/udemy/analyze",
@@ -700,7 +833,7 @@ def test_udemy_download_endpoint_returns_job_and_result(tmp_path):
             )
 
     app.state.udemy_course_service = FakeUdemyCourseService()
-    client = TestClient(app)
+    client = _client(app)
 
     response = client.post(
         "/udemy/download",
@@ -734,7 +867,7 @@ def test_outputs_endpoint_lists_outputs(tmp_path):
         '{"filename": "sample.wav"}',
         encoding="utf-8",
     )
-    client = TestClient(create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base))
+    client = _client(create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base))
 
     response = client.get("/outputs")
 
@@ -750,7 +883,7 @@ def test_output_detail_endpoint_returns_summary(tmp_path):
     output_dir = output_base / "local_20260530T134814Z_detail"
     (output_dir / "transcripts").mkdir(parents=True)
     (output_dir / "transcripts" / "summary_prompt.md").write_text("prompt", encoding="utf-8")
-    client = TestClient(create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base))
+    client = _client(create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base))
 
     response = client.get(f"/outputs/{output_dir.name}")
 
@@ -763,7 +896,7 @@ def test_delete_output_endpoint_deletes_dummy_output(tmp_path):
     output_dir = output_base / "local_20260530T134814Z_dummy"
     output_dir.mkdir(parents=True)
     (output_dir / "file.txt").write_text("dummy", encoding="utf-8")
-    client = TestClient(create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base))
+    client = _client(create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base))
 
     response = client.delete(f"/outputs/{output_dir.name}")
 
@@ -775,7 +908,7 @@ def test_delete_output_endpoint_deletes_dummy_output(tmp_path):
 def test_delete_output_endpoint_refuses_path_traversal(tmp_path):
     output_base = tmp_path / "outputs"
     output_base.mkdir()
-    client = TestClient(create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base))
+    client = _client(create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base))
 
     response = client.delete("/outputs/..%2Fproof")
 

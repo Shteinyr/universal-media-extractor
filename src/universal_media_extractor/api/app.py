@@ -8,12 +8,14 @@ features, or run as an online service.
 from __future__ import annotations
 
 import os
+import secrets
 from pathlib import Path
 from threading import Thread
 from typing import Any, Callable
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from universal_media_extractor.api.schemas import (
@@ -52,12 +54,18 @@ from universal_media_extractor.services import (
 
 DEFAULT_RAW_OUTPUT_BASE_DIR = Path("proof/api")
 DEFAULT_OUTPUT_BASE_DIR = Path.home() / "Downloads" / "Universal Media Extractor"
+DEFAULT_MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024
+SECURITY_HEADER_NAME = "x-ume-session-token"
+LOCAL_ORIGIN_REGEX = r"^https?://(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$"
 STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
 
 
 def create_app(
     raw_output_base_dir: Path | None = None,
     output_base_dir: Path | None = None,
+    *,
+    session_token: str | None = None,
+    max_upload_bytes: int | None = None,
 ) -> FastAPI:
     """Create the analysis-only FastAPI app."""
 
@@ -76,6 +84,40 @@ def create_app(
     app.state.job_service = JobService()
     app.state.raw_output_base_dir = raw_output_base_dir or DEFAULT_RAW_OUTPUT_BASE_DIR
     app.state.output_base_dir = output_base_dir or DEFAULT_OUTPUT_BASE_DIR
+    app.state.session_token = session_token or secrets.token_urlsafe(32)
+    app.state.max_upload_bytes = max_upload_bytes or DEFAULT_MAX_UPLOAD_BYTES
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=LOCAL_ORIGIN_REGEX,
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_headers=["content-type", SECURITY_HEADER_NAME],
+    )
+
+    @app.middleware("http")
+    async def enforce_local_security(request: Request, call_next):
+        if not _is_allowed_host(request.headers.get("host", "")):
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Only localhost requests are allowed."},
+            )
+        if not _is_allowed_origin(request.headers.get("origin")):
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Origin is not allowed."},
+            )
+        if _requires_session_token(request):
+            provided_token = request.headers.get(SECURITY_HEADER_NAME, "")
+            if not secrets.compare_digest(provided_token, app.state.session_token):
+                return JSONResponse(
+                    status_code=403,
+                    content={"detail": "Local session token is required."},
+                )
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        return response
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
@@ -91,6 +133,7 @@ def create_app(
         return AppConfigResponse(
             public_product_mode=public_mode,
             course_mode_enabled=_read_bool_env("UME_ENABLE_COURSE_MODE", default=course_default),
+            session_token=app.state.session_token,
         )
 
     @app.get("/health", response_model=HealthResponse)
@@ -212,7 +255,7 @@ def create_app(
             filename=file.filename,
         )
         saved_path = output_dir / "source" / _safe_filename(file.filename)
-        size = await _save_upload(file, saved_path)
+        size = await _save_upload(file, saved_path, max_bytes=app.state.max_upload_bytes)
         if size == 0:
             raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
@@ -311,6 +354,31 @@ def create_app(
     return app
 
 
+def _requires_session_token(request: Request) -> bool:
+    if request.method == "OPTIONS":
+        return False
+    path = request.url.path
+    if path in {"/", "/health", "/config", "/favicon.ico"}:
+        return False
+    return not path.startswith("/static/")
+
+
+def _is_allowed_host(host_header: str) -> bool:
+    host = host_header.rsplit(":", 1)[0].strip().lower()
+    if host.startswith("[") and host.endswith("]"):
+        host = host[1:-1]
+    return host in {"127.0.0.1", "localhost", "::1", "testserver"}
+
+
+def _is_allowed_origin(origin: str | None) -> bool:
+    if not origin:
+        return True
+    from urllib.parse import urlparse
+
+    parsed = urlparse(origin)
+    return parsed.scheme in {"http", "https"} and parsed.hostname in {"127.0.0.1", "localhost", "::1"}
+
+
 def _read_bool_env(name: str, *, default: bool) -> bool:
     value = os.getenv(name)
     if value is None:
@@ -321,19 +389,25 @@ def _read_bool_env(name: str, *, default: bool) -> bool:
 app = create_app()
 
 
-async def _save_upload(file: UploadFile, destination: Path) -> int:
-    """Save an UploadFile to a project-local destination."""
+async def _save_upload(file: UploadFile, destination: Path, *, max_bytes: int) -> int:
+    """Save an UploadFile to a local destination with a strict size cap."""
 
     destination.parent.mkdir(parents=True, exist_ok=True)
     total = 0
-    with destination.open("wb") as handle:
-        while True:
-            chunk = await file.read(1024 * 1024)
-            if not chunk:
-                break
-            total += len(chunk)
-            handle.write(chunk)
-    await file.close()
+    try:
+        with destination.open("wb") as handle:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > max_bytes:
+                    handle.close()
+                    destination.unlink(missing_ok=True)
+                    raise HTTPException(status_code=413, detail="Uploaded file is too large.")
+                handle.write(chunk)
+    finally:
+        await file.close()
     return total
 
 

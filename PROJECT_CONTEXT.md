@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation; Commercial Block 3 issue #9 completed for preset-based output selection.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation; Commercial Block 3 issue #9 completed for preset-based output selection; Commercial Block 4 issue #8 completed for localhost security hardening.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -59,6 +59,7 @@ Commercial direction after GPT Pro strategy review:
 - `pywebview` for the local desktop wrapper.
 - Udemy course analyze/download service through `yt-dlp`.
 - Shared error normalization and local redacted diagnostics bundles for failed jobs.
+- Local API security middleware with random session token, local origin/host checks, explicit CORS policy, and upload size cap.
 
 ## Completed Roadmap
 
@@ -76,9 +77,11 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
-Commercial Block 3: Preset Output Selection - done.
+Commercial Block 4: Localhost Security Hardening - done.
 
-Result: the public URL output picker now shows presets instead of raw technical stream rows: `Best Video`, `1080p`, `Smaller Video`, `Audio M4A`, `Audio MP3`, `Subtitles`, and disabled planned `Archive Pack`. Internal `format_id` values are still preserved for `/download`, and technical stream rows are available only under `Advanced details`.
+Result: protected local API calls now require an in-memory random session token passed by the static UI as `X-UME-Session-Token`. The backend rejects non-local hosts/origins, uses explicit local-only CORS settings, caps uploads, keeps path-sensitive operations constrained, and preserves CLI argument allowlists and diagnostics redaction.
+
+Commercial Block 3 remains completed: the public URL output picker shows presets instead of raw technical stream rows, while internal `format_id` values stay available for `/download`.
 
 Udemy Course Offline Export remains completed as an internal/experimental feature. The UI must preserve pasted Udemy lecture/player URLs and not rewrite them into clean course URLs.
 
@@ -94,7 +97,7 @@ Udemy command path is documented in `docs/UDEMY_COURSE_EXPORT.md`.
 
 ## Planned Next Block
 
-Commercial Foundation, Commercial Block 2 Errors + Diagnostics Foundation, and Commercial Block 3 Preset Output Selection are completed. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
+Commercial Foundation, Commercial Block 2 Errors + Diagnostics Foundation, Commercial Block 3 Preset Output Selection, and Commercial Block 4 Localhost Security Hardening are completed. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
 
 Recommended next user-approved commercial block:
 
@@ -102,7 +105,7 @@ Recommended next user-approved commercial block:
 Public Beta Readiness
 ```
 
-Candidate issues: localhost security hardening, SQLite-backed jobs/history, output templates, production packaging foundations, and beta-ready QA/documentation.
+Candidate issues: SQLite-backed jobs/history, output templates, production packaging foundations, and beta-ready QA/documentation.
 
 Do not start the next block until the user explicitly confirms.
 
@@ -227,3 +230,10 @@ This document closes GitHub issues #6-#7 and defines the first public-beta diagn
 - `docs/COMMERCIAL_BLOCK_3_PRESET_OUTPUT_SELECTION.md`
 
 This document closes GitHub issue #9 and defines the first public preset-based output selection layer.
+
+
+## Commercial Block 4 Docs
+
+- `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`
+
+This document closes GitHub issue #8 and defines the first public-beta localhost API security boundary.

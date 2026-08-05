@@ -39,5 +39,4 @@ Large files can take a long time to download, process, merge, or transcribe. The
 - no batch/queue workflow;
 - no paid licensing system;
 - no public website/payment flow;
-- no diagnostics bundle yet;
-- no production localhost security hardening yet.
+- production diagnostics and localhost security behavior still need external beta validation.

@@ -95,9 +95,11 @@ let activeTranscribeJobId = null;
 let activeLocalTranscribeJobId = null;
 let activeCourseDownloadJobId = null;
 let activeFormatCategory = null;
-let appConfig = { course_mode_enabled: true, public_product_mode: false };
+let appConfig = { course_mode_enabled: true, public_product_mode: false, session_token: "" };
+let sessionToken = "";
 const DEFAULT_DOWNLOAD_OUTPUT_DIR = "~/Downloads/Universal Media Extractor";
 const DEFAULT_UDEMY_OUTPUT_DIR = "~/Downloads/Universal Media Extractor/Udemy";
+const SECURITY_HEADER_NAME = "X-UME-Session-Token";
 const OUTPUT_FORMAT_CHOICES = {
   audio: [
     ["m4a", "M4A"],
@@ -156,7 +158,7 @@ form.addEventListener("submit", async (event) => {
   setLoading(true);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/analyze`, {
+    const response = await apiFetch("/analyze", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -212,7 +214,7 @@ localFileForm.addEventListener("submit", async (event) => {
   formData.append("file", file);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/local/analyze`, {
+    const response = await apiFetch("/local/analyze", {
       method: "POST",
       body: formData,
     });
@@ -251,7 +253,7 @@ courseForm.addEventListener("submit", async (event) => {
 
   setCourseLoading(true);
   try {
-    const response = await fetch(`${API_BASE_URL}/udemy/analyze`, {
+    const response = await apiFetch("/udemy/analyze", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -282,7 +284,7 @@ downloadButton.addEventListener("click", async () => {
   setDownloadLoading(true);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/download`, {
+    const response = await apiFetch("/download", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -351,7 +353,7 @@ transcribeButton.addEventListener("click", async () => {
   setTranscribeLoading(true);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/transcribe`, {
+    const response = await apiFetch("/transcribe", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -418,7 +420,7 @@ localTranscribeButton.addEventListener("click", async () => {
   downloadedFileForTranscript = currentLocalFileResult.saved_path;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/local/transcribe`, {
+    const response = await apiFetch("/local/transcribe", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -484,7 +486,7 @@ courseDownloadButton.addEventListener("click", async () => {
 
   setCourseDownloadLoading(true);
   try {
-    const response = await fetch(`${API_BASE_URL}/udemy/download`, {
+    const response = await apiFetch("/udemy/download", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -565,14 +567,27 @@ if (recentCard && !recentCard.classList.contains("hidden")) {
 
 async function initializeAppConfig() {
   try {
-    const response = await fetch(`${API_BASE_URL}/config`);
+    const response = await fetch(`${API_BASE_URL}/config`, { cache: "no-store" });
     if (response.ok) {
       appConfig = await response.json();
+      sessionToken = appConfig.session_token || "";
     }
   } catch {
-    appConfig = { course_mode_enabled: true, public_product_mode: false };
+    appConfig = { course_mode_enabled: true, public_product_mode: false, session_token: "" };
+    sessionToken = "";
   }
   applyFeatureConfig();
+}
+
+function apiFetch(path, options = {}) {
+  const headers = new Headers(options.headers || {});
+  if (sessionToken) {
+    headers.set(SECURITY_HEADER_NAME, sessionToken);
+  }
+  return fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
 }
 
 function applyFeatureConfig() {
@@ -1407,7 +1422,7 @@ function renderJobStatus(container, job, label) {
 async function pollJob(jobId, onUpdate) {
   while (true) {
     await delay(900);
-    const response = await fetch(`${API_BASE_URL}/jobs/${encodeURIComponent(jobId)}`);
+    const response = await apiFetch(`/jobs/${encodeURIComponent(jobId)}`);
     if (!response.ok) {
       throw new Error(await readErrorMessage(response));
     }
@@ -1420,7 +1435,7 @@ async function pollJob(jobId, onUpdate) {
 }
 
 async function cancelJob(jobId, container, label) {
-  const response = await fetch(`${API_BASE_URL}/jobs/${encodeURIComponent(jobId)}/cancel`, {
+  const response = await apiFetch(`/jobs/${encodeURIComponent(jobId)}/cancel`, {
     method: "POST",
   });
   if (!response.ok) {
@@ -1541,7 +1556,7 @@ function selectedTranscriptPath(result) {
 
 async function loadRecentOutputs() {
   try {
-    const response = await fetch(`${API_BASE_URL}/outputs`);
+    const response = await apiFetch("/outputs");
     if (!response.ok) {
       recentResultsList.innerHTML = "";
       recentResultsList.appendChild(emptyLine("Recent results are unavailable."));
@@ -1605,7 +1620,7 @@ function renderRecentOutputs(outputs) {
 
 async function deleteRecentOutput(outputId) {
   try {
-    const response = await fetch(`${API_BASE_URL}/outputs/${encodeURIComponent(outputId)}`, {
+    const response = await apiFetch(`/outputs/${encodeURIComponent(outputId)}`, {
       method: "DELETE",
     });
     if (!response.ok) {

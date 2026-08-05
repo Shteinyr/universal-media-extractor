@@ -1,10 +1,10 @@
 # Universal Media Extractor & Transcriber
 
-Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, Commercial Block 2, and Commercial Block 3 are completed.
+Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, Commercial Block 2, Commercial Block 3, and Commercial Block 4 are completed.
 
 This project is evaluating whether a local web app can accept a URL or local audio/video file, analyze available media variants, extract or download selected outputs, transcribe audio locally, and save structured results without paid APIs or cloud services.
 
-Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, preset-based output selection, selected-output download, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, in-memory job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, browser smoke screenshots, desktop wrapper launcher, generated transcript result actions, and structured output folders. Chrome extension, packaged/signed `.app`, auth, database, stored credentials, online service behavior, batch processing, external queue, and AI summary are not implemented.
+Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, preset-based output selection, selected-output download, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, in-memory job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, generated transcript result actions, and structured output folders. Chrome extension, packaged/signed `.app`, auth, database, stored credentials, online service behavior, batch processing, external queue, and AI summary are not implemented.
 
 The visible UI has been simplified for a more final user-facing surface: the sidebar now focuses on mode selection and input, while development-oriented status, flow checklist, helper copy, and Recent results are hidden from the main screen.
 
@@ -26,6 +26,7 @@ Commercial foundation docs:
 - `docs/PUBLIC_KNOWN_LIMITATIONS.md`
 - `docs/COMMERCIAL_BLOCK_2_ERRORS_DIAGNOSTICS.md`
 - `docs/COMMERCIAL_BLOCK_3_PRESET_OUTPUT_SELECTION.md`
+- `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`
 
 Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1`. In that mode, internal/experimental Course Mode is hidden from the static UI by default.
 
@@ -36,6 +37,9 @@ GET /diagnostics/jobs/{job_id}
 ```
 
 Diagnostics are redacted by default: no cookies, tokens, transcripts, full URLs, or local paths. Details are documented in `docs/COMMERCIAL_BLOCK_2_ERRORS_DIAGNOSTICS.md`.
+
+
+Commercial Block 4 adds localhost API hardening. The static UI receives a random in-memory session token from `/config` and sends it through `X-UME-Session-Token` for protected API calls. The API rejects non-local origins/hosts, uses a strict CORS allowlist, and caps local uploads. Details are documented in `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`.
 
 Durable project context is recorded in `PROJECT_CONTEXT.md`. Read it before large tasks and update it after completed large blocks.
 

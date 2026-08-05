@@ -35,7 +35,7 @@ Current setup:
 - 40 roadmap issues created.
 - All roadmap issues were added to the Project.
 - Project fields were populated through `gh project item-edit`, with `Roadmap Status=Backlog` for all initial items.
-- Commercial Foundation issues #1-#5, Commercial Block 2 issues #6-#7, and Commercial Block 3 issue #9 are now completed and should be tracked as `Done`.
+- Commercial Foundation issues #1-#5, Commercial Block 2 issues #6-#7, Commercial Block 3 issue #9, and Commercial Block 4 issue #8 are now completed and should be tracked as `Done`.
 
 ## Recommended GitHub Project Fields
 
@@ -467,3 +467,21 @@ Result:
 Documentation:
 
 - `docs/COMMERCIAL_BLOCK_3_PRESET_OUTPUT_SELECTION.md`
+
+## Commercial Block 4 Completion
+
+Completed issue:
+
+- `#8 [P0] Harden localhost security`
+
+Result:
+
+- Protected API calls require a random local session token.
+- CORS/origin/host checks are local-only and explicit.
+- CSRF risk is reduced by avoiding cookies and requiring a custom session-token header.
+- Local upload size limits exist.
+- Existing path constraints, CLI allowlists, and diagnostics redaction remain in place.
+
+Documentation:
+
+- `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`

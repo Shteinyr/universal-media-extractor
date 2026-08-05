@@ -512,3 +512,17 @@
 - Created `docs/COMMERCIAL_BLOCK_3_PRESET_OUTPUT_SELECTION.md`.
 - Verified with `node --check` for static JS files and `.venv/bin/python -m pytest -q`; result: 111 passed.
 - Verified browser smoke on `127.0.0.1:8766`; screenshots saved under `proof/commercial_block_3_presets/`.
+
+
+## 2026-08-05 - Commercial Block 4 Localhost Security Hardening
+
+- Added a random session token to the local FastAPI app and exposed it to the same-origin UI through `/config`.
+- Updated static UI requests to send `X-UME-Session-Token` on protected API calls without storing it persistently.
+- Added local host/origin checks and explicit local-only CORS settings.
+- Added a default local upload size limit and partial-file cleanup for oversized uploads.
+- Added API tests for missing/invalid token, rejected cross-origin requests, local-origin success, CORS preflight, and upload size limits.
+- Created `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`.
+- Verified with `node --check src/universal_media_extractor/static/app.js`.
+- Verified with Python py_compile for API schemas, API app, and API tests.
+- Verified with `.venv/bin/python -m pytest -q`; result: 117 passed.
+- Verified browser smoke on `127.0.0.1:8766`; screenshots saved under `proof/commercial_block_4_security/`.

@@ -21,7 +21,7 @@ from universal_media_extractor.models import (
 
 
 class AppConfigResponse(BaseModel):
-    """Feature flags for the local static UI."""
+    """Feature flags and local session data for the static UI."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -29,6 +29,7 @@ class AppConfigResponse(BaseModel):
     mode: Literal["local-only"] = "local-only"
     public_product_mode: bool = False
     course_mode_enabled: bool = True
+    session_token: str = Field(min_length=32)
 
 
 class HealthResponse(BaseModel):

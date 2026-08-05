@@ -146,3 +146,11 @@
 - The main UI should hide `format_id`, codec strings, fps details, and duplicate stream rows by default.
 - Internal download behavior should still preserve the selected `format_id` for `/download`.
 - `Archive Pack` is allowed as a visible disabled planned preset, but real Archive Pack execution requires later queue/batch/history work and is not part of Commercial Block 3.
+
+## 2026-08-05 - Localhost Security Hardening
+
+- Protected API operations require an in-memory random session token between the static UI and backend.
+- `/config` is the only endpoint that exposes the token to the same-origin UI; the token is not stored in localStorage or files.
+- Non-local `Host`/`Origin` requests are rejected and CORS uses explicit local-only settings.
+- Local uploads have a size cap and partial oversized uploads are removed.
+- Path access remains constrained to managed output operations; arbitrary CLI argument passthrough remains out of scope.
