@@ -893,3 +893,23 @@ Future signing/notarization flow:
 Current blocker: a `Developer ID Application` certificate must be installed in Keychain before real signing/notarization can complete.
 
 Docs: `docs/COMMERCIAL_BLOCK_8_MACOS_SIGNING_NOTARIZATION_READINESS.md`.
+
+## macOS DMG Installer Readiness
+
+Build the app, then create a local DMG proof:
+
+```bash
+.venv/bin/python scripts/build_macos_app.py
+.venv/bin/python scripts/build_macos_dmg.py
+```
+
+Artifacts:
+
+```text
+build/macos/dmg/Universal Media Extractor.dmg
+build/macos/dmg/Universal Media Extractor.dmg.sha256
+```
+
+The current DMG is a local unsigned/unnotarized proof. Public distribution requires the signing/notarization work from issue #13 first.
+
+Docs: `docs/COMMERCIAL_BLOCK_9_MACOS_DMG_INSTALLER_READINESS.md`.

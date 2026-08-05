@@ -519,3 +519,10 @@ Documentation:
 - Added scripts/docs for Developer ID signing, hardened runtime, notarytool credentials, notarization, stapling, and Gatekeeper assessment.
 - Current blocker: no `Developer ID Application` certificate is installed in Keychain.
 - DMG installer remains separate issue #14.
+
+## Commercial Block 9 - macOS DMG Installer Readiness
+
+- GitHub issue #14: `[P0] Create macOS DMG installer`.
+- Status: readiness prepared, issue remains open.
+- Added DMG build script, tests, install/uninstall docs, checksum generation, and local unsigned DMG proof.
+- Current blocker: final public DMG must include a signed/notarized app, which depends on issue #13.

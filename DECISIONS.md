@@ -189,3 +189,9 @@
 - Notarization uses `xcrun notarytool`, not deprecated `altool`.
 - Notary credentials should be stored in macOS Keychain via a named profile; passwords and private keys must not be committed or passed through project files.
 - `packaging/macos/entitlements.plist` remains empty until a real signed build proves a specific entitlement is necessary.
+
+## 2026-08-05 - macOS DMG Installer Readiness
+
+- macOS DMG readiness uses a drag-to-Applications layout: app bundle plus `Applications -> /Applications` symlink.
+- Local proof DMGs may be unsigned/unnotarized, but public release DMGs must contain a signed/notarized app and should be signed, notarized, stapled, verified, and published with SHA-256 checksum.
+- DMG installer work remains separate from Windows packaging, payments, website, and product features.

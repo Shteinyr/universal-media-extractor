@@ -393,3 +393,12 @@ The development `.app` now uses a tiny compiled Mach-O launcher in `Contents/Mac
 - Current local readiness check passes for Xcode tools and the built `.app`, but fails because no `Developer ID Application` certificate is available in Keychain.
 - Issue #13 must remain open until Apple Developer ID certificate and notarytool credentials are available and notarization/Gatekeeper checks actually pass.
 - DMG installer remains separate issue #14; no Windows, payments, website, or product feature work was started.
+
+## 2026-08-05 - Commercial Block 9 macOS DMG Installer Readiness
+
+- Prepared local DMG installer readiness without signed/notarized public distribution.
+- Added `scripts/build_macos_dmg.py` to stage the app with an `/Applications` symlink, create a UDZO DMG, verify it with `hdiutil`, and write a SHA-256 checksum.
+- Built local unsigned proof DMG at `build/macos/dmg/Universal Media Extractor.dmg`.
+- Created proof report under `proof/commercial_block_9_macos_dmg_readiness/`.
+- Added install/uninstall/checksum/release-flow docs in `docs/COMMERCIAL_BLOCK_9_MACOS_DMG_INSTALLER_READINESS.md`.
+- Issue #14 remains open because public acceptance requires the DMG to contain a signed/notarized app, which depends on issue #13 Apple Developer ID readiness.

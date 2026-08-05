@@ -572,3 +572,12 @@
 - Added `tests/test_macos_signing_readiness.py`.
 - Created `docs/COMMERCIAL_BLOCK_8_MACOS_SIGNING_NOTARIZATION_READINESS.md`.
 - Readiness proof confirms Xcode signing/notarization tools are available, but `Developer ID Application` identity is missing.
+
+## 2026-08-05 - Commercial Block 9 macOS DMG Installer Readiness
+
+- Added `scripts/build_macos_dmg.py`.
+- Added `tests/test_build_macos_dmg.py`.
+- Created `docs/COMMERCIAL_BLOCK_9_MACOS_DMG_INSTALLER_READINESS.md`.
+- Built local unsigned DMG proof and SHA-256 checksum under `build/macos/dmg/`.
+- Created proof report under `proof/commercial_block_9_macos_dmg_readiness/`.
+- Documented install/uninstall behavior and the blocker for final public DMG: signed/notarized app from issue #13.
