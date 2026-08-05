@@ -16,6 +16,17 @@ Commercial direction: move toward a paid local desktop utility for macOS and Win
 
 GitHub commercial roadmap board: [https://github.com/users/Shteinyr/projects/7](https://github.com/users/Shteinyr/projects/7).
 
+Commercial foundation docs:
+
+- `docs/PUBLIC_PRODUCT_BOUNDARY.md`
+- `docs/LEGAL_SAFE_PRODUCT_COPY.md`
+- `docs/EULA_DRAFT.md`
+- `docs/PRIVACY_POLICY_DRAFT.md`
+- `docs/REFUND_POLICY_DRAFT.md`
+- `docs/PUBLIC_KNOWN_LIMITATIONS.md`
+
+Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1`. In that mode, internal/experimental Course Mode is hidden from the static UI by default.
+
 Durable project context is recorded in `PROJECT_CONTEXT.md`. Read it before large tasks and update it after completed large blocks.
 
 ## Quick Start

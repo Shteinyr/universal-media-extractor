@@ -93,6 +93,7 @@ let activeTranscribeJobId = null;
 let activeLocalTranscribeJobId = null;
 let activeCourseDownloadJobId = null;
 let activeFormatCategory = null;
+let appConfig = { course_mode_enabled: true, public_product_mode: false };
 const DEFAULT_DOWNLOAD_OUTPUT_DIR = "~/Downloads/Universal Media Extractor";
 const DEFAULT_UDEMY_OUTPUT_DIR = "~/Downloads/Universal Media Extractor/Udemy";
 const OUTPUT_FORMAT_CHOICES = {
@@ -554,8 +555,35 @@ copyOutputButton.addEventListener("click", () => {
   copyText(latestTranscriptResult?.output_dir || latestDownloadResult?.output_dir || "", "Output path copied.");
 });
 
+initializeAppConfig();
+
 if (recentCard && !recentCard.classList.contains("hidden")) {
   loadRecentOutputs();
+}
+
+async function initializeAppConfig() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/config`);
+    if (response.ok) {
+      appConfig = await response.json();
+    }
+  } catch {
+    appConfig = { course_mode_enabled: true, public_product_mode: false };
+  }
+  applyFeatureConfig();
+}
+
+function applyFeatureConfig() {
+  const courseEnabled = appConfig.course_mode_enabled !== false;
+  courseModeButton?.classList.toggle("hidden", !courseEnabled);
+  courseModeButton?.setAttribute("aria-hidden", String(!courseEnabled));
+  if (!courseEnabled) {
+    courseForm?.classList.add("hidden");
+    coursePanel?.classList.add("hidden");
+    if (courseModeButton?.classList.contains("is-active")) {
+      switchInputMode("url");
+    }
+  }
 }
 
 function isValidUrl(value) {

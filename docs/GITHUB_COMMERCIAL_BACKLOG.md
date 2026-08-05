@@ -35,6 +35,7 @@ Current setup:
 - 40 roadmap issues created.
 - All roadmap issues were added to the Project.
 - Project fields were populated through `gh project item-edit`, with `Roadmap Status=Backlog` for all initial items.
+- Commercial Foundation issues #1-#5 are now completed and should be tracked as `Done`.
 
 ## Recommended GitHub Project Fields
 
@@ -402,3 +403,29 @@ Acceptance criteria:
 - Failure categories are tracked.
 - Refund/support risk criteria are documented.
 
+
+
+## Commercial Foundation Completion
+
+Completed issue set:
+
+- #1 `[Strategy] Commercialization roadmap tracker`
+- #2 `[P0] Define public product boundary and positioning`
+- #3 `[P0] Hide Udemy Course Mode from public commercial builds`
+- #4 `[P0] Prepare legal-safe product copy`
+- #5 `[P0] Prepare EULA, privacy policy, refund policy, known limitations`
+
+Evidence files:
+
+- `docs/PUBLIC_PRODUCT_BOUNDARY.md`
+- `docs/LEGAL_SAFE_PRODUCT_COPY.md`
+- `docs/EULA_DRAFT.md`
+- `docs/PRIVACY_POLICY_DRAFT.md`
+- `docs/REFUND_POLICY_DRAFT.md`
+- `docs/PUBLIC_KNOWN_LIMITATIONS.md`
+
+Implementation evidence for #3:
+
+- `GET /config` exposes `public_product_mode` and `course_mode_enabled`.
+- Static UI hides Course Mode when `course_mode_enabled=false`.
+- Public builds can set `UME_PUBLIC_PRODUCT_MODE=1`.

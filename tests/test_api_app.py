@@ -65,6 +65,44 @@ def test_health_endpoint_returns_local_only_status(tmp_path):
     }
 
 
+def test_config_endpoint_defaults_to_internal_course_mode(tmp_path, monkeypatch):
+    monkeypatch.delenv("UME_PUBLIC_PRODUCT_MODE", raising=False)
+    monkeypatch.delenv("UME_ENABLE_COURSE_MODE", raising=False)
+    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+
+    response = client.get("/config")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "service": "universal-media-extractor",
+        "mode": "local-only",
+        "public_product_mode": False,
+        "course_mode_enabled": True,
+    }
+
+
+def test_config_endpoint_hides_course_mode_in_public_product_mode(tmp_path, monkeypatch):
+    monkeypatch.setenv("UME_PUBLIC_PRODUCT_MODE", "1")
+    monkeypatch.delenv("UME_ENABLE_COURSE_MODE", raising=False)
+    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+
+    response = client.get("/config")
+
+    assert response.status_code == 200
+    assert response.json()["public_product_mode"] is True
+    assert response.json()["course_mode_enabled"] is False
+
+
+def test_config_endpoint_can_disable_course_mode_explicitly(tmp_path, monkeypatch):
+    monkeypatch.setenv("UME_ENABLE_COURSE_MODE", "0")
+    client = TestClient(create_app(raw_output_base_dir=tmp_path))
+
+    response = client.get("/config")
+
+    assert response.status_code == 200
+    assert response.json()["course_mode_enabled"] is False
+
+
 def test_static_index_is_available(tmp_path):
     client = TestClient(create_app(raw_output_base_dir=tmp_path))
 
@@ -105,6 +143,7 @@ def test_static_javascript_is_available(tmp_path):
     assert "/udemy/analyze" in response.text
     assert "/udemy/download" in response.text
     assert "/outputs" in response.text
+    assert "/config" in response.text
     assert "/jobs/" in response.text
     assert "cancelDownloadButton" in response.text
     assert "cancelTranscribeButton" in response.text

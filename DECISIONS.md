@@ -122,3 +122,12 @@
 - Udemy downloads use the existing local job/poll/cancel system and subprocess list arguments with `shell=False`.
 - Udemy Course mode should use Chrome session auth by default via `yt-dlp --cookies-from-browser chrome`.
 - Manual `cookies.txt` remains available only as an advanced fallback for cases where browser-cookie access is unavailable.
+
+## 2026-08-05 - Commercial Foundation
+
+- Public product positioning is fixed as `Local Media Downloader & Organizer for macOS and Windows`.
+- Public copy must not promise universal website support or DRM/paywall/CAPTCHA/login bypass.
+- Udemy Course Mode remains internal/experimental and must be hidden from public builds/marketing unless separately approved.
+- Public commercial builds can set `UME_PUBLIC_PRODUCT_MODE=1` to hide Course Mode in the static UI by default.
+- Legal, privacy, refund, and public limitation documents are product drafts and must be reviewed before paid public launch.
+- Next commercial work should come from the GitHub commercial roadmap, not ad hoc feature expansion.

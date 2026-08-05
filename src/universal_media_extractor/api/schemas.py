@@ -20,6 +20,17 @@ from universal_media_extractor.models import (
 )
 
 
+class AppConfigResponse(BaseModel):
+    """Feature flags for the local static UI."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    service: Literal["universal-media-extractor"] = "universal-media-extractor"
+    mode: Literal["local-only"] = "local-only"
+    public_product_mode: bool = False
+    course_mode_enabled: bool = True
+
+
 class HealthResponse(BaseModel):
     """Static health response for local backend checks."""
 

@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported and converted into an execution backlog.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -26,7 +26,7 @@ Commercial direction after GPT Pro strategy review:
 
 - position as `Local Media Downloader & Organizer for macOS and Windows`;
 - sell installation, organization, presets, history, batch, compatibility updates, diagnostics, and local processing rather than merely `yt-dlp` execution;
-- keep Udemy Course mode internal/experimental for now;
+- keep Udemy Course mode internal/experimental for now and hidden from public builds/marketing;
 - avoid public claims around universal source support, DRM, paywall, CAPTCHA, or login bypass;
 - prepare direct website distribution first, Microsoft Store later, and avoid Mac App Store for the full downloader.
 
@@ -41,7 +41,7 @@ Commercial direction after GPT Pro strategy review:
 - Backend binds only to `127.0.0.1`.
 - Download/process actions preserve rights-confirmation requirements in the backend contract.
 - No DRM, CAPTCHA, paywall, login, or platform restriction bypass.
-- Udemy support uses Chrome session auth by default, keeps manual cookies as advanced fallback, and must not store credentials or bypass DRM.
+- Udemy support uses Chrome session auth by default, keeps manual cookies as advanced fallback, and must not store credentials or bypass DRM. Public builds hide Course Mode by setting `UME_PUBLIC_PRODUCT_MODE=1`.
 - Codex recommendations are recommendations only, not roadmap decisions.
 
 ## Current Architecture
@@ -93,17 +93,17 @@ Udemy command path is documented in `docs/UDEMY_COURSE_EXPORT.md`.
 
 ## Planned Next Block
 
-The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing production readiness before extension work.
+Commercial Foundation is completed. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
 
 Recommended next user-approved commercial block:
 
 ```text
-Commercial Block 1: Public Product Boundary + Positioning Cleanup
+Public Beta Readiness
 ```
 
-Goal: define public Free/Pro boundaries, hide risky internal features from public builds/marketing, update positioning, and prepare for packaging/security work.
+Candidate issues: normalized user-facing errors, diagnostics bundle, localhost security hardening, preset-based output selection, SQLite-backed jobs/history, and output templates.
 
-Do not start this block until the user explicitly confirms.
+Do not start the next block until the user explicitly confirms.
 
 ## Later / Optional
 
@@ -198,3 +198,15 @@ The dev `.app` can also be copied to `/Applications`; it remains tied to this pr
 - Follow `docs/ROADMAP_V2.md` unless the user explicitly changes it.
 - Before every large task, read `PROJECT_CONTEXT.md`.
 - After every completed block, update `PROJECT_CONTEXT.md`, `PROJECT_STATE.md`, `CHANGELOG.md`, `README.md`, and relevant docs.
+
+
+## Commercial Foundation Docs
+
+- `docs/PUBLIC_PRODUCT_BOUNDARY.md`
+- `docs/LEGAL_SAFE_PRODUCT_COPY.md`
+- `docs/EULA_DRAFT.md`
+- `docs/PRIVACY_POLICY_DRAFT.md`
+- `docs/REFUND_POLICY_DRAFT.md`
+- `docs/PUBLIC_KNOWN_LIMITATIONS.md`
+
+These documents close GitHub issues #1-#5 and define the public product boundary for future website, packaging, and beta work.

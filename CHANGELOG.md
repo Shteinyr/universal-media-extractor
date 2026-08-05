@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-08-05 - Commercial Foundation
+
+- Completed the first commercial foundation work for issues #1-#5.
+- Added public product boundary and positioning documentation.
+- Added legal-safe product copy guidance.
+- Added draft EULA, privacy policy, refund policy, and public known limitations.
+- Added `/config` with public product/course mode flags.
+- Added UI support to hide Udemy Course Mode for public commercial builds.
+- Documented that Udemy remains internal/experimental and is not part of public positioning.
+
 ## 2026-08-05 - GitHub Commercial Roadmap Setup
 
 - Created GitHub Project: `https://github.com/users/Shteinyr/projects/7`.

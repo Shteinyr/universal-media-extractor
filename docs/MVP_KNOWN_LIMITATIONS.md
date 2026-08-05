@@ -63,3 +63,11 @@ Date: 2026-05-30
 - Do not expose the backend port to the public internet.
 - The MVP does not store credentials, cookies, API keys, or login tokens.
 - Download/transcription actions require `user_confirmed_rights=true`.
+
+
+## Public Commercial Boundary
+
+- Public positioning is `Local Media Downloader & Organizer for macOS and Windows`.
+- Udemy Course Mode is internal/experimental and should be hidden from public builds/marketing unless separately approved.
+- Public builds can set `UME_PUBLIC_PRODUCT_MODE=1` to hide Course Mode in the UI.
+- Public copy must not promise guaranteed source support or DRM/CAPTCHA/paywall/login bypass.

@@ -7,6 +7,7 @@ features, or run as an online service.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from threading import Thread
 from typing import Any, Callable
@@ -17,6 +18,7 @@ from fastapi.staticfiles import StaticFiles
 
 from universal_media_extractor.api.schemas import (
     AnalyzeRequest,
+    AppConfigResponse,
     AnalyzeResponse,
     DownloadRequest,
     HealthResponse,
@@ -77,6 +79,16 @@ def create_app(
     @app.get("/", response_class=FileResponse)
     def index() -> FileResponse:
         return FileResponse(STATIC_DIR / "index.html")
+
+
+    @app.get("/config", response_model=AppConfigResponse)
+    def config() -> AppConfigResponse:
+        public_mode = _read_bool_env("UME_PUBLIC_PRODUCT_MODE", default=False)
+        course_default = not public_mode
+        return AppConfigResponse(
+            public_product_mode=public_mode,
+            course_mode_enabled=_read_bool_env("UME_ENABLE_COURSE_MODE", default=course_default),
+        )
 
     @app.get("/health", response_model=HealthResponse)
     def health() -> HealthResponse:
@@ -285,6 +297,13 @@ def create_app(
             raise HTTPException(status_code=404, detail="Job not found.") from None
 
     return app
+
+
+def _read_bool_env(name: str, *, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() not in {"0", "false", "no", "off"}
 
 
 app = create_app()

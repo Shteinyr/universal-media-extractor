@@ -6,7 +6,7 @@ Universal Media Extractor & Transcriber is intended to be a local web app with a
 
 ## Current Stage
 
-Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Recommended next work is a user-approved commercial readiness block, not automatic Chrome Extension work.
+Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Recommended next work is Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work.
 
 ## Already Installed And Reported By User
 
@@ -30,6 +30,7 @@ Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy import
 - Commercial direction: local media downloader and organizer for macOS and Windows.
 - Public product should not promise universal site support or bypass platform restrictions.
 - Udemy Course mode should remain internal/experimental unless separately approved.
+- Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1` to hide Course Mode.
 
 ## Constraints
 
@@ -81,6 +82,16 @@ Commercial strategy docs:
 - `docs/GITHUB_COMMERCIAL_BACKLOG.md`
 
 GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`. It contains 40 issues across 8 milestones.
+
+Commercial Foundation issues #1-#5 are completed and documented in:
+
+- `docs/PUBLIC_PRODUCT_BOUNDARY.md`
+- `docs/LEGAL_SAFE_PRODUCT_COPY.md`
+- `docs/EULA_DRAFT.md`
+- `docs/PRIVACY_POLICY_DRAFT.md`
+- `docs/REFUND_POLICY_DRAFT.md`
+- `docs/PUBLIC_KNOWN_LIMITATIONS.md`
+
 
 `PROJECT_CONTEXT.md` now exists as the long-term project context file. Read it before large tasks and update it after completed large blocks.
 
