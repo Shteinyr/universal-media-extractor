@@ -181,3 +181,11 @@
 - The production-foundation `.app` bundles the Python app/runtime but does not yet include Developer ID signing, notarization, or a DMG installer.
 - GUI launches prepend standard Homebrew/system CLI paths so external media engines can be found from Finder-launched apps.
 - Public distribution work remains split into separate signing/notarization and installer tasks.
+
+## 2026-08-05 - macOS Signing Readiness
+
+- macOS signing readiness uses Developer ID only for public direct distribution.
+- Hardened Runtime is enabled through `codesign --options runtime --timestamp`.
+- Notarization uses `xcrun notarytool`, not deprecated `altool`.
+- Notary credentials should be stored in macOS Keychain via a named profile; passwords and private keys must not be committed or passed through project files.
+- `packaging/macos/entitlements.plist` remains empty until a real signed build proves a specific entitlement is necessary.

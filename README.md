@@ -864,3 +864,32 @@ open "build/macos/dist/Universal Media Extractor.app"
 This bundle is for local production-foundation testing. Public distribution still requires Developer ID signing, notarization, and a DMG/installer.
 
 Docs: `docs/COMMERCIAL_BLOCK_7_MACOS_PRODUCTION_BUILD_FOUNDATION.md`.
+
+## macOS Signing / Notarization Readiness
+
+Check local readiness:
+
+```bash
+.venv/bin/python scripts/check_macos_signing_readiness.py
+```
+
+Prepare notarytool credentials in Keychain, after Apple Developer account setup:
+
+```bash
+.venv/bin/python scripts/store_macos_notary_credentials.py \
+  --apple-id "APPLE_ID_EMAIL" \
+  --team-id "TEAMID" \
+  --profile UME_NOTARY
+```
+
+Future signing/notarization flow:
+
+```bash
+.venv/bin/python scripts/build_macos_app.py
+.venv/bin/python scripts/sign_macos_app.py --identity "Developer ID Application: Company Name (TEAMID)"
+.venv/bin/python scripts/notarize_macos_app.py --keychain-profile UME_NOTARY
+```
+
+Current blocker: a `Developer ID Application` certificate must be installed in Keychain before real signing/notarization can complete.
+
+Docs: `docs/COMMERCIAL_BLOCK_8_MACOS_SIGNING_NOTARIZATION_READINESS.md`.

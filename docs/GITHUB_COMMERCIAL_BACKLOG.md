@@ -511,3 +511,11 @@ Documentation:
 - Status: completed foundation.
 - Added PyInstaller `.app` build script/spec and smoke-verified `build/macos/dist/Universal Media Extractor.app`.
 - Signing/notarization (#13) and DMG installer (#14) remain separate roadmap tasks.
+
+## Commercial Block 8 - macOS Signing / Notarization Readiness
+
+- GitHub issue #13: `[P0] Add macOS signing and notarization`.
+- Status: readiness prepared, issue remains open.
+- Added scripts/docs for Developer ID signing, hardened runtime, notarytool credentials, notarization, stapling, and Gatekeeper assessment.
+- Current blocker: no `Developer ID Application` certificate is installed in Keychain.
+- DMG installer remains separate issue #14.

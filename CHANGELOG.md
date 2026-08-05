@@ -561,3 +561,14 @@
 - Added macOS build script and desktop launcher regression tests.
 - Built `build/macos/dist/Universal Media Extractor.app` and verified smoke startup/shutdown.
 - Created `docs/COMMERCIAL_BLOCK_7_MACOS_PRODUCTION_BUILD_FOUNDATION.md`.
+
+## 2026-08-05 - Commercial Block 8 macOS Signing / Notarization Readiness
+
+- Added `scripts/check_macos_signing_readiness.py`.
+- Added `scripts/store_macos_notary_credentials.py`.
+- Added `scripts/sign_macos_app.py`.
+- Added `scripts/notarize_macos_app.py`.
+- Added `packaging/macos/entitlements.plist`.
+- Added `tests/test_macos_signing_readiness.py`.
+- Created `docs/COMMERCIAL_BLOCK_8_MACOS_SIGNING_NOTARIZATION_READINESS.md`.
+- Readiness proof confirms Xcode signing/notarization tools are available, but `Developer ID Application` identity is missing.

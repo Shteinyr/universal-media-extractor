@@ -384,3 +384,12 @@ The development `.app` now uses a tiny compiled Mach-O launcher in `Contents/Mac
 - Verification confirmed the built app starts the local backend, opens the desktop UI, and stops the backend after close.
 - Apple Developer ID signing/notarization and DMG installer are separate next packaging tasks, not part of this block.
 - Next recommended commercial block: issue #13, macOS signing and notarization, but do not start it without explicit user approval.
+
+## 2026-08-05 - Commercial Block 8 macOS Signing / Notarization Readiness
+
+- Prepared Developer ID signing and notarization readiness without performing real signing.
+- Added readiness/preflight script, signing script, notarytool credential helper, notarization/stapling script, and empty hardened-runtime entitlements file.
+- Official Apple docs confirm Developer ID signing, Hardened Runtime, `notarytool`, stapling, and Gatekeeper validation are required for direct macOS distribution.
+- Current local readiness check passes for Xcode tools and the built `.app`, but fails because no `Developer ID Application` certificate is available in Keychain.
+- Issue #13 must remain open until Apple Developer ID certificate and notarytool credentials are available and notarization/Gatekeeper checks actually pass.
+- DMG installer remains separate issue #14; no Windows, payments, website, or product feature work was started.
