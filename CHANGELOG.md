@@ -604,3 +604,8 @@
 - Created `docs/SUPPORT_PAGE_DRAFT.md`.
 - Added `tests/test_founder_launch_site.py`.
 - Kept checkout, license activation, Apple signing, Windows build, batch, AI summary, and new downloader features out of scope.
+
+## 2026-08-05 - Commercial Block 11 GitHub Tracking
+
+- Closed GitHub issues #19, #20, and #21.
+- Set GitHub Project `Status=Done` and `Roadmap Status=Done` for issues #19, #20, and #21.

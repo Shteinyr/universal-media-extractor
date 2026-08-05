@@ -79,7 +79,7 @@ Commercial direction after GPT Pro strategy review:
 
 Commercial Block 11: Founder Launch Surface - done.
 
-Result: public static site, founder launch copy, beta onboarding copy, draft pricing/plans, and support page draft are prepared. GitHub issues #19, #20, and #21 can be closed once pushed and commented. No checkout, license activation, Apple signing, Windows build, or new downloader feature was added.
+Result: public static site, founder launch copy, beta onboarding copy, draft pricing/plans, and support page draft are prepared. GitHub issues #19, #20, and #21 are closed and marked Done in the project. No checkout, license activation, Apple signing, Windows build, or new downloader feature was added.
 
 Previous completed block:
 

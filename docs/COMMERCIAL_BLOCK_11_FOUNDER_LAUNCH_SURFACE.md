@@ -1,6 +1,6 @@
 # Commercial Block 11: Founder Launch Surface
 
-Status: completed.
+Status: completed; issues #19, #20, and #21 are closed and marked Done in the GitHub Project.
 
 GitHub issues:
 

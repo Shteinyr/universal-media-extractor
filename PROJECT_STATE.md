@@ -104,7 +104,7 @@ Commercial Block 6 issue #11 adds URL output folder templates, macOS/Windows-saf
 
 Commercial Block 10 prepares macOS public release docs and validation gates around issues #13/#14. It adds `docs/MACOS_PUBLIC_RELEASE_CHECKLIST.md`, `docs/APPLE_DEVELOPER_ACCOUNT_SETUP.md`, `docs/MACOS_RELEASE_VALIDATION_CHECKLIST.md`, `docs/MACOS_SIGNING_NOTARIZATION_TROUBLESHOOTING.md`, and `scripts/notarize_macos_dmg.py`. Issues #13/#14 remain open because real Developer ID signing/notarization and Gatekeeper validation require Apple Developer Program access and local Keychain credentials from the user.
 
-Commercial Block 11 prepares the public founder launch surface for issues #19-#21: static landing page in `site/`, `docs/FOUNDER_LAUNCH_SITE_COPY.md`, `docs/BETA_ONBOARDING_COPY.md`, `docs/PRICING_AND_PLANS.md`, and `docs/SUPPORT_PAGE_DRAFT.md`. No checkout, license activation, Apple signing, Windows build, or new product feature was added.
+Commercial Block 11 prepares the public founder launch surface for issues #19-#21: static landing page in `site/`, `docs/FOUNDER_LAUNCH_SITE_COPY.md`, `docs/BETA_ONBOARDING_COPY.md`, `docs/PRICING_AND_PLANS.md`, and `docs/SUPPORT_PAGE_DRAFT.md`. Issues #19, #20, and #21 are closed and marked Done in the project. No checkout, license activation, Apple signing, Windows build, or new product feature was added.
 
 
 `PROJECT_CONTEXT.md` now exists as the long-term project context file. Read it before large tasks and update it after completed large blocks.
