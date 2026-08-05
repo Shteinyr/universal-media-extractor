@@ -21,6 +21,9 @@ proof/
 build/
 dist/
 *.app/
+data/
+*.sqlite
+*.sqlite3
 
 # Local media and generated transcripts
 *.mp3

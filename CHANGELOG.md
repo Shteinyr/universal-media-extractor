@@ -526,3 +526,16 @@
 - Verified with Python py_compile for API schemas, API app, and API tests.
 - Verified with `.venv/bin/python -m pytest -q`; result: 117 passed.
 - Verified browser smoke on `127.0.0.1:8766`; screenshots saved under `proof/commercial_block_4_security/`.
+
+
+## 2026-08-05 - Commercial Block 5 SQLite Jobs And History
+
+- Added optional SQLite persistence to `JobService` and enabled it for the FastAPI app at `data/jobs.sqlite3`.
+- Added persisted job fields for status, progress, error, result, timestamps, and retry linkage.
+- Added startup recovery for interrupted queued/running jobs.
+- Added `GET /jobs`, `POST /jobs/{job_id}/retry`, and `DELETE /jobs/history`.
+- Added tests for restart persistence, error/progress/result persistence, interrupted recovery, retry, and clear-history behavior.
+- Created `docs/COMMERCIAL_BLOCK_5_SQLITE_JOBS_HISTORY.md`.
+- Verified with targeted API/job tests; result: 57 passed.
+- Verified with `.venv/bin/python -m pytest -q`; result: 129 passed.
+- Verified static JS with `node --check src/universal_media_extractor/static/app.js`.

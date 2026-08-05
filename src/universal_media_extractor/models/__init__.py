@@ -18,7 +18,12 @@ from universal_media_extractor.models.download import (
     DownloadResult,
     DownloadStatus,
 )
-from universal_media_extractor.models.job import Job, JobStatus
+from universal_media_extractor.models.job import (
+    Job,
+    JobHistoryClearResult,
+    JobHistoryResult,
+    JobStatus,
+)
 from universal_media_extractor.models.local_file import (
     LocalFileAnalyzeResult,
     LocalFileStreamInfo,
@@ -61,6 +66,8 @@ __all__ = [
     "DownloadStatus",
     "ErrorState",
     "Job",
+    "JobHistoryClearResult",
+    "JobHistoryResult",
     "JobStatus",
     "LegalSafetyState",
     "LocalFileAnalyzeResult",

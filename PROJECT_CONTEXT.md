@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation; Commercial Block 3 issue #9 completed for preset-based output selection; Commercial Block 4 issue #8 completed for localhost security hardening.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Block 2 issues #6-#7 completed for normalized errors and diagnostics foundation; Commercial Block 3 issue #9 completed for preset-based output selection; Commercial Block 4 issue #8 completed for localhost security hardening; Commercial Block 5 issue #10 completed for SQLite-backed persistent jobs/history.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -53,7 +53,7 @@ Commercial direction after GPT Pro strategy review:
 - `yt-dlp` for URL analysis/download.
 - `ffmpeg`/`ffprobe` for media metadata, extraction, and conversion.
 - Whisper CLI for local transcription.
-- In-memory job system for download/transcription.
+- SQLite-backed persistent job system for download/transcription history.
 - Output indexing and safe delete for managed result folders.
 - Python Playwright for manual/dev browser smoke checks.
 - `pywebview` for the local desktop wrapper.
@@ -77,11 +77,11 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
-Commercial Block 4: Localhost Security Hardening - done.
+Commercial Block 5: SQLite Jobs And History - done.
 
-Result: protected local API calls now require an in-memory random session token passed by the static UI as `X-UME-Session-Token`. The backend rejects non-local hosts/origins, uses explicit local-only CORS settings, caps uploads, keeps path-sensitive operations constrained, and preserves CLI argument allowlists and diagnostics redaction.
+Result: job state now persists to local SQLite at `data/jobs.sqlite3`. Jobs survive restart, interrupted queued/running jobs recover to a failed recoverable state, failed jobs can be retried through `POST /jobs/{job_id}/retry`, and terminal history can be cleared through `DELETE /jobs/history` without deleting output files.
 
-Commercial Block 3 remains completed: the public URL output picker shows presets instead of raw technical stream rows, while internal `format_id` values stay available for `/download`.
+Commercial Block 4 remains completed: protected local API calls require an in-memory random session token, the backend rejects non-local hosts/origins, CORS is local-only, and upload limits are enforced. Commercial Block 3 remains completed: the public URL output picker shows presets instead of raw technical stream rows, while internal `format_id` values stay available for `/download`.
 
 Udemy Course Offline Export remains completed as an internal/experimental feature. The UI must preserve pasted Udemy lecture/player URLs and not rewrite them into clean course URLs.
 
@@ -97,7 +97,7 @@ Udemy command path is documented in `docs/UDEMY_COURSE_EXPORT.md`.
 
 ## Planned Next Block
 
-Commercial Foundation, Commercial Block 2 Errors + Diagnostics Foundation, Commercial Block 3 Preset Output Selection, and Commercial Block 4 Localhost Security Hardening are completed. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
+Commercial Foundation, Commercial Block 2 Errors + Diagnostics Foundation, Commercial Block 3 Preset Output Selection, Commercial Block 4 Localhost Security Hardening, and Commercial Block 5 SQLite Jobs And History are completed. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
 
 Recommended next user-approved commercial block:
 
@@ -105,7 +105,7 @@ Recommended next user-approved commercial block:
 Public Beta Readiness
 ```
 
-Candidate issues: SQLite-backed jobs/history, output templates, production packaging foundations, and beta-ready QA/documentation.
+Candidate issues: output templates, production packaging foundations, queue/batch foundation, and beta-ready QA/documentation.
 
 Do not start the next block until the user explicitly confirms.
 
@@ -237,3 +237,10 @@ This document closes GitHub issue #9 and defines the first public preset-based o
 - `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`
 
 This document closes GitHub issue #8 and defines the first public-beta localhost API security boundary.
+
+
+## Commercial Block 5 Docs
+
+- `docs/COMMERCIAL_BLOCK_5_SQLITE_JOBS_HISTORY.md`
+
+This document closes GitHub issue #10 and defines the first public-beta persistent jobs/history boundary.

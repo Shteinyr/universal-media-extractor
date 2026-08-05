@@ -154,3 +154,12 @@
 - Non-local `Host`/`Origin` requests are rejected and CORS uses explicit local-only settings.
 - Local uploads have a size cap and partial oversized uploads are removed.
 - Path access remains constrained to managed output operations; arbitrary CLI argument passthrough remains out of scope.
+
+
+## 2026-08-05 - SQLite Jobs And History
+
+- App-level jobs should persist locally in SQLite at `data/jobs.sqlite3` for the current development product.
+- `JobService()` can still run in-memory when no database path is supplied for isolated service tests and narrow usage.
+- Queued/running jobs found on startup are not resumed automatically; they recover to a clear failed, recoverable `interrupted` state.
+- Retry creates a new job with the original payload and links it through `retry_of_job_id`.
+- Clearing history removes terminal job records only and must not delete output files.

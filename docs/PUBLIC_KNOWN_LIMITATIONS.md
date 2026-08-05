@@ -35,7 +35,7 @@ Large files can take a long time to download, process, merge, or transcribe. The
 
 - no production signed/notarized macOS installer;
 - no production Windows installer;
-- no persistent SQLite jobs/history;
+- SQLite-backed jobs/history exists, but beta UX for browsing/retry/clear still needs real-user validation;
 - no batch/queue workflow;
 - no paid licensing system;
 - no public website/payment flow;

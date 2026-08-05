@@ -913,3 +913,116 @@ def test_delete_output_endpoint_refuses_path_traversal(tmp_path):
     response = client.delete("/outputs/..%2Fproof")
 
     assert response.status_code in {400, 404}
+
+
+
+def test_jobs_endpoint_lists_persisted_jobs(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    app = create_app(raw_output_base_dir=tmp_path, job_db_path=db_path)
+    job = app.state.job_service.create_job("download", {"format_id": "140"})
+    client = _client(app)
+
+    response = client.get("/jobs")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["jobs"][0]["job_id"] == job.job_id
+    assert body["jobs"][0]["task_type"] == "download"
+
+    restarted = create_app(raw_output_base_dir=tmp_path, job_db_path=db_path)
+    restarted_client = _client(restarted)
+    restarted_response = restarted_client.get(f"/jobs/{job.job_id}")
+
+    assert restarted_response.status_code == 200
+    assert restarted_response.json()["status"] == "failed"
+    assert restarted_response.json()["current_step"] == "interrupted"
+
+
+def test_clear_job_history_endpoint_removes_terminal_jobs_without_deleting_files(tmp_path):
+    output_file = tmp_path / "output" / "media.m4a"
+    output_file.parent.mkdir()
+    output_file.write_bytes(b"media")
+    app = create_app(raw_output_base_dir=tmp_path, job_db_path=tmp_path / "jobs.sqlite3")
+    failed = app.state.job_service.create_job("download", {"output_dir": str(output_file.parent)})
+    running = app.state.job_service.create_job("download", {})
+    app.state.job_service.fail_job(
+        failed.job_id,
+        ErrorState(code="network_error", message="Network failed.", recoverable=True),
+    )
+    app.state.job_service.update_job_status(running.job_id, "running")
+    client = _client(app)
+
+    response = client.delete("/jobs/history")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body == {"cleared_count": 1, "remaining_count": 1, "files_deleted": False}
+    assert output_file.exists()
+    assert client.get(f"/jobs/{failed.job_id}").status_code == 404
+    assert client.get(f"/jobs/{running.job_id}").status_code == 200
+
+
+def test_retry_failed_download_job_endpoint_restarts_with_persisted_payload(tmp_path):
+    app = create_app(raw_output_base_dir=tmp_path, job_db_path=tmp_path / "jobs.sqlite3")
+    calls = {}
+
+    class FakeDownloadService:
+        def download_media(self, request, **kwargs):
+            calls["request"] = request
+            calls["kwargs"] = kwargs
+            return DownloadResult(
+                status="succeeded",
+                source_url=request.source_url,
+                selected_format_id=request.format_id,
+                output_dir=str(tmp_path / "output"),
+                downloaded_files=[str(tmp_path / "output" / "audio.m4a")],
+                metadata_path=str(tmp_path / "output" / ".metadata" / "download_result.json"),
+                log_path=str(tmp_path / "output" / ".logs" / "download.log"),
+            )
+
+    app.state.download_service = FakeDownloadService()
+    failed = app.state.job_service.create_job(
+        "download",
+        {
+            "source_url": "https://youtu.be/UUdxAp3kuKA",
+            "format_id": "140",
+            "mode": "audio",
+            "user_confirmed_rights": True,
+        },
+    )
+    app.state.job_service.fail_job(
+        failed.job_id,
+        ErrorState(code="network_error", message="Network failed.", recoverable=True),
+    )
+    client = _client(app)
+
+    response = client.post(f"/jobs/{failed.job_id}/retry")
+
+    assert response.status_code == 200
+    retried = response.json()
+    assert retried["retry_of_job_id"] == failed.job_id
+    body = _wait_for_terminal_job(client, retried["job_id"])
+    assert body["status"] == "succeeded"
+    assert body["result"]["selected_format_id"] == "140"
+    assert calls["request"].format_id == "140"
+    assert calls["kwargs"]["job_id"] == retried["job_id"]
+
+
+def test_retry_job_endpoint_rejects_non_failed_job(tmp_path):
+    app = create_app(raw_output_base_dir=tmp_path, job_db_path=tmp_path / "jobs.sqlite3")
+    job = app.state.job_service.create_job("download", {})
+    client = _client(app)
+
+    response = client.post(f"/jobs/{job.job_id}/retry")
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Only failed jobs can be retried."}
+
+
+def test_retry_job_endpoint_returns_404_for_missing_job(tmp_path):
+    client = _client(create_app(raw_output_base_dir=tmp_path, job_db_path=tmp_path / "jobs.sqlite3"))
+
+    response = client.post("/jobs/missing/retry")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Job not found."}

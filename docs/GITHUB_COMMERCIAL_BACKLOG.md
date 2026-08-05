@@ -35,7 +35,7 @@ Current setup:
 - 40 roadmap issues created.
 - All roadmap issues were added to the Project.
 - Project fields were populated through `gh project item-edit`, with `Roadmap Status=Backlog` for all initial items.
-- Commercial Foundation issues #1-#5, Commercial Block 2 issues #6-#7, Commercial Block 3 issue #9, and Commercial Block 4 issue #8 are now completed and should be tracked as `Done`.
+- Commercial Foundation issues #1-#5, Commercial Block 2 issues #6-#7, Commercial Block 3 issue #9, Commercial Block 4 issue #8, and Commercial Block 5 issue #10 are now completed and should be tracked as `Done`.
 
 ## Recommended GitHub Project Fields
 
@@ -485,3 +485,22 @@ Result:
 Documentation:
 
 - `docs/COMMERCIAL_BLOCK_4_LOCALHOST_SECURITY.md`
+
+
+## Commercial Block 5 Completion
+
+Completed issue:
+
+- `#10 [P0] Add SQLite-backed persistent jobs and history`
+
+Result:
+
+- Jobs persist to local SQLite.
+- Status, progress, error, result, timestamps, and retry linkage are saved.
+- Queued/running jobs from a previous app run recover to a clear failed/interrupted state.
+- Failed jobs can be retried.
+- Terminal job history can be cleared without deleting output files.
+
+Documentation:
+
+- `docs/COMMERCIAL_BLOCK_5_SQLITE_JOBS_HISTORY.md`

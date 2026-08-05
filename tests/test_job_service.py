@@ -1,4 +1,10 @@
+import sys
+from pathlib import Path
+
 import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 
 from universal_media_extractor.models import ErrorState, Job
 from universal_media_extractor.services.job_service import JobService
@@ -115,3 +121,126 @@ def test_job_service_missing_job_raises_key_error():
 
     with pytest.raises(KeyError):
         service.update_job_status("missing", "running")
+
+
+
+def test_job_service_persists_jobs_across_instances(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    service = JobService(db_path)
+    job = service.create_job("download", {"format_id": "140"})
+    service.update_job_step(job.job_id, "downloading", 42)
+    service.finish_job(job.job_id, {"output_dir": str(tmp_path / "output")})
+
+    reloaded = JobService(db_path)
+    persisted = reloaded.get_job(job.job_id)
+
+    assert persisted is not None
+    assert persisted.status == "succeeded"
+    assert persisted.current_step == "succeeded"
+    assert persisted.progress_percent == 100
+    assert persisted.result == {"output_dir": str(tmp_path / "output")}
+
+
+
+def test_job_service_persists_error_and_progress(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    service = JobService(db_path)
+    job = service.create_job("download", {"format_id": "140"})
+    service.update_job_status(job.job_id, "running", current_step="downloading", progress_percent=64)
+    service.fail_job(
+        job.job_id,
+        ErrorState(code="network_error", message="Network failed.", recoverable=True),
+        result={"status": "failed"},
+    )
+
+    reloaded = JobService(db_path)
+    persisted = reloaded.get_job(job.job_id)
+
+    assert persisted is not None
+    assert persisted.status == "failed"
+    assert persisted.progress_percent == 64
+    assert persisted.error is not None
+    assert persisted.error.code == "network_error"
+    assert persisted.result == {"status": "failed"}
+
+
+def test_job_service_recovers_interrupted_jobs_on_startup(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    service = JobService(db_path)
+    queued = service.create_job("download", {"format_id": "140"})
+    running = service.create_job("transcribe", {"input_file_path": "audio.m4a"})
+    service.update_job_status(running.job_id, "running", current_step="running_whisper", progress_percent=35)
+
+    reloaded = JobService(db_path)
+
+    recovered_queued = reloaded.get_job(queued.job_id)
+    recovered_running = reloaded.get_job(running.job_id)
+    assert recovered_queued is not None
+    assert recovered_running is not None
+    assert recovered_queued.status == "failed"
+    assert recovered_queued.current_step == "interrupted"
+    assert recovered_queued.error is not None
+    assert recovered_queued.error.recoverable is True
+    assert recovered_running.status == "failed"
+    assert recovered_running.current_step == "interrupted"
+    assert recovered_running.progress_percent == 35
+
+
+def test_job_service_lists_recent_jobs_newest_first(tmp_path):
+    service = JobService(tmp_path / "jobs.sqlite3")
+    first = service.create_job("download", {"n": 1})
+    second = service.create_job("download", {"n": 2})
+
+    jobs = service.list_jobs()
+
+    assert [job.job_id for job in jobs[:2]] == [second.job_id, first.job_id]
+    assert service.list_jobs(limit=1)[0].job_id == second.job_id
+
+
+def test_job_service_retry_failed_job_creates_new_queued_job(tmp_path):
+    service = JobService(tmp_path / "jobs.sqlite3")
+    failed = service.create_job("download", {"format_id": "140"})
+    service.fail_job(
+        failed.job_id,
+        ErrorState(code="network_error", message="Network failed.", recoverable=True),
+    )
+
+    retried = service.retry_job(failed.job_id)
+
+    assert retried.job_id != failed.job_id
+    assert retried.retry_of_job_id == failed.job_id
+    assert retried.task_type == "download"
+    assert retried.payload == {"format_id": "140"}
+    assert retried.status == "queued"
+
+
+def test_job_service_retry_requires_failed_job(tmp_path):
+    service = JobService(tmp_path / "jobs.sqlite3")
+    job = service.create_job("download", {})
+
+    with pytest.raises(ValueError):
+        service.retry_job(job.job_id)
+
+
+def test_job_service_clear_history_keeps_active_jobs_and_files(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    output_file = tmp_path / "output" / "media.m4a"
+    output_file.parent.mkdir()
+    output_file.write_bytes(b"media")
+    service = JobService(db_path)
+    failed = service.create_job("download", {"output_dir": str(output_file.parent)})
+    running = service.create_job("download", {"format_id": "140"})
+    service.fail_job(
+        failed.job_id,
+        ErrorState(code="network_error", message="Network failed.", recoverable=True),
+    )
+    service.update_job_status(running.job_id, "running")
+
+    cleared = service.clear_history()
+
+    assert cleared == 1
+    assert service.get_job(failed.job_id) is None
+    assert service.get_job(running.job_id) is not None
+    assert output_file.exists()
+    reloaded = JobService(db_path)
+    assert reloaded.get_job(failed.job_id) is None

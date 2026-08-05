@@ -34,6 +34,9 @@ from universal_media_extractor.models import (
     DiagnosticBundle,
     ErrorState,
     Job,
+    JobHistoryClearResult,
+    JobHistoryResult,
+    JobStatus,
     LocalFileAnalyzeResult,
     OutputDeleteResult,
     OutputListResult,
@@ -51,14 +54,13 @@ from universal_media_extractor.services import (
     UdemyCourseService,
 )
 
-
 DEFAULT_RAW_OUTPUT_BASE_DIR = Path("proof/api")
 DEFAULT_OUTPUT_BASE_DIR = Path.home() / "Downloads" / "Universal Media Extractor"
+DEFAULT_JOB_DB_PATH = Path("data/jobs.sqlite3")
 DEFAULT_MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024
 SECURITY_HEADER_NAME = "x-ume-session-token"
 LOCAL_ORIGIN_REGEX = r"^https?://(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$"
 STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
-
 
 def create_app(
     raw_output_base_dir: Path | None = None,
@@ -66,6 +68,7 @@ def create_app(
     *,
     session_token: str | None = None,
     max_upload_bytes: int | None = None,
+    job_db_path: Path | None = None,
 ) -> FastAPI:
     """Create the analysis-only FastAPI app."""
 
@@ -81,9 +84,14 @@ def create_app(
     app.state.udemy_course_service = UdemyCourseService()
     app.state.local_file_metadata_service = LocalFileMetadataService()
     app.state.output_manager = OutputManager()
-    app.state.job_service = JobService()
     app.state.raw_output_base_dir = raw_output_base_dir or DEFAULT_RAW_OUTPUT_BASE_DIR
     app.state.output_base_dir = output_base_dir or DEFAULT_OUTPUT_BASE_DIR
+    app.state.job_db_path = _resolve_job_db_path(
+        job_db_path=job_db_path,
+        raw_output_base_dir=raw_output_base_dir,
+        output_base_dir=output_base_dir,
+    )
+    app.state.job_service = JobService(app.state.job_db_path)
     app.state.session_token = session_token or secrets.token_urlsafe(32)
     app.state.max_upload_bytes = max_upload_bytes or DEFAULT_MAX_UPLOAD_BYTES
 
@@ -124,7 +132,6 @@ def create_app(
     @app.get("/", response_class=FileResponse)
     def index() -> FileResponse:
         return FileResponse(STATIC_DIR / "index.html")
-
 
     @app.get("/config", response_model=AppConfigResponse)
     def config() -> AppConfigResponse:
@@ -326,6 +333,34 @@ def create_app(
             raise HTTPException(status_code=404, detail=result.message)
         return result
 
+    @app.get("/jobs", response_model=JobHistoryResult)
+    def list_jobs(limit: int = 100, status: JobStatus | None = None) -> JobHistoryResult:
+        job_service: JobService = app.state.job_service
+        return JobHistoryResult(jobs=job_service.list_jobs(limit=limit, status=status))
+
+    @app.delete("/jobs/history", response_model=JobHistoryClearResult)
+    def clear_job_history() -> JobHistoryClearResult:
+        job_service: JobService = app.state.job_service
+        cleared_count = job_service.clear_history()
+        remaining_count = len(job_service.list_jobs(limit=10_000))
+        return JobHistoryClearResult(
+            cleared_count=cleared_count,
+            remaining_count=remaining_count,
+            files_deleted=False,
+        )
+
+    @app.post("/jobs/{job_id}/retry", response_model=Job)
+    def retry_job(job_id: str) -> Job:
+        job_service: JobService = app.state.job_service
+        try:
+            retried = job_service.retry_job(job_id)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="Job not found.") from None
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from None
+        _start_retry_job(app, retried)
+        return job_service.get_job(retried.job_id) or retried
+
     @app.get("/jobs/{job_id}", response_model=Job)
     def get_job(job_id: str) -> Job:
         job_service: JobService = app.state.job_service
@@ -353,6 +388,19 @@ def create_app(
 
     return app
 
+def _resolve_job_db_path(
+    *,
+    job_db_path: Path | None,
+    raw_output_base_dir: Path | None,
+    output_base_dir: Path | None,
+) -> Path:
+    if job_db_path is not None:
+        return job_db_path
+    if raw_output_base_dir is not None:
+        return Path(raw_output_base_dir) / "jobs.sqlite3"
+    if output_base_dir is not None:
+        return Path(output_base_dir) / ".ume" / "jobs.sqlite3"
+    return DEFAULT_JOB_DB_PATH
 
 def _requires_session_token(request: Request) -> bool:
     if request.method == "OPTIONS":
@@ -362,13 +410,11 @@ def _requires_session_token(request: Request) -> bool:
         return False
     return not path.startswith("/static/")
 
-
 def _is_allowed_host(host_header: str) -> bool:
     host = host_header.rsplit(":", 1)[0].strip().lower()
     if host.startswith("[") and host.endswith("]"):
         host = host[1:-1]
     return host in {"127.0.0.1", "localhost", "::1", "testserver"}
-
 
 def _is_allowed_origin(origin: str | None) -> bool:
     if not origin:
@@ -378,16 +424,13 @@ def _is_allowed_origin(origin: str | None) -> bool:
     parsed = urlparse(origin)
     return parsed.scheme in {"http", "https"} and parsed.hostname in {"127.0.0.1", "localhost", "::1"}
 
-
 def _read_bool_env(name: str, *, default: bool) -> bool:
     value = os.getenv(name)
     if value is None:
         return default
     return value.strip().lower() not in {"0", "false", "no", "off"}
 
-
 app = create_app()
-
 
 async def _save_upload(file: UploadFile, destination: Path, *, max_bytes: int) -> int:
     """Save an UploadFile to a local destination with a strict size cap."""
@@ -410,12 +453,116 @@ async def _save_upload(file: UploadFile, destination: Path, *, max_bytes: int) -
         await file.close()
     return total
 
-
 def _safe_filename(filename: str) -> str:
     path_name = Path(filename).name
     safe = "".join(ch if ch.isalnum() or ch in {"-", "_", "."} else "_" for ch in path_name)
     return (safe.strip("._") or "local_file")[:160]
 
+def _start_retry_job(app: FastAPI, job: Job) -> None:
+    """Restart a failed job using its persisted task type and payload."""
+
+    job_service: JobService = app.state.job_service
+
+    try:
+        if job.task_type == "analyze_url":
+            request = AnalyzeRequest.model_validate(job.payload)
+            output_manager: OutputManager = app.state.output_manager
+            analyze_service: AnalyzeService = app.state.analyze_service
+
+            def operation() -> Any:
+                raw_output_dir = output_manager.create_analysis_output_dir(
+                    Path(app.state.raw_output_base_dir),
+                    source_id=request.url,
+                )
+                return analyze_service.analyze_url(request.url, raw_output_dir=raw_output_dir)
+
+            _start_background_job(
+                job_service,
+                job.job_id,
+                initial_step="preparing_analysis",
+                operation=operation,
+            )
+            return
+
+        if job.task_type == "download":
+            request = DownloadRequest.model_validate(job.payload)
+            if request.output_base_dir:
+                app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()
+            download_service: DownloadService = app.state.download_service
+            _start_background_job(
+                job_service,
+                job.job_id,
+                initial_step="preparing_download",
+                operation=lambda: download_service.download_media(
+                    request,
+                    job_service=job_service,
+                    job_id=job.job_id,
+                ),
+            )
+            return
+
+        if job.task_type == "udemy_download":
+            request = UdemyCourseDownloadRequest.model_validate(job.payload)
+            if request.output_base_dir:
+                app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()
+            udemy_course_service: UdemyCourseService = app.state.udemy_course_service
+            _start_background_job(
+                job_service,
+                job.job_id,
+                initial_step="preparing_udemy_download",
+                operation=lambda: udemy_course_service.download_course(
+                    request,
+                    job_service=job_service,
+                    job_id=job.job_id,
+                ),
+            )
+            return
+
+        if job.task_type == "transcribe":
+            if "input_file_path" in job.payload:
+                request = TranscriptionRequest.model_validate(job.payload)
+            else:
+                local_request = LocalFileTranscriptionRequest.model_validate(job.payload)
+                request = TranscriptionRequest(
+                    input_file_path=local_request.saved_file_path,
+                    output_dir=local_request.output_dir,
+                    user_confirmed_rights=local_request.user_confirmed_rights,
+                    model=local_request.model,
+                    language=local_request.language,
+                    source_kind=local_request.source_kind,
+                    transcript_format=local_request.transcript_format,
+                )
+            transcription_service: TranscriptionService = app.state.transcription_service
+            _start_background_job(
+                job_service,
+                job.job_id,
+                initial_step="preparing_transcription",
+                operation=lambda: transcription_service.transcribe_file(
+                    request,
+                    job_service=job_service,
+                    job_id=job.job_id,
+                ),
+            )
+            return
+
+        job_service.fail_job(
+            job.job_id,
+            ErrorState(
+                code="unknown_error",
+                message="This job type cannot be retried yet.",
+                recoverable=False,
+            ),
+        )
+    except Exception as exc:
+        job_service.fail_job(
+            job.job_id,
+            ErrorState(
+                code="unknown_error",
+                message="Retry job could not be started.",
+                technical_details=str(exc),
+                recoverable=True,
+            ),
+        )
 
 def _start_background_job(
     job_service: JobService,
