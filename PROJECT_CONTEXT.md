@@ -3,10 +3,11 @@
 ## Project Identity
 
 - Name: Universal Media Extractor.
-- Working directory: `/Users/aleksandr/Documents/Codex/Projects/universal-media-extractor`.
+- Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported and converted into an execution backlog.
 - Roadmap source: `docs/ROADMAP_V2.md`.
+- Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 
 ## Product Goal
 
@@ -19,6 +20,14 @@ Primary flows:
 - Udemy lecture/player URL + Chrome session -> Analyze course playlist -> Download course.
 
 The product should help a user inspect available outputs, choose a clear result, save files locally, and optionally create a local Whisper transcript without paid APIs or cloud processing.
+
+Commercial direction after GPT Pro strategy review:
+
+- position as `Local Media Downloader & Organizer for macOS and Windows`;
+- sell installation, organization, presets, history, batch, compatibility updates, diagnostics, and local processing rather than merely `yt-dlp` execution;
+- keep Udemy Course mode internal/experimental for now;
+- avoid public claims around universal source support, DRM, paywall, CAPTCHA, or login bypass;
+- prepare direct website distribution first, Microsoft Store later, and avoid Mac App Store for the full downloader.
 
 ## Core Principles
 
@@ -83,9 +92,17 @@ Udemy command path is documented in `docs/UDEMY_COURSE_EXPORT.md`.
 
 ## Planned Next Block
 
-Block 12. Chrome Extension - planned, not started.
+The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing production readiness before extension work.
 
-Goal: send the current page to the local app. The extension should not extract media itself.
+Recommended next user-approved commercial block:
+
+```text
+Commercial Block 1: Public Product Boundary + Positioning Cleanup
+```
+
+Goal: define public Free/Pro boundaries, hide risky internal features from public builds/marketing, update positioning, and prepare for packaging/security work.
+
+Do not start this block until the user explicitly confirms.
 
 ## Later / Optional
 
@@ -103,7 +120,7 @@ Goal: send the current page to the local app. The extension should not extract m
 Run browser mode:
 
 ```bash
-cd /Users/aleksandr/Documents/Codex/Projects/universal-media-extractor
+cd "/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor"
 .venv/bin/python scripts/run_api.py
 ```
 

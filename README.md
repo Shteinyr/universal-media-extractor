@@ -1,6 +1,6 @@
 # Universal Media Extractor & Transcriber
 
-Status: Block 11 Desktop Wrapper completed; Udemy Course Offline Export initial implementation added.
+Status: Commercial strategy imported; Blocks 1-11 and Udemy Course Offline Export are completed.
 
 This project is evaluating whether a local web app can accept a URL or local audio/video file, analyze available media variants, extract or download selected outputs, transcribe audio locally, and save structured results without paid APIs or cloud services.
 
@@ -10,7 +10,9 @@ The visible UI has been simplified for a more final user-facing surface: the sid
 
 Roadmap note: new work is now organized by larger blocks, not new Phase numbers, unless the user explicitly authorizes new Phase numbering.
 
-Roadmap v2 is recorded in `docs/ROADMAP_V2.md`. Blocks 1-11 are completed. The current next planned block is Block 12: Chrome Extension, but it must not start without explicit user confirmation.
+Roadmap v2 is recorded in `docs/ROADMAP_V2.md`. Blocks 1-11 are completed. A GPT Pro commercialization strategy is saved in `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`, with execution notes in `docs/COMMERCIALIZATION_EXECUTION_PLAN.md` and GitHub issue drafts in `docs/GITHUB_COMMERCIAL_BACKLOG.md`.
+
+Commercial direction: move toward a paid local desktop utility for macOS and Windows. The recommended public positioning is “Local Media Downloader & Organizer,” not “universal downloader for every site.” Udemy Course mode should stay internal/experimental unless separately approved for public release.
 
 Durable project context is recorded in `PROJECT_CONTEXT.md`. Read it before large tasks and update it after completed large blocks.
 
@@ -19,7 +21,7 @@ Durable project context is recorded in `PROJECT_CONTEXT.md`. Read it before larg
 From the project directory:
 
 ```bash
-cd /Users/aleksandr/Documents/Codex/Projects/universal-media-extractor
+cd "/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor"
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 ```

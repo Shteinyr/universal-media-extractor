@@ -6,7 +6,7 @@ Universal Media Extractor & Transcriber is intended to be a local web app with a
 
 ## Current Stage
 
-Blocks 1-11 completed. Roadmap v2 documented. Current next planned block is Block 12 Chrome Extension, but it must not start without explicit user confirmation.
+Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Recommended next work is a user-approved commercial readiness block, not automatic Chrome Extension work.
 
 ## Already Installed And Reported By User
 
@@ -27,6 +27,9 @@ Blocks 1-11 completed. Roadmap v2 documented. Current next planned block is Bloc
 - Do not use paid APIs at the start.
 - Do not build an online service at the start.
 - Main local processing path under audit: `yt-dlp` + `ffmpeg` + Whisper CLI.
+- Commercial direction: local media downloader and organizer for macOS and Windows.
+- Public product should not promise universal site support or bypass platform restrictions.
+- Udemy Course mode should remain internal/experimental unless separately approved.
 
 ## Constraints
 
@@ -67,7 +70,15 @@ Udemy Course mode was refined after user testing. The UI no longer rewrites Udem
 
 Roadmap v2 documented in `docs/ROADMAP_V2.md`.
 
-Current next planned block: Block 12. Chrome Extension. Do not start it until the user explicitly confirms.
+Previous Roadmap v2 next planned block was Block 12. Chrome Extension. The imported commercial strategy recommends deferring extension work and prioritizing commercial readiness: public product boundary, production packaging, persistent jobs/history, batch, presets, diagnostics, security, website, and licensing.
+
+Do not start a new commercial implementation block until the user explicitly confirms.
+
+Commercial strategy docs:
+
+- `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`
+- `docs/COMMERCIALIZATION_EXECUTION_PLAN.md`
+- `docs/GITHUB_COMMERCIAL_BACKLOG.md`
 
 `PROJECT_CONTEXT.md` now exists as the long-term project context file. Read it before large tasks and update it after completed large blocks.
 

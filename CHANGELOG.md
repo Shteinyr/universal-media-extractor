@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-08-05 - Commercial Strategy Import
+
+- Saved the GPT Pro strategy document into `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
+- Created `docs/COMMERCIALIZATION_EXECUTION_PLAN.md` with the commercial execution direction.
+- Created `docs/GITHUB_COMMERCIAL_BACKLOG.md` with 18 ready-to-create GitHub issues.
+- Recorded that the public commercial product should be positioned as a local media downloader and organizer, not a universal downloader for every site.
+- Recorded that Udemy Course mode should stay internal/experimental unless separately approved for public release.
+- GitHub issue/project creation was blocked because the GitHub connector returned `403` and local `gh` auth has an invalid token.
+
 ## 2026-06-13 - Udemy Lecture URL Analysis Fix
 
 - Diagnosed the user-tested Udemy course failure.
