@@ -77,7 +77,11 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
-Beta Website / Download Flow - done.
+Public Beta QA Round - done.
+
+Result: the current beta baseline passed browser/API/local-file/batch/diagnostics/output QA. Verified JS syntax, `196 passed`, browser smoke screenshots, URL analyze/download/transcribe, local synthetic file analyze/transcribe, one-item batch download, diagnostics redaction, output safe delete, and public mode Course hiding. No blocker product bug was found. Documented in `docs/PUBLIC_BETA_QA_ROUND.md`.
+
+Previous completed block: Beta Website / Download Flow - done.
 
 Result: the public beta website/download packaging is documented without deploying a production site or changing core app code. The doc defines public positioning, landing sections, download CTA states, macOS/Windows availability copy, early-access/waitlist flow, limitations, privacy/no-cloud copy, and support diagnostics messaging. Documented in `docs/BETA_WEBSITE_DOWNLOAD_FLOW.md`.
 
@@ -142,10 +146,10 @@ Commercial Blocks 1-14 are completed or prepared except for externally blocked A
 Recommended next user-approved commercial block:
 
 ```text
-Windows Production Foundation or macOS signed release unblock
+Public Beta UI / UX Finalization
 ```
 
-Candidate direction: continue toward shippable desktop builds. Website/download copy is prepared, but real public download links still require signed/notarized macOS builds and later Windows packaging.
+Candidate direction: use the QA baseline to polish the final public beta interface before taking screenshots for the website or packaging broader beta builds.
 
 Do not start the next block until the user explicitly confirms. Do not start checkout or licensing enforcement until payment provider approval and user business details are ready.
 

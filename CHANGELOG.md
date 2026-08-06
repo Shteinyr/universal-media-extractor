@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-08-06 - Public Beta QA Round
+
+- Completed a public beta QA pass without adding features or changing the roadmap.
+- Verified browser launch, `/health`, `/config`, static UI, URL analyze/download/transcribe, local synthetic file analyze/transcribe, one-item batch download, diagnostics redaction, output index/safe delete, and public mode Course hiding.
+- Ran `node --check src/universal_media_extractor/static/app.js`, `.venv/bin/python -m pytest -q`, and `scripts/browser_smoke.py --proof-dir proof/public_beta_qa_round`; result: JS syntax passed, `196 passed`, browser smoke passed.
+- Created `docs/PUBLIC_BETA_QA_ROUND.md` and proof artifacts under `proof/public_beta_qa_round/`.
+- No product blocker or runtime regression was found.
+
 ## 2026-08-05 - Local Session Token UI Race Fix
 
 - Fixed a frontend race where protected API calls could run before the UI finished loading `/config` and receiving the local session token.

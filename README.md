@@ -52,6 +52,7 @@ Commercial foundation docs:
 - `docs/COMMERCIAL_BLOCK_14_PUBLIC_BETA_UI_READINESS.md`
 - `docs/PUBLIC_BETA_SECURITY_DIAGNOSTICS_QA_REVIEW.md`
 - `docs/BETA_WEBSITE_DOWNLOAD_FLOW.md`
+- `docs/PUBLIC_BETA_QA_ROUND.md`
 
 Public commercial builds should set `UME_PUBLIC_PRODUCT_MODE=1`. In that mode, internal/experimental Course Mode is hidden from the static UI by default.
 
@@ -175,6 +176,16 @@ Start here:
 - `docs/MACOS_SIGNING_NOTARIZATION_TROUBLESHOOTING.md`
 
 Do not ship the unsigned local DMG as a public release.
+
+## Public Beta QA Round
+
+The current public beta QA pass is documented in:
+
+```text
+docs/PUBLIC_BETA_QA_ROUND.md
+```
+
+It verifies browser launch, URL analyze/download/transcribe, local synthetic file analyze/transcribe, one-item batch download, diagnostics redaction, output safe delete, public mode Course hiding, JS syntax, pytest, and browser smoke proof. Proof artifacts are under `proof/public_beta_qa_round/`.
 
 ## Beta Website / Download Flow
 
