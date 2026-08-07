@@ -67,7 +67,7 @@ class DownloadService:
                 ],
             )
 
-        _update_job_step(job_service, job_id, "preparing_download", 0)
+        _update_job_step(job_service, job_id, "validating_output")
         output_base_dir = (
             Path(request.output_base_dir).expanduser()
             if request.output_base_dir
@@ -139,7 +139,7 @@ class DownloadService:
         job_service: "JobService | None" = None,
         job_id: str | None = None,
     ) -> DownloadResult:
-        _update_job_step(job_service, job_id, "downloading", 0)
+        _update_job_step(job_service, job_id, "downloading")
         process: subprocess.Popen[str] | None = None
         output_lines: list[str] = []
         try:
@@ -189,7 +189,13 @@ class DownloadService:
                     _append_log_text(log_path, line)
                     step, percent = _parse_ytdlp_progress_line(line)
                     if step:
-                        _update_job_step(job_service, job_id, step, percent)
+                        _update_job_step(
+                            job_service,
+                            job_id,
+                            step,
+                            percent,
+                            progress_mode="determinate" if percent is not None else "indeterminate",
+                        )
                     continue
 
                 if process.poll() is not None:
@@ -204,7 +210,13 @@ class DownloadService:
                     for line in remaining.splitlines():
                         step, percent = _parse_ytdlp_progress_line(line)
                         if step:
-                            _update_job_step(job_service, job_id, step, percent)
+                            _update_job_step(
+                                job_service,
+                                job_id,
+                                step,
+                                percent,
+                                progress_mode="determinate" if percent is not None else "indeterminate",
+                            )
             returncode = process.wait(timeout=2)
         finally:
             if job_service and job_id and process is not None:
@@ -252,7 +264,7 @@ class DownloadService:
                 downloaded_files=downloaded_files,
             )
 
-        _update_job_step(job_service, job_id, "saving_metadata", 99)
+        _update_job_step(job_service, job_id, "saving_metadata")
         return DownloadResult(
             status="succeeded",
             source_url=request.source_url,
@@ -402,6 +414,7 @@ def _cancelled_result(
     *,
     downloaded_files: list[Path] | None = None,
 ) -> DownloadResult:
+    _cleanup_download_temp_files(output_dir)
     return DownloadResult(
         status="cancelled",
         source_url=request.source_url,
@@ -418,11 +431,14 @@ def _update_job_step(
     job_id: str | None,
     current_step: str,
     progress_percent: float | None = None,
+    *,
+    progress_mode: str | None = None,
 ) -> None:
     if job_service is None or job_id is None:
         return
     try:
-        job_service.update_job_step(job_id, current_step, progress_percent)
+        kwargs = {"progress_mode": progress_mode} if progress_mode else {}
+        job_service.update_job_step(job_id, current_step, progress_percent, **kwargs)
     except KeyError:
         return
 
@@ -462,6 +478,17 @@ def _list_downloaded_files(output_dir: Path) -> list[Path]:
         for path in output_dir.iterdir()
         if path.is_file() and not path.name.startswith(".")
     )
+
+
+def _cleanup_download_temp_files(output_dir: Path) -> None:
+    if not output_dir.exists():
+        return
+    for path in output_dir.iterdir():
+        if path.is_file() and path.name.endswith((".part", ".ytdl", ".temp", ".tmp")):
+            try:
+                path.unlink()
+            except OSError:
+                continue
 
 
 def _compact_details(value: str | bytes | None) -> str | None:

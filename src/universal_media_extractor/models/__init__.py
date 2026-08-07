@@ -39,7 +39,9 @@ from universal_media_extractor.models.job import (
     Job,
     JobHistoryClearResult,
     JobHistoryResult,
+    JobStage,
     JobStatus,
+    ProgressMode,
 )
 from universal_media_extractor.models.local_file import (
     LocalFileAnalyzeResult,
@@ -98,7 +100,9 @@ __all__ = [
     "Job",
     "JobHistoryClearResult",
     "JobHistoryResult",
+    "JobStage",
     "JobStatus",
+    "ProgressMode",
     "LegalSafetyState",
     "LocalFileAnalyzeResult",
     "LocalFileStreamInfo",

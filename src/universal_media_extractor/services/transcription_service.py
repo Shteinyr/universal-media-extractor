@@ -468,6 +468,7 @@ def _cancelled_result(
     *,
     extracted_audio_path: Path | None = None,
 ) -> TranscriptionResult:
+    _cleanup_transcription_temp_files(output_dir, extracted_audio_path)
     return TranscriptionResult(
         status="cancelled",
         input_file_path=request.input_file_path,
@@ -475,6 +476,27 @@ def _cancelled_result(
         extracted_audio_path=str(extracted_audio_path) if extracted_audio_path else None,
         log_path=str(log_path),
     )
+
+
+def _cleanup_transcription_temp_files(
+    output_dir: Path,
+    extracted_audio_path: Path | None,
+) -> None:
+    output_path = output_dir.expanduser().resolve()
+    if extracted_audio_path:
+        audio_path = extracted_audio_path.expanduser().resolve()
+        if audio_path.is_relative_to(output_path) and audio_path.name == "extracted_audio.wav":
+            try:
+                audio_path.unlink()
+            except OSError:
+                pass
+    for dirname in (".work", "work"):
+        work_dir = (output_path / dirname).resolve()
+        if work_dir.is_dir() and work_dir.is_relative_to(output_path):
+            try:
+                shutil.rmtree(work_dir)
+            except OSError:
+                pass
 
 
 def _append_log(log_path: Path, text: str) -> None:

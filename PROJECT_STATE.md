@@ -6,7 +6,7 @@ Universal Media Extractor & Transcriber is intended to be a local web app with a
 
 ## Current Stage
 
-Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Commercial Block 2 issues #6-#7 are completed. Commercial Block 3 issue #9 is completed. Commercial Block 4 issue #8 is completed. Commercial Block 5 issue #10 is completed. Commercial Block 6 issue #11 is completed. Commercial Blocks 7-10 prepared macOS packaging/public release readiness up to the Apple Developer ID blocker. Commercial Block 11 prepared the founder launch surface around issues #19-#21. Commercial Block 12 prepared payment provider pre-approval and licensing model docs for issues #22-#23. Commercial Block 13 added batch queue foundation, playlist/clipboard/text import, controlled concurrency, and retry failed items for issues #25-#28. Issue #29 Archive Pack remains open/planned. Commercial Block 14 polished the existing static UI for public beta readiness without API or roadmap changes. Public beta security/diagnostics/QA sanity checks are completed without roadmap changes: `/config` and diagnostics use no-store headers, non-local Host rejection is covered, and failed/cancelled background jobs expose a local redacted diagnostics copy action. Beta website/download flow packaging is documented without deploying a production site, adding checkout, changing installers, or changing core app code. Public Beta QA Round and Public Beta UI / UX Finalization Implementation are completed. Public Beta UI/UX Refactor Block 1 issues #42-#45 are completed. Durable Queue/Library issue #46 is completed. Native filesystem integration issue #47 is completed: desktop mode has native file/folder pickers, local files can be analyzed in place, output folders are validated before download, reveal targets the primary result file when available, and long absolute paths stay out of the main default UI. Recommended next work remains Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work. After Block 12, real checkout/licensing remains gated by provider approval and user business details.
+Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Commercial Block 2 issues #6-#7 are completed. Commercial Block 3 issue #9 is completed. Commercial Block 4 issue #8 is completed. Commercial Block 5 issue #10 is completed. Commercial Block 6 issue #11 is completed. Commercial Blocks 7-10 prepared macOS packaging/public release readiness up to the Apple Developer ID blocker. Commercial Block 11 prepared the founder launch surface around issues #19-#21. Commercial Block 12 prepared payment provider pre-approval and licensing model docs for issues #22-#23. Commercial Block 13 added batch queue foundation, playlist/clipboard/text import, controlled concurrency, and retry failed items for issues #25-#28. Issue #29 Archive Pack remains open/planned. Commercial Block 14 polished the existing static UI for public beta readiness without API or roadmap changes. Public beta security/diagnostics/QA sanity checks are completed without roadmap changes: `/config` and diagnostics use no-store headers, non-local Host rejection is covered, and failed/cancelled background jobs expose a local redacted diagnostics copy action. Beta website/download flow packaging is documented without deploying a production site, adding checkout, changing installers, or changing core app code. Public Beta QA Round and Public Beta UI / UX Finalization Implementation are completed. Public Beta UI/UX Refactor Block 1 issues #42-#45 are completed. Durable Queue/Library issue #46 is completed. Native filesystem integration issue #47 is completed. Unified progress/cancel/retry/recovery issue #48 is completed: jobs expose normalized stages and progress modes, UI shows determinate progress only for real download percentages, cancellation cleans safe temporary files, interrupted jobs recover to retryable states, and batch isolates unexpected item failures. Recommended next work remains Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work. After Block 12, real checkout/licensing remains gated by provider approval and user business details.
 
 ## Already Installed And Reported By User
 
@@ -126,6 +126,8 @@ Durable Queue/Library finalization is documented in `docs/PUBLIC_BETA_DURABLE_QU
 
 Native filesystem integration is documented in `docs/PUBLIC_BETA_NATIVE_FILESYSTEM_INTEGRATION.md`. It implements issue #47: desktop mode exposes native file/folder pickers through `pywebview`, `POST /local/analyze-path` analyzes desktop-selected files without copying large media just for metadata, downloads validate selected output folders before starting, reveal/open stays constrained to managed outputs and prefers the primary result file, and the main UI keeps the short default save path. Verification: JS syntax checks, targeted filesystem/API tests, full pytest with `216 passed`, and browser smoke proof under `proof/native_filesystem_integration/`.
 
+Unified progress/cancel/retry/recovery is documented in `docs/PUBLIC_BETA_PROGRESS_CANCEL_RETRY_RECOVERY.md`. It implements issue #48: jobs expose normalized `stage` and `progress_mode`, determinate UI progress appears only for real `yt-dlp` download percentages and terminal success, merge/ffmpeg/Whisper/saving/cancel/interrupted states are indeterminate, cancelled jobs clean safe temporary artifacts, and batch execution isolates unexpected item failures. Verification: JS syntax checks, focused tests with `45 passed`, full pytest with `220 passed`, and browser smoke proof under `proof/unified_progress_recovery/`.
+
 UI/UX research package for GPT Pro was expanded into a full context pack. It preserves the GPT Pro strategy competitor list as the baseline, adds supplemental references, maps the current product functions and likely screens, captures public competitor visual references, captures current app UI screenshots, and prepares a copy-ready GPT Pro synthesis prompt. Docs:
 
 - `docs/UI_UX_COMPETITOR_VISUAL_AUDIT.md`
@@ -151,14 +153,17 @@ GPT Pro final UI/UX commercial spec was imported and tracked. It recommends movi
 - `docs/UNIVERSAL_MEDIA_EXTRACTOR_FINAL_UI_UX_COMMERCIAL_SPEC.md`
 - `docs/FINAL_UI_UX_IMPLEMENTATION_PLAN.md`
 
-GitHub issues #41-#51 were created and added to Project #7. First recommended implementation block is #42-#45:
+GitHub issues #41-#51 were created and added to Project #7. Completed public-beta UI/UX readiness issues include #42-#48:
 
 - #42 `[P0] Public build Course surface removal hardening`
 - #43 `[P0] Backend source-of-truth audit and endpoint inventory`
 - #44 `[P0] Universal New Task composer`
 - #45 `[P0] Stable semantic preset resolver`
+- #46 `[P0] Durable Queue and Library finalization`
+- #47 `[P0] Native filesystem integration`
+- #48 `[P0] Unified progress, cancel, retry, recovery`
 
-Do not start #42-#45 until the user explicitly confirms the implementation block.
+Next remaining public-beta readiness candidates are #49-#51. Do not start the next issue until the user explicitly confirms.
 
 
 `PROJECT_CONTEXT.md` now exists as the long-term project context file. Read it before large tasks and update it after completed large blocks.

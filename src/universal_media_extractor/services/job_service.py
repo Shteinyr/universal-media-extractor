@@ -11,7 +11,7 @@ from typing import Any
 from uuid import uuid4
 
 from universal_media_extractor.models import ErrorState, Job
-from universal_media_extractor.models.job import JobStatus
+from universal_media_extractor.models.job import JobStage, JobStatus, ProgressMode
 
 
 TERMINAL_STATUSES: set[JobStatus] = {"succeeded", "failed", "cancelled"}
@@ -88,6 +88,8 @@ class JobService:
         *,
         current_step: str | None = None,
         progress_percent: float | None = None,
+        stage: JobStage | None = None,
+        progress_mode: ProgressMode | None = None,
         result: Any | None = None,
     ) -> Job:
         """Update job status and optional error."""
@@ -103,6 +105,13 @@ class JobService:
             update["current_step"] = current_step
         if progress_percent is not None:
             update["progress_percent"] = progress_percent
+        resolved_stage = stage or _stage_for_step(current_step or job.current_step, status)
+        update["stage"] = resolved_stage
+        update["progress_mode"] = progress_mode or _progress_mode_for(
+            status=status,
+            stage=resolved_stage,
+            progress_percent=progress_percent,
+        )
         if result is not None:
             update["result"] = result
         if status == "running" and job.started_at is None:
@@ -120,12 +129,22 @@ class JobService:
         job_id: str,
         current_step: str,
         progress_percent: float | None = None,
+        *,
+        stage: JobStage | None = None,
+        progress_mode: ProgressMode | None = None,
     ) -> Job:
         """Update a running job's current step."""
 
         job = self._require_job(job_id)
+        resolved_stage = stage or _stage_for_step(current_step, job.status)
         update: dict[str, Any] = {
             "current_step": current_step,
+            "stage": resolved_stage,
+            "progress_mode": progress_mode or _progress_mode_for(
+                status=job.status,
+                stage=resolved_stage,
+                progress_percent=progress_percent,
+            ),
             "updated_at": datetime.now(timezone.utc),
         }
         if progress_percent is not None:
@@ -144,6 +163,8 @@ class JobService:
             "succeeded",
             current_step="succeeded",
             progress_percent=100,
+            stage="completed",
+            progress_mode="determinate",
             result=result,
         )
 
@@ -155,6 +176,8 @@ class JobService:
             "failed",
             error=error,
             current_step="failed",
+            stage="failed",
+            progress_mode="indeterminate",
             result=result,
         )
 
@@ -199,6 +222,8 @@ class JobService:
                     update={
                         "status": "failed",
                         "current_step": "interrupted",
+                        "stage": "interrupted",
+                        "progress_mode": "indeterminate",
                         "progress_percent": job.progress_percent,
                         "error": ErrorState(
                             code="unknown_error",
@@ -229,6 +254,8 @@ class JobService:
                     "status": "cancelled",
                     "cancel_requested": True,
                     "current_step": "cancelled",
+                    "stage": "cancelled",
+                    "progress_mode": "indeterminate",
                     "finished_at": now,
                     "updated_at": now,
                 }
@@ -239,6 +266,8 @@ class JobService:
                 updated = job.model_copy(
                     update={
                         "current_step": "cancel requested after subprocess finished",
+                        "stage": "cancelling",
+                        "progress_mode": "indeterminate",
                         "updated_at": now,
                     }
                 )
@@ -251,6 +280,8 @@ class JobService:
                 update={
                     "cancel_requested": True,
                     "current_step": "cancel requested",
+                    "stage": "cancelling",
+                    "progress_mode": "indeterminate",
                     "updated_at": now,
                 }
             )
@@ -325,6 +356,8 @@ class JobService:
                     "status": "cancelled",
                     "cancel_requested": True,
                     "current_step": "cancelled",
+                    "stage": "cancelled",
+                    "progress_mode": "indeterminate",
                     "finished_at": datetime.now(timezone.utc),
                     "updated_at": datetime.now(timezone.utc),
                 }
@@ -341,6 +374,8 @@ class JobService:
             update={
                 "cancel_requested": True,
                 "current_step": "cancel requested",
+                "stage": "cancelling",
+                "progress_mode": "indeterminate",
                 "error": ErrorState(
                     code="unknown_error",
                     message="Cancel was requested but could not immediately stop active work.",
@@ -432,3 +467,58 @@ class JobService:
                 "DELETE FROM jobs WHERE job_id = ?",
                 [(job_id,) for job_id in job_ids],
             )
+
+
+def _stage_for_step(current_step: str | None, status: JobStatus) -> JobStage:
+    """Map legacy step strings into stable public progress stages."""
+
+    if status == "queued":
+        return "queued"
+    if status == "succeeded":
+        return "completed"
+    if status == "failed":
+        return "failed"
+    if status == "cancelled":
+        return "cancelled"
+
+    step = (current_step or "").strip().lower()
+    if step == "interrupted":
+        return "interrupted"
+    if "cancel" in step:
+        return "cancelling"
+    if step.startswith("validating"):
+        return "validating"
+    if step.startswith("preparing"):
+        return "preparing"
+    if "analy" in step:
+        return "analyzing"
+    if "download" in step:
+        return "downloading"
+    if "merge" in step or "postprocess" in step or "remux" in step:
+        return "merging"
+    if "convert" in step:
+        return "converting"
+    if "extract" in step and "audio" in step:
+        return "extracting_audio"
+    if "whisper" in step or "transcrib" in step:
+        return "transcribing"
+    if "saving" in step or "generating" in step:
+        return "saving"
+    return "preparing"
+
+
+def _progress_mode_for(
+    *,
+    status: JobStatus,
+    stage: JobStage,
+    progress_percent: float | None,
+) -> ProgressMode:
+    """Use determinate progress only when the value represents real progress."""
+
+    if status == "succeeded":
+        return "determinate"
+    if status != "running" or progress_percent is None:
+        return "indeterminate"
+    if stage == "downloading":
+        return "determinate"
+    return "indeterminate"

@@ -10,6 +10,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from universal_media_extractor.models import DownloadRequest
 from universal_media_extractor.services.download_service import (
     DownloadService,
+    _cancelled_result as cancelled_download_result,
     _parse_ytdlp_progress_line,
 )
 
@@ -314,3 +315,23 @@ def test_ytdlp_progress_parser_reads_percent_and_postprocessing():
         None,
     )
     assert _parse_ytdlp_progress_line("plain text") == (None, None)
+
+
+def test_cancelled_download_cleans_safe_temp_files(tmp_path):
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+    part_file = output_dir / "media.mp4.part"
+    final_file = output_dir / "media.mp4"
+    part_file.write_bytes(b"partial")
+    final_file.write_bytes(b"final")
+
+    result = cancelled_download_result(
+        _request(tmp_path),
+        output_dir,
+        output_dir / ".logs" / "download.log",
+        output_dir / ".metadata" / "download_result.json",
+    )
+
+    assert result.status == "cancelled"
+    assert not part_file.exists()
+    assert final_file.exists()

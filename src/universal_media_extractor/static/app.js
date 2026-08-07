@@ -1486,6 +1486,27 @@ function humanStepLabel(step) {
   return value || "Queued";
 }
 
+function humanStageLabel(stage) {
+  const labels = {
+    queued: "Queued",
+    preparing: "Preparing",
+    validating: "Checking output",
+    analyzing: "Analyzing",
+    downloading: "Downloading",
+    merging: "Merging",
+    converting: "Converting",
+    extracting_audio: "Extracting audio",
+    transcribing: "Transcribing",
+    saving: "Saving files",
+    completed: "Completed",
+    failed: "Failed",
+    cancelling: "Cancelling",
+    cancelled: "Cancelled",
+    interrupted: "Interrupted",
+  };
+  return labels[stage] || humanStepLabel(stage);
+}
+
 function statusHeading(text, status) {
   const title = document.createElement("strong");
   title.className = `status-title ${statusClass(status)}`;
@@ -1606,15 +1627,21 @@ function renderJobStatus(container, job, label) {
 
   const step = document.createElement("p");
   step.className = "job-detail";
-  step.textContent = humanStepLabel(job.current_step || status);
+  step.textContent = humanStageLabel(job.stage || job.current_step || status);
   container.appendChild(step);
 
-  if (Number.isFinite(job.progress_percent)) {
+  const isDeterminateProgress =
+    job.progress_mode === "determinate" && Number.isFinite(job.progress_percent);
+  const shouldShowIndeterminate = ["queued", "running"].includes(status) && !isDeterminateProgress;
+
+  if (isDeterminateProgress || shouldShowIndeterminate) {
     const track = document.createElement("div");
-    track.className = "progress-track";
+    track.className = shouldShowIndeterminate ? "progress-track is-indeterminate" : "progress-track";
     const fill = document.createElement("div");
     fill.className = "progress-fill";
-    fill.style.width = `${Math.max(0, Math.min(100, Math.round(job.progress_percent)))}%`;
+    if (isDeterminateProgress) {
+      fill.style.width = `${Math.max(0, Math.min(100, Math.round(job.progress_percent)))}%`;
+    }
     track.appendChild(fill);
     container.appendChild(track);
   }

@@ -2,6 +2,16 @@
 
 ## 2026-08-07
 
+- GitHub issue #48 Unified progress, cancel, retry, recovery is completed as public beta readiness work, not as a new roadmap block.
+- Public job responses expose normalized `stage` and `progress_mode` while keeping `current_step` for compatibility and diagnostics.
+- Determinate progress may be shown only for real `yt-dlp` download percentages or terminal success.
+- Merge/post-processing, ffmpeg extraction, Whisper transcription, saving, cancellation, and interrupted recovery must be shown as indeterminate unless a real parser is added and tested.
+- Pause must not be shown until true resume is implemented and verified for the relevant operation/source.
+- Unexpected failure in one batch item must not stop unrelated queued/running items.
+- Cancelled jobs may clean only safe temporary artifacts and must not delete user-visible completed files.
+
+## 2026-08-07
+
 - GitHub issue #47 Native filesystem integration is completed as public beta readiness work, not as a new roadmap block.
 - Desktop native file/folder picking uses the existing `pywebview` wrapper and does not add Electron, React/Vite, CDN assets, or a new frontend stack.
 - Browser mode remains supported through normal upload inputs and typed save paths; browser mode cannot promise a native folder picker.

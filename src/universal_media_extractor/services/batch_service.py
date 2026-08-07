@@ -273,7 +273,21 @@ class BatchService:
                 for item in items
             }
             for future in as_completed(futures):
-                future.result()
+                item_id = futures[future]
+                try:
+                    future.result()
+                except Exception as exc:  # pragma: no cover - defensive worker boundary
+                    self._mark_item_failed(
+                        batch_id,
+                        item_id,
+                        ErrorState(
+                            code="unknown_error",
+                            message="Batch item failed unexpectedly.",
+                            technical_details=compact_details(str(exc)),
+                            recoverable=True,
+                            suggested_user_action="Retry this item after checking the source.",
+                        ),
+                    )
 
         with self._lock:
             batch = self._batches.get(batch_id)
@@ -310,11 +324,23 @@ class BatchService:
                 stored.updated_at = datetime.now(timezone.utc)
                 self._persist_batch_locked(self._batches[batch_id])
 
-        result = self._download_service.download_media(
-            download_request,
-            job_service=self._job_service,
-            job_id=job.job_id,
-        )
+        try:
+            result = self._download_service.download_media(
+                download_request,
+                job_service=self._job_service,
+                job_id=job.job_id,
+            )
+        except Exception as exc:  # pragma: no cover - defensive service boundary
+            error = ErrorState(
+                code="unknown_error",
+                message="Batch item failed unexpectedly.",
+                technical_details=compact_details(str(exc)),
+                recoverable=True,
+                suggested_user_action="Retry this item after checking the source.",
+            )
+            self._job_service.fail_job(job.job_id, error)
+            self._mark_item_failed(batch_id, item.item_id, error, job_id=job.job_id)
+            return
         result_data = result.model_dump(mode="json")
         errors = result.errors or []
         refreshed = self._job_service.get_job(job.job_id)
@@ -359,6 +385,28 @@ class BatchService:
                 stored.updated_at = datetime.now(timezone.utc)
                 self._refresh_counts(batch)
                 self._persist_batch_locked(batch)
+
+    def _mark_item_failed(
+        self,
+        batch_id: str,
+        item_id: str,
+        error: ErrorState,
+        *,
+        job_id: str | None = None,
+    ) -> None:
+        with self._lock:
+            stored = self._find_item(batch_id, item_id)
+            batch = self._batches.get(batch_id)
+            if stored is None or batch is None:
+                return
+            if stored.status in TERMINAL_ITEM_STATUSES:
+                return
+            stored.status = "failed"
+            stored.job_id = job_id or stored.job_id
+            stored.error = error
+            stored.updated_at = datetime.now(timezone.utc)
+            self._refresh_counts(batch)
+            self._persist_batch_locked(batch)
 
     def _download_request_for_item(self, item: BatchItem, request: BatchCreateRequest) -> DownloadRequest:
         mode, format_id, output_format = self._preset_download_values(request.preset)

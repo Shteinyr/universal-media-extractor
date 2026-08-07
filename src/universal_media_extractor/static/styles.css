@@ -1078,6 +1078,20 @@ button:disabled {
   background: var(--accent);
 }
 
+.progress-track.is-indeterminate .progress-fill {
+  width: 34%;
+  animation: progress-indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(310%);
+  }
+}
+
 .notice-panel {
   box-shadow: none;
 }

@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness. Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, Durable Queue/Library finalization, and Native filesystem integration are completed.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness. Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, Durable Queue/Library finalization, Native filesystem integration, and Unified progress/cancel/retry/recovery are completed.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -76,6 +76,31 @@ Commercial direction after GPT Pro strategy review:
 - Block 11. Desktop Wrapper - done.
 
 ## Latest Completed Block
+
+Unified progress, cancel, retry, recovery - done.
+
+Created doc:
+
+- `docs/PUBLIC_BETA_PROGRESS_CANCEL_RETRY_RECOVERY.md`
+
+Result: issue #48 is implemented. Jobs now expose normalized `stage` and `progress_mode` fields while preserving legacy `current_step`. Determinate progress is shown only for real `yt-dlp` download percentages and terminal success. Merge/post-processing, ffmpeg extraction, Whisper transcription, saving, cancellation, and interrupted recovery use honest indeterminate states. Cancelled download/transcription jobs clean safe temporary artifacts, and batch execution isolates unexpected item failures so unrelated items keep running.
+
+Verification:
+
+- `node --check src/universal_media_extractor/static/app.js`;
+- `node --check src/universal_media_extractor/static/option_normalizer.js`;
+- `.venv/bin/python -m pytest tests/test_job_service.py tests/test_download_service.py tests/test_transcription_service.py tests/test_batch_service.py -q` -> `45 passed`;
+- `.venv/bin/python -m pytest -q` outside sandbox -> `220 passed`;
+- `.venv/bin/python scripts/browser_smoke.py --proof-dir proof/unified_progress_recovery`.
+
+Proof screenshots:
+
+- `proof/unified_progress_recovery/ui_initial.png`
+- `proof/unified_progress_recovery/ui_analyze_result.png`
+- `proof/unified_progress_recovery/ui_output_selected.png`
+- `proof/unified_progress_recovery/ui_library.png`
+
+Previous completed block:
 
 Native filesystem integration - done.
 
@@ -287,10 +312,10 @@ Commercial Blocks 1-14 are completed or prepared except for externally blocked A
 Recommended next user-approved commercial block, depending on user readiness:
 
 ```text
-Unified progress, cancel, retry, recovery
+Error normalization and diagnostics final pass
 ```
 
-Candidate direction: continue with issue #48 to refine long-running task behavior. If Apple Developer Program access and signing credentials are ready, macOS signed public beta release validation can be chosen instead.
+Candidate direction: continue with issue #49 to do the final public-beta pass on user-facing errors and local diagnostics. If Apple Developer Program access and signing credentials are ready, macOS signed public beta release validation can be chosen instead.
 
 Do not start the next block until the user explicitly confirms. Do not start checkout or licensing enforcement until payment provider approval and user business details are ready.
 

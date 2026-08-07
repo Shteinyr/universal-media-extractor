@@ -11,6 +11,24 @@ from universal_media_extractor.models.analyze import ErrorState
 
 
 JobStatus = Literal["queued", "running", "succeeded", "failed", "cancelled"]
+JobStage = Literal[
+    "queued",
+    "preparing",
+    "validating",
+    "analyzing",
+    "downloading",
+    "merging",
+    "converting",
+    "extracting_audio",
+    "transcribing",
+    "saving",
+    "completed",
+    "failed",
+    "cancelling",
+    "cancelled",
+    "interrupted",
+]
+ProgressMode = Literal["indeterminate", "determinate"]
 
 
 class Job(BaseModel):
@@ -21,6 +39,8 @@ class Job(BaseModel):
     job_id: str = Field(min_length=1)
     task_type: str = Field(min_length=1)
     status: JobStatus = Field(default="queued")
+    stage: JobStage = "queued"
+    progress_mode: ProgressMode = "indeterminate"
     current_step: str | None = Field(default=None)
     progress_percent: float | None = Field(default=None, ge=0, le=100)
     payload: dict[str, Any] = Field(default_factory=dict)

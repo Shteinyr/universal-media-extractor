@@ -69,6 +69,23 @@ SQLite is used for jobs/history and durable batch queue snapshots.
 - Queued/running batch groups found at startup are recovered into a failed, recoverable interruption state.
 - Failed batch items can be retried when the original request snapshot is available.
 
+## Progress, Cancel, Retry, Recovery
+
+Issue #48 adds normalized public job progress semantics.
+
+Implemented:
+
+- jobs expose stable `stage` and `progress_mode` fields;
+- legacy `current_step` remains for compatibility and diagnostics;
+- real `yt-dlp` download percentages use `progress_mode=determinate`;
+- merge/remux/post-processing, ffmpeg extraction, Whisper transcription, saving, cancelling, and interrupted recovery use `progress_mode=indeterminate`;
+- queued/running jobs found at startup recover to a failed, recoverable `interrupted` stage;
+- queued/running batch groups found at startup recover to failed/retryable states;
+- failed jobs and failed batch items can be retried through existing endpoints;
+- unexpected failure in one batch item is isolated to that item and does not stop unrelated items;
+- cancelled download/transcription jobs clean safe temporary files where practical;
+- no Pause action is exposed because true resume is not implemented for every source.
+
 SQLite is not yet a full product database.
 
 - Output library/search is folder-index based, not database-backed.
@@ -163,5 +180,5 @@ Not implemented:
 
 ## Follow-Ups
 
-- Progress/cancel/retry recovery can be refined further for long-running media processes.
 - Native filesystem edge cases should be rechecked during Windows production packaging.
+- Error normalization and diagnostics still need a final public-beta pass.

@@ -8,7 +8,10 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from universal_media_extractor.models import TranscriptionRequest
 from universal_media_extractor.services.job_service import JobService
-from universal_media_extractor.services.transcription_service import TranscriptionService
+from universal_media_extractor.services.transcription_service import (
+    TranscriptionService,
+    _cancelled_result as cancelled_transcription_result,
+)
 
 
 def _write_whisper_outputs(command):
@@ -270,4 +273,33 @@ def test_transcription_service_updates_step_based_job_status(monkeypatch, tmp_pa
     updated = job_service.get_job(job.job_id)
     assert result.status == "succeeded"
     assert updated.current_step == "generating_transcript_files"
+    assert updated.stage == "saving"
+    assert updated.progress_mode == "indeterminate"
     assert updated.progress_percent == 90
+
+
+def test_cancelled_transcription_cleans_safe_work_files(tmp_path):
+    output_dir = tmp_path / "output"
+    work_dir = output_dir / ".work"
+    work_dir.mkdir(parents=True)
+    extracted_audio = work_dir / "extracted_audio.wav"
+    extracted_audio.write_bytes(b"wav")
+    keep_file = output_dir / "source.m4a"
+    keep_file.write_bytes(b"audio")
+    request = TranscriptionRequest(
+        input_file_path=str(keep_file),
+        user_confirmed_rights=True,
+    )
+
+    result = cancelled_transcription_result(
+        request,
+        output_dir,
+        output_dir / ".logs" / "transcription.log",
+        output_dir / ".metadata" / "transcription_result.json",
+        extracted_audio_path=extracted_audio,
+    )
+
+    assert result.status == "cancelled"
+    assert not extracted_audio.exists()
+    assert not work_dir.exists()
+    assert keep_file.exists()

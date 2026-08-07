@@ -55,6 +55,13 @@ class FakeDownloadService:
         )
 
 
+class RaisingDownloadService(FakeDownloadService):
+    def download_media(self, request, *, job_service=None, job_id=None):
+        if "raise" in request.source_url:
+            raise RuntimeError("unexpected item failure")
+        return super().download_media(request, job_service=job_service, job_id=job_id)
+
+
 def wait_for_batch(service, batch_id, timeout=2.0):
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -93,6 +100,30 @@ def test_batch_runs_with_controlled_concurrency(tmp_path):
     assert fake.max_active <= 2
     assert all(call.mode == "audio" for call in fake.calls)
     assert all(call.output_format == "m4a" for call in fake.calls)
+
+
+def test_batch_isolates_unexpected_item_failure(tmp_path):
+    fake = RaisingDownloadService()
+    service = BatchService(job_service=JobService(tmp_path / "jobs.sqlite3"), download_service=fake)
+    request = BatchCreateRequest(
+        items=[
+            BatchDownloadItemRequest(source_url="https://example.test/raise"),
+            BatchDownloadItemRequest(source_url="https://example.test/success"),
+        ],
+        user_confirmed_rights=True,
+        concurrency=2,
+        preset="audio_m4a",
+    )
+
+    batch = service.create_batch(request)
+    final = wait_for_batch(service, batch.batch_id)
+
+    assert final.status == "failed"
+    assert final.failed_count == 1
+    assert final.succeeded_count == 1
+    failed_item = next(item for item in final.items if item.status == "failed")
+    assert failed_item.error is not None
+    assert failed_item.error.recoverable is True
 
 
 def test_batch_requires_rights_confirmation(tmp_path):

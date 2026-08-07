@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-08-07 - Unified Progress, Cancel, Retry, Recovery
+
+- Implemented GitHub issue #48 from the GPT Pro final UI/UX public beta readiness set.
+- Added normalized job `stage` and `progress_mode` fields while preserving legacy `current_step` for compatibility and diagnostics.
+- Limited determinate progress to real `yt-dlp` download percentages and terminal success; merge, ffmpeg, Whisper, saving, cancellation, and interruption now use honest indeterminate states.
+- Updated the static UI to render stage labels and indeterminate progress without showing fake percentages.
+- Added safe cleanup for cancelled download and transcription temporary files.
+- Hardened batch execution so an unexpected failure in one item becomes a failed item and does not stop unrelated items.
+- Created `docs/PUBLIC_BETA_PROGRESS_CANCEL_RETRY_RECOVERY.md` and updated backend source-of-truth/project memory docs.
+- Verification: JS syntax checks passed, focused job/download/transcription/batch tests passed with `45 passed`, full pytest passed with `220 passed`, and browser smoke passed in public product mode.
+- Saved proof screenshots under `proof/unified_progress_recovery/`.
+
 ## 2026-08-07 - Native Filesystem Integration
 
 - Implemented GitHub issue #47 from the GPT Pro final UI/UX public beta readiness set.

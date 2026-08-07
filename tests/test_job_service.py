@@ -45,6 +45,8 @@ def test_job_service_creates_job():
     assert job.job_id.startswith("job-")
     assert job.task_type == "analyze_url"
     assert job.status == "queued"
+    assert job.stage == "queued"
+    assert job.progress_mode == "indeterminate"
     assert job.payload == {"url": "https://example.test/video"}
     assert service.get_job(job.job_id) == job
 
@@ -61,6 +63,8 @@ def test_job_service_updates_status_with_error():
     updated = service.update_job_status(job.job_id, "failed", error=error)
 
     assert updated.status == "failed"
+    assert updated.stage == "failed"
+    assert updated.progress_mode == "indeterminate"
     assert updated.error == error
     assert updated.updated_at >= job.updated_at
 
@@ -86,6 +90,7 @@ def test_job_service_stops_registered_running_process():
     assert process.terminated is True
     assert cancelled.status == "cancelled"
     assert cancelled.current_step == "cancelled"
+    assert cancelled.stage == "cancelled"
 
 
 def test_job_service_kills_process_when_terminate_wait_times_out():
@@ -114,6 +119,7 @@ def test_job_service_does_not_cancel_when_registered_process_already_finished():
     assert updated.status == "running"
     assert updated.cancel_requested is False
     assert updated.current_step == "cancel requested after subprocess finished"
+    assert updated.stage == "cancelling"
 
 
 def test_job_service_missing_job_raises_key_error():
@@ -137,6 +143,8 @@ def test_job_service_persists_jobs_across_instances(tmp_path):
     assert persisted is not None
     assert persisted.status == "succeeded"
     assert persisted.current_step == "succeeded"
+    assert persisted.stage == "completed"
+    assert persisted.progress_mode == "determinate"
     assert persisted.progress_percent == 100
     assert persisted.result == {"output_dir": str(tmp_path / "output")}
 
@@ -179,11 +187,30 @@ def test_job_service_recovers_interrupted_jobs_on_startup(tmp_path):
     assert recovered_running is not None
     assert recovered_queued.status == "failed"
     assert recovered_queued.current_step == "interrupted"
+    assert recovered_queued.stage == "interrupted"
+    assert recovered_queued.progress_mode == "indeterminate"
     assert recovered_queued.error is not None
     assert recovered_queued.error.recoverable is True
     assert recovered_running.status == "failed"
     assert recovered_running.current_step == "interrupted"
+    assert recovered_running.stage == "interrupted"
     assert recovered_running.progress_percent == 35
+
+
+def test_job_service_marks_only_real_download_progress_as_determinate():
+    service = JobService()
+    download = service.create_job("download", {})
+    transcribe = service.create_job("transcribe", {})
+    service.update_job_status(download.job_id, "running")
+    service.update_job_status(transcribe.job_id, "running")
+
+    download = service.update_job_step(download.job_id, "downloading", 64)
+    transcribe = service.update_job_step(transcribe.job_id, "running_whisper", 35)
+
+    assert download.stage == "downloading"
+    assert download.progress_mode == "determinate"
+    assert transcribe.stage == "transcribing"
+    assert transcribe.progress_mode == "indeterminate"
 
 
 def test_job_service_lists_recent_jobs_newest_first(tmp_path):
