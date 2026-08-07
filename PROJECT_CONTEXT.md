@@ -212,7 +212,7 @@ Created docs:
 - `docs/PUBLIC_BETA_UI_UX_REFACTOR_BLOCK_1.md`
 - `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`
 
-Result: issues #42-#45 are implemented. Public mode hides Course/Udemy/cookies/Chrome-session surfaces and does not register internal Course endpoints. The public UI now starts from a single `New task` composer that routes one URL, local files, multiple links, and `.txt/.csv` URL lists. Output choices use stable semantic presets: Best video, 1080p video, Up to 720p, Audio M4A, Audio MP3, and Subtitles.
+Result: issues #42-#45 are implemented. Public mode hides Course/Udemy/private-session surfaces and does not register internal Course endpoints. The public static JavaScript bundle also avoids user-facing `cookies` wording while preserving backend error-code compatibility. The public UI now starts from a single `New task` composer that routes one URL, local files, multiple links, and `.txt/.csv` URL lists. Output choices use stable semantic presets: Best video, 1080p video, Up to 720p, Audio M4A, Audio MP3, and Subtitles. Current goal audit proof is saved under `proof/final_ui_ux_refactor_block_1_goal_audit/`.
 
 Verification:
 

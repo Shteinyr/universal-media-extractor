@@ -19,6 +19,8 @@ The public UI now starts from one `New task` composer instead of forcing the use
 
 Public static UI no longer contains user-facing Course/Udemy/cookie/Chrome-session surfaces.
 
+Follow-up tightening: the public JavaScript bundle also avoids user-facing `cookies` wording for private-session failures. Those backend error codes remain compatible internally, but public UI copy maps them to neutral private-session language.
+
 Public product mode:
 
 ```bash
@@ -88,8 +90,8 @@ UME_PUBLIC_PRODUCT_MODE=1 .venv/bin/python scripts/run_api.py
 Results:
 
 - JS syntax checks passed.
-- Targeted tests passed: `62 passed`.
-- Full pytest passed outside sandbox: `200 passed`.
+- Current goal audit targeted tests passed: `72 passed`.
+- Current goal audit full pytest passed outside sandbox: `232 passed`.
 - Browser smoke passed in public product mode.
 
 Proof screenshots:
@@ -97,6 +99,11 @@ Proof screenshots:
 - `proof/final_ui_ux_refactor_block_1/ui_initial.png`
 - `proof/final_ui_ux_refactor_block_1/ui_analyze_result.png`
 - `proof/final_ui_ux_refactor_block_1/ui_output_selected.png`
+- `proof/final_ui_ux_refactor_block_1_goal_audit/ui_initial.png`
+- `proof/final_ui_ux_refactor_block_1_goal_audit/ui_invalid_url.png`
+- `proof/final_ui_ux_refactor_block_1_goal_audit/ui_analyze_result.png`
+- `proof/final_ui_ux_refactor_block_1_goal_audit/ui_output_selected.png`
+- `proof/final_ui_ux_refactor_block_1_goal_audit/ui_library.png`
 
 ## Not Changed
 

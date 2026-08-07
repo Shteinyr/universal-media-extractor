@@ -39,6 +39,7 @@ GPT Pro final UI/UX tracking:
 - GitHub tracker: [#41 Final public beta UX refactor tracker](https://github.com/Shteinyr/universal-media-extractor/issues/41)
 - Public Beta UI/UX Refactor Block 1: #42, #43, #44, #45 completed.
 - Docs: `docs/PUBLIC_BETA_UI_UX_REFACTOR_BLOCK_1.md`, `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`.
+- Public bundle boundary tightened: public static JS avoids Course/Udemy/Chrome/manual-cookie/cookies wording while keeping backend error-code compatibility.
 - Durable Queue/Library finalization: #46 completed.
 - Doc: `docs/PUBLIC_BETA_DURABLE_QUEUE_LIBRARY.md`.
 - Native filesystem integration: #47 completed.

@@ -224,7 +224,6 @@ def test_static_javascript_is_available(tmp_path):
     assert "/diagnostics/jobs/" in response.text
     for error_code in [
         "drm_protected",
-        "cookies_required",
         "region_restricted",
         "private_or_deleted",
         "no_requested_format",
@@ -235,7 +234,15 @@ def test_static_javascript_is_available(tmp_path):
     ]:
         assert error_code in response.text
     assert "Technical details" in response.text
-    for forbidden in ["/udemy/analyze", "/udemy/download", "Course mode", "Udemy course", "Chrome session", "Manual cookies"]:
+    for forbidden in [
+        "/udemy/analyze",
+        "/udemy/download",
+        "Course mode",
+        "Udemy course",
+        "Chrome session",
+        "Manual cookies",
+        "cookies",
+    ]:
         assert forbidden not in response.text
 
 
