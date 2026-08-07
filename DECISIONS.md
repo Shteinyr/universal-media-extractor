@@ -2,6 +2,14 @@
 
 ## 2026-08-07
 
+- GitHub issue #49 Error normalization and diagnostics final pass is completed as public beta readiness work, not as a new roadmap block.
+- Public-beta error handling must use stable normalized categories before raw CLI details.
+- Raw CLI stderr may be available only behind technical details or redacted diagnostics, not as the primary user-facing message.
+- Protected/access-required errors must never suggest bypassing DRM, sign-in, cookies, paywalls, or platform restrictions.
+- Diagnostics remain local and redacted; the app must not upload diagnostics automatically.
+
+## 2026-08-07
+
 - GitHub issue #48 Unified progress, cancel, retry, recovery is completed as public beta readiness work, not as a new roadmap block.
 - Public job responses expose normalized `stage` and `progress_mode` while keeping `current_step` for compatibility and diagnostics.
 - Determinate progress may be shown only for real `yt-dlp` download percentages or terminal success.

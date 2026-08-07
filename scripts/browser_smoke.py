@@ -75,6 +75,11 @@ def run_analysis_smoke(page: Page, base_url: str, source_url: str, proof_dir: Pa
     page.get_by_role("textbox", name="New task").wait_for(timeout=10_000)
     page.screenshot(path=proof_dir / "ui_initial.png", full_page=True)
 
+    page.locator("#url-input").fill("not a url")
+    page.locator("#analyze-button").click()
+    assert_visible_text(page, "Enter a valid http or https link.")
+    page.screenshot(path=proof_dir / "ui_invalid_url.png", full_page=True)
+
     page.locator("#url-input").fill(source_url)
     page.locator("#analyze-button").click()
     page.locator("#media-title").get_by_text("Showreel", exact=True).wait_for(timeout=90_000)

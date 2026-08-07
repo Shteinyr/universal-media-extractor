@@ -113,10 +113,10 @@ def redact_value(value: Any) -> Any:
 
 def redact_text(value: str) -> str:
     text = str(value)
-    text = SECRET_LINE_RE.sub("<redacted-secret-line>", text)
     text = URL_RE.sub(_redact_url_match, text)
     text = MAC_PATH_RE.sub("<redacted-path>", text)
     text = WIN_PATH_RE.sub("<redacted-path>", text)
+    text = SECRET_LINE_RE.sub("<redacted-secret-line>", text)
     return text
 
 

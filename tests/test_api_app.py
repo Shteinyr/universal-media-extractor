@@ -203,7 +203,20 @@ def test_static_javascript_is_available(tmp_path):
     assert response.headers["cache-control"] == "no-store"
     assert "Copy diagnostics" in response.text
     assert "/diagnostics/jobs/" in response.text
-    for forbidden in ["/udemy/analyze", "/udemy/download", "Course", "Udemy", "cookies", "Chrome session", "Manual cookies"]:
+    for error_code in [
+        "drm_protected",
+        "cookies_required",
+        "region_restricted",
+        "private_or_deleted",
+        "no_requested_format",
+        "disk_full",
+        "permission_denied",
+        "engine_outdated",
+        "transcription_failed",
+    ]:
+        assert error_code in response.text
+    assert "Technical details" in response.text
+    for forbidden in ["/udemy/analyze", "/udemy/download", "Course mode", "Udemy course", "Chrome session", "Manual cookies"]:
         assert forbidden not in response.text
 
 

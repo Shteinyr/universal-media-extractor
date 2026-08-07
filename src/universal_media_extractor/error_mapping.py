@@ -83,7 +83,7 @@ def normalize_cli_error(
             message="This source requires account access.",
             technical_details=details,
             recoverable=True,
-            suggested_user_action="Open the source in your browser and make sure you have access, then retry if this source is supported.",
+            suggested_user_action="Use a public source or an explicitly supported private-session flow. The app does not bypass sign-in or access restrictions.",
         )
 
     if _contains_any(lowered, ["cookie", "cookies", "keyring", "browser", "http error 401", "http error 403", "forbidden"]):
@@ -92,7 +92,7 @@ def normalize_cli_error(
             message="This source requires a browser session or cookies.",
             technical_details=details,
             recoverable=True,
-            suggested_user_action="Sign in through the supported browser session or use an allowed manual cookies fallback.",
+            suggested_user_action="Use an explicitly supported browser-session/manual-cookie flow only if you have access. The app does not bypass protected sources.",
         )
 
     if _contains_any(lowered, ["timed out", "timeout", "connection reset", "connection aborted", "temporary failure", "network", "unable to download webpage"]):
@@ -130,7 +130,7 @@ def compact_details(value: str | bytes | None, max_length: int = 1200) -> str | 
     text = text.strip()
     if not text:
         return None
-    return text[:max_length]
+    return text[-max_length:]
 
 
 def _contains_any(value: str, needles: list[str]) -> bool:

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-08-07 - Public Beta Error Diagnostics Final Pass
+
+- Implemented GitHub issue #49 from the GPT Pro final UI/UX public beta readiness set.
+- Expanded normalized public-beta error fixture coverage for DRM, sign-in/session, region, private/deleted, format unavailable, network, disk, permission, and outdated media engine categories.
+- Updated protected/access-required suggested actions so they never recommend bypassing DRM, login, cookies, paywalls, or platform restrictions.
+- Kept raw CLI stderr behind `Technical details` and preserved the important tail of long CLI output.
+- Hardened diagnostics redaction for URLs, macOS/Windows paths, tokens, authorization lines, cookies, transcript text, and summary prompt text.
+- Updated browser smoke proof to capture invalid URL UI state before the normal analysis proof.
+- Created `docs/PUBLIC_BETA_ERROR_DIAGNOSTICS_FINAL_PASS.md`.
+- Verification: JS syntax check passed, browser smoke script compile passed, focused tests passed with `72 passed`, full pytest passed outside sandbox with `230 passed`, and browser smoke passed in public product mode.
+- Saved proof screenshots under `proof/error_diagnostics_final_pass/`.
+
 ## 2026-08-07 - Unified Progress, Cancel, Retry, Recovery
 
 - Implemented GitHub issue #48 from the GPT Pro final UI/UX public beta readiness set.

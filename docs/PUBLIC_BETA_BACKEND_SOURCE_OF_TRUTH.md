@@ -155,6 +155,9 @@ Implemented:
 - `GET /diagnostics/jobs/{job_id}`;
 - redaction of cookies, tokens, transcripts, full URLs, and local paths;
 - no-store cache headers for diagnostics responses.
+- final public-beta category coverage for DRM, sign-in/session, region, private/deleted, format unavailable, network, disk, permission, and outdated media engine errors;
+- protected/access-required errors do not suggest bypassing DRM, sign-in, cookies, paywalls, or platform restrictions;
+- copied diagnostics identify app version, OS/Python, media engine versions, normalized error, and redacted logs.
 
 Diagnostics are for support/debugging, not telemetry. No diagnostics are uploaded by the app.
 
@@ -181,4 +184,4 @@ Not implemented:
 ## Follow-Ups
 
 - Native filesystem edge cases should be rechecked during Windows production packaging.
-- Error normalization and diagnostics still need a final public-beta pass.
+- Result and local transcription UX remains a later public-beta readiness pass.
