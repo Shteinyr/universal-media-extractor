@@ -126,6 +126,31 @@ Default user output base:
 
 The backend resolves and validates user-selected output folders before starting downloads.
 
+Download results expose user-facing saved file metadata:
+
+- `downloaded_files` remains the stable path list;
+- `downloaded_file_details` adds filename, container, and size when available;
+- the UI uses those details for the saved result card instead of showing only raw paths.
+
+## Transcription Results
+
+Transcription stays local through Whisper CLI.
+
+Implemented:
+
+- one selected transcript format per transcription run;
+- implemented formats: TXT, Markdown, JSON;
+- `TranscriptionResult.transcript_format` records the selected output;
+- `TranscriptionResult.transcript_file_text` contains the selected output content for copy actions;
+- `TranscriptionResult.transcript_text` remains the readable plain-text preview source;
+- local file transcription is enabled only for analyzed audio/video media.
+
+Not implemented:
+
+- AI summary API;
+- full transcript editor/workbench;
+- multi-format transcript export in one run.
+
 ## Native Filesystem Integration
 
 Issue #47 adds desktop filesystem convenience without broad filesystem access.
@@ -184,4 +209,4 @@ Not implemented:
 ## Follow-Ups
 
 - Native filesystem edge cases should be rechecked during Windows production packaging.
-- Result and local transcription UX remains a later public-beta readiness pass.
+- Commercial desktop readiness remains a later public-beta readiness pass.

@@ -173,12 +173,13 @@
             <label class="model-field" for="whisper-model">
               Whisper model
               <select id="whisper-model">
-                <option value="tiny" selected>tiny - fastest</option>
-                <option value="base">base</option>
-                <option value="small">small</option>
-                <option value="medium">medium</option>
-                <option value="turbo">turbo/default</option>
+                <option value="tiny" selected>Tiny - fastest, rougher text</option>
+                <option value="base">Base - quick, cleaner text</option>
+                <option value="small">Small - balanced quality</option>
+                <option value="medium">Medium - slower, higher quality</option>
+                <option value="turbo">Turbo - fast large model</option>
               </select>
+              <span class="field-help">Larger models can take more time and disk space, but usually improve transcript quality.</span>
             </label>
             <label class="model-field" for="transcript-format">
               Save transcript as
@@ -188,7 +189,7 @@
                 <option value="json">JSON</option>
               </select>
             </label>
-            <button id="transcribe-button" type="button">Transcribe</button>
+            <button id="transcribe-button" type="button">Transcribe locally</button>
             <button id="cancel-transcribe-button" type="button" class="secondary-button hidden">Cancel transcription</button>
             <div class="download-result hidden" id="transcript-result" role="status" aria-live="polite"></div>
           </section>
@@ -203,12 +204,13 @@
             <label class="model-field" for="local-whisper-model">
               Whisper model
               <select id="local-whisper-model">
-                <option value="tiny" selected>tiny - fastest</option>
-                <option value="base">base</option>
-                <option value="small">small</option>
-                <option value="medium">medium</option>
-                <option value="turbo">turbo/default</option>
+                <option value="tiny" selected>Tiny - fastest, rougher text</option>
+                <option value="base">Base - quick, cleaner text</option>
+                <option value="small">Small - balanced quality</option>
+                <option value="medium">Medium - slower, higher quality</option>
+                <option value="turbo">Turbo - fast large model</option>
               </select>
+              <span class="field-help">Larger models can take more time and disk space, but usually improve transcript quality.</span>
             </label>
             <label class="model-field" for="local-transcript-format">
               Save transcript as
@@ -218,7 +220,8 @@
                 <option value="json">JSON</option>
               </select>
             </label>
-            <button id="local-transcribe-button" type="button" disabled>Transcribe local file</button>
+            <p class="hint hidden" id="local-transcribe-hint">This file type cannot be transcribed.</p>
+            <button id="local-transcribe-button" type="button" disabled>Transcribe locally</button>
             <button id="cancel-local-transcribe-button" type="button" class="secondary-button hidden">Cancel local transcription</button>
             <div class="download-result hidden" id="local-transcript-result" role="status" aria-live="polite"></div>
           </section>

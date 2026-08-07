@@ -137,7 +137,15 @@ def test_static_index_is_available(tmp_path):
     assert "Import list" in response.text
     assert "Choose output" in response.text
     assert "Whisper model" in response.text
+    assert "Larger models can take more time and disk space" in response.text
     assert "Copy transcript" in response.text
+    assert "Transcribe locally" in response.text
+    assert "Save transcript as" in response.text
+    assert "TXT" in response.text
+    assert "Markdown" in response.text
+    assert "JSON" in response.text
+    assert "SRT" not in response.text
+    assert "VTT" not in response.text
     assert "Save to" in response.text
     assert "Folder name" in response.text
     assert "If exists" in response.text
@@ -179,6 +187,9 @@ def test_static_javascript_is_available(tmp_path):
     assert "progress-track" in response.text
     assert "toggleCancelButton" in response.text
     assert "copySummaryButton" in response.text
+    assert "downloaded_file_details" in response.text
+    assert "transcript_file_text" in response.text
+    assert "canTranscribeLocalFile" in response.text
     assert "selectedFormatSummary" in response.text
     assert "whisperModel.value" in response.text
     assert "Enter a valid http or https link" in response.text

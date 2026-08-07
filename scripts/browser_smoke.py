@@ -116,7 +116,7 @@ def run_full_flow(page: Page, proof_dir: Path) -> None:
     page.locator("#transcribe-button").click()
     wait_for_status_text(page, "#transcript-result", "Transcript saved", timeout_ms=900_000)
     assert_visible_text(page, "Saved result")
-    assert_visible_text(page, "Copy transcript")
+    assert_visible_text(page, "Copy TXT")
     page.screenshot(path=proof_dir / "ui_transcribe_result.png", full_page=True)
 
 

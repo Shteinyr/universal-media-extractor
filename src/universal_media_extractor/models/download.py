@@ -27,6 +27,15 @@ DownloadStatus = Literal[
 ]
 
 
+class DownloadedFileInfo(ContractModel):
+    """User-facing metadata for one downloaded file."""
+
+    path: str
+    filename: str
+    container: str | None = Field(default=None)
+    size_bytes: int | None = Field(default=None, ge=0)
+
+
 class DownloadRequest(ContractModel):
     """Request to download one selected media/subtitle option."""
 
@@ -82,6 +91,7 @@ class DownloadResult(ContractModel):
     selected_format_id: str
     output_dir: str | None = Field(default=None)
     downloaded_files: list[str] = Field(default_factory=list)
+    downloaded_file_details: list[DownloadedFileInfo] = Field(default_factory=list)
     metadata_path: str | None = Field(default=None)
     log_path: str | None = Field(default=None)
     errors: list[ErrorState] = Field(default_factory=list)

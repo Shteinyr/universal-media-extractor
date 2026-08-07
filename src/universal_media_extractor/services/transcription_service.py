@@ -187,7 +187,9 @@ class TranscriptionService:
             transcript_txt_path=str(artifacts["txt"]) if artifacts.get("txt") else None,
             transcript_md_path=str(artifacts["md"]) if artifacts.get("md") else None,
             transcript_json_path=str(artifacts["json"]) if artifacts.get("json") else None,
+            transcript_format=request.transcript_format,
             transcript_text=artifacts["transcript_text"],
+            transcript_file_text=artifacts["transcript_file_text"],
             extracted_audio_path=str(extracted_audio_path) if extracted_audio_path else None,
             log_path=str(log_path),
         )
@@ -369,7 +371,7 @@ def _normalize_transcript_artifacts(
     original_input: Path,
     model: str,
     transcript_format: str,
-) -> dict[str, Path]:
+) -> dict[str, Path | str | None]:
     generated_txt = whisper_work_dir / f"{source_stem}.txt"
     generated_json = whisper_work_dir / f"{source_stem}.json"
     transcript_txt = output_dir / "transcript.txt"
@@ -382,11 +384,13 @@ def _normalize_transcript_artifacts(
         "json": None,
         "md": None,
         "transcript_text": text,
+        "transcript_file_text": text,
     }
 
     if transcript_format == "txt":
         transcript_txt.write_text(text, encoding="utf-8")
         artifacts["txt"] = transcript_txt
+        artifacts["transcript_file_text"] = text
     elif transcript_format == "json":
         if generated_json.exists():
             shutil.copyfile(generated_json, transcript_json)
@@ -396,16 +400,21 @@ def _normalize_transcript_artifacts(
                 encoding="utf-8",
             )
         artifacts["json"] = transcript_json
+        artifacts["transcript_file_text"] = transcript_json.read_text(encoding="utf-8")
     else:
-        transcript_md.write_text(
+        markdown = (
             "# Transcript\n\n"
             f"- Source file: `{original_input.name}`\n"
             f"- Whisper model: `{model}`\n\n"
             "## Text\n\n"
-            f"{text.strip()}\n",
+            f"{text.strip()}\n"
+        )
+        transcript_md.write_text(
+            markdown,
             encoding="utf-8",
         )
         artifacts["md"] = transcript_md
+        artifacts["transcript_file_text"] = transcript_md.read_text(encoding="utf-8")
 
     return artifacts
 
@@ -454,6 +463,7 @@ def _failed_result(
         status="failed",
         input_file_path=request.input_file_path,
         output_dir=str(output_dir),
+        transcript_format=request.transcript_format,
         extracted_audio_path=str(extracted_audio_path) if extracted_audio_path else None,
         log_path=str(log_path),
         errors=[error],
@@ -473,6 +483,7 @@ def _cancelled_result(
         status="cancelled",
         input_file_path=request.input_file_path,
         output_dir=str(output_dir),
+        transcript_format=request.transcript_format,
         extracted_audio_path=str(extracted_audio_path) if extracted_audio_path else None,
         log_path=str(log_path),
     )

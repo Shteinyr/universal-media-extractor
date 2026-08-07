@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness. Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, Durable Queue/Library finalization, Native filesystem integration, Unified progress/cancel/retry/recovery, and Error normalization/diagnostics final pass are completed.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness. Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, Durable Queue/Library finalization, Native filesystem integration, Unified progress/cancel/retry/recovery, Error normalization/diagnostics final pass, and Result/local transcription UX final pass are completed.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -77,6 +77,34 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
+Result and local transcription UX final pass - done.
+
+Created doc:
+
+- `docs/PUBLIC_BETA_RESULT_TRANSCRIPTION_UX_FINAL_PASS.md`
+
+Result: issue #50 is implemented. Saved result cards show actual filename, container, size when available, and location. `Transcribe locally` is enabled only for transcribable media. Transcript preview stays readable, copy actions target the selected transcript output content, and only implemented transcript formats are exposed. Whisper model copy now communicates speed, disk, and quality tradeoffs.
+
+Verification:
+
+- `node --check src/universal_media_extractor/static/app.js`;
+- `python3 -m py_compile scripts/browser_smoke.py src/universal_media_extractor/models/download.py src/universal_media_extractor/models/transcript.py src/universal_media_extractor/services/download_service.py src/universal_media_extractor/services/transcription_service.py`;
+- `.venv/bin/python -m pytest tests/test_download_service.py tests/test_transcription_service.py tests/test_api_app.py -q` -> `78 passed`;
+- `.venv/bin/python -m pytest -q` outside sandbox -> `231 passed`;
+- `.venv/bin/python scripts/browser_smoke.py --proof-dir proof/result_transcription_ux_final_pass --full-flow`.
+
+Proof screenshots:
+
+- `proof/result_transcription_ux_final_pass/ui_initial.png`
+- `proof/result_transcription_ux_final_pass/ui_invalid_url.png`
+- `proof/result_transcription_ux_final_pass/ui_analyze_result.png`
+- `proof/result_transcription_ux_final_pass/ui_output_selected.png`
+- `proof/result_transcription_ux_final_pass/ui_download_result.png`
+- `proof/result_transcription_ux_final_pass/ui_transcribe_result.png`
+- `proof/result_transcription_ux_final_pass/ui_library.png`
+
+Previous completed block:
+
 Error normalization and diagnostics final pass - done.
 
 Created doc:
@@ -84,22 +112,6 @@ Created doc:
 - `docs/PUBLIC_BETA_ERROR_DIAGNOSTICS_FINAL_PASS.md`
 
 Result: issue #49 is implemented. Planned public-beta error categories have fixture coverage. Protected/access-required errors do not suggest bypassing DRM, sign-in, cookies, paywalls, or platform restrictions. Raw CLI stderr remains behind `Technical details`. Diagnostics bundles identify app version, OS/Python, media engine versions, normalized error, and redacted logs while removing URLs, local paths, tokens, authorization lines, cookies, transcript text, and summary prompt text.
-
-Verification:
-
-- `node --check src/universal_media_extractor/static/app.js`;
-- `python3 -m py_compile scripts/browser_smoke.py`;
-- `.venv/bin/python -m pytest tests/test_error_mapping.py tests/test_diagnostics_service.py tests/test_api_app.py -q` -> `72 passed`;
-- `.venv/bin/python -m pytest -q` outside sandbox -> `230 passed`;
-- `.venv/bin/python scripts/browser_smoke.py --proof-dir proof/error_diagnostics_final_pass`.
-
-Proof screenshots:
-
-- `proof/error_diagnostics_final_pass/ui_initial.png`
-- `proof/error_diagnostics_final_pass/ui_invalid_url.png`
-- `proof/error_diagnostics_final_pass/ui_analyze_result.png`
-- `proof/error_diagnostics_final_pass/ui_output_selected.png`
-- `proof/error_diagnostics_final_pass/ui_library.png`
 
 Previous completed block:
 
@@ -267,10 +279,10 @@ GitHub:
 - #43 `[P0] Backend source-of-truth audit and endpoint inventory`
 - #44 `[P0] Universal New Task composer`
 - #45 `[P0] Stable semantic preset resolver`
-- #46-#49 completed follow-up final UI/UX readiness tasks
-- #50-#51 remaining follow-up final UI/UX readiness tasks
+- #46-#50 completed follow-up final UI/UX readiness tasks
+- #51 remaining follow-up final UI/UX readiness task
 
-Public Beta UI/UX Refactor Block 1 issues #42-#45 are completed; follow-up issues #46-#49 are completed public beta readiness work; #50-#51 remain later public beta readiness work.
+Public Beta UI/UX Refactor Block 1 issues #42-#45 are completed; follow-up issues #46-#50 are completed public beta readiness work; #51 remains later public beta readiness work.
 
 Result: the current beta baseline passed browser/API/local-file/batch/diagnostics/output QA. Verified JS syntax, `196 passed`, browser smoke screenshots, URL analyze/download/transcribe, local synthetic file analyze/transcribe, one-item batch download, diagnostics redaction, output safe delete, and public mode Course hiding. No blocker product bug was found. Documented in `docs/PUBLIC_BETA_QA_ROUND.md`.
 
@@ -339,10 +351,10 @@ Commercial Blocks 1-14 are completed or prepared except for externally blocked A
 Recommended next user-approved commercial block, depending on user readiness:
 
 ```text
-Result and local transcription UX final pass
+Commercial desktop readiness final pass
 ```
 
-Candidate direction: continue with issue #50 to polish result/transcription UX. If Apple Developer Program access and signing credentials are ready, macOS signed public beta release validation can be chosen instead.
+Candidate direction: continue with issue #51 to complete the remaining commercial desktop readiness review. If Apple Developer Program access and signing credentials are ready, macOS signed public beta release validation can be chosen instead.
 
 Do not start the next block until the user explicitly confirms. Do not start checkout or licensing enforcement until payment provider approval and user business details are ready.
 

@@ -248,6 +248,32 @@ def test_download_service_video_mode_downloads_video_with_audio(monkeypatch, tmp
     assert "137" in result.selected_format_id
 
 
+def test_download_service_returns_downloaded_file_metadata(monkeypatch, tmp_path):
+    saved_file = tmp_path / "Showreel" / "Showreel.m4a"
+    saved_file.parent.mkdir()
+    saved_file.write_bytes(b"audio-bytes")
+
+    def fake_popen(command, **kwargs):
+        return FakePopen(command, **kwargs)
+
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service.subprocess.Popen",
+        fake_popen,
+    )
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service._list_downloaded_files",
+        lambda output_dir: [saved_file],
+    )
+
+    result = DownloadService(timeout_seconds=5).download_media(_request(tmp_path))
+
+    assert result.status == "succeeded"
+    assert result.downloaded_files == [str(saved_file)]
+    assert result.downloaded_file_details[0].filename == "Showreel.m4a"
+    assert result.downloaded_file_details[0].container == "m4a"
+    assert result.downloaded_file_details[0].size_bytes == len(b"audio-bytes")
+
+
 def test_download_service_combined_mode_can_remux_container(monkeypatch, tmp_path):
     calls = {}
 

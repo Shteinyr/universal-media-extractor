@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import parse_qs, urlparse
 
 from universal_media_extractor.error_mapping import normalize_cli_error
-from universal_media_extractor.models import DownloadRequest, DownloadResult, ErrorState
+from universal_media_extractor.models import DownloadedFileInfo, DownloadRequest, DownloadResult, ErrorState
 from universal_media_extractor.services.output_manager import OutputManager
 from universal_media_extractor.services.safety_service import SafetyService
 
@@ -271,6 +271,7 @@ class DownloadService:
             selected_format_id=request.format_id,
             output_dir=str(output_dir),
             downloaded_files=[str(path) for path in downloaded_files],
+            downloaded_file_details=_downloaded_file_details(downloaded_files),
             metadata_path=str(result_path),
             log_path=str(log_path),
         )
@@ -400,6 +401,7 @@ def _failed_result(
         selected_format_id=request.format_id,
         output_dir=str(output_dir),
         downloaded_files=[str(path) for path in (downloaded_files or [])],
+        downloaded_file_details=_downloaded_file_details(downloaded_files or []),
         metadata_path=str(result_path),
         log_path=str(log_path),
         errors=[error],
@@ -421,6 +423,7 @@ def _cancelled_result(
         selected_format_id=request.format_id,
         output_dir=str(output_dir),
         downloaded_files=[str(path) for path in (downloaded_files or [])],
+        downloaded_file_details=_downloaded_file_details(downloaded_files or []),
         metadata_path=str(result_path),
         log_path=str(log_path),
     )
@@ -478,6 +481,25 @@ def _list_downloaded_files(output_dir: Path) -> list[Path]:
         for path in output_dir.iterdir()
         if path.is_file() and not path.name.startswith(".")
     )
+
+
+def _downloaded_file_details(paths: list[Path]) -> list[DownloadedFileInfo]:
+    details: list[DownloadedFileInfo] = []
+    for path in paths:
+        try:
+            size = path.stat().st_size
+        except OSError:
+            size = None
+        container = path.suffix.lower().lstrip(".") or None
+        details.append(
+            DownloadedFileInfo(
+                path=str(path),
+                filename=path.name,
+                container=container,
+                size_bytes=size,
+            )
+        )
+    return details
 
 
 def _cleanup_download_temp_files(output_dir: Path) -> None:

@@ -29,6 +29,7 @@ from universal_media_extractor.models.batch import (
 )
 from universal_media_extractor.models.diagnostics import DiagnosticBundle, DiagnosticLog
 from universal_media_extractor.models.download import (
+    DownloadedFileInfo,
     DownloadMode,
     DuplicatePolicy,
     DownloadRequest,
@@ -91,6 +92,7 @@ __all__ = [
     "BatchUrlImportResult",
     "DiagnosticBundle",
     "DiagnosticLog",
+    "DownloadedFileInfo",
     "DownloadMode",
     "DuplicatePolicy",
     "DownloadRequest",

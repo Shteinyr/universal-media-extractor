@@ -87,6 +87,8 @@ def test_transcription_service_transcribes_audio_with_whisper(monkeypatch, tmp_p
     assert Path(result.transcript_txt_path).read_text(encoding="utf-8") == "Hello from Showreel."
     assert result.transcript_md_path is None
     assert result.transcript_json_path is None
+    assert result.transcript_format == "txt"
+    assert result.transcript_file_text == "Hello from Showreel."
     assert result.summary_prompt_path is None
     assert Path(result.log_path).name == "transcription.log"
 
@@ -147,6 +149,9 @@ def test_transcription_service_saves_only_selected_markdown(monkeypatch, tmp_pat
     assert result.transcript_txt_path is None
     assert Path(result.transcript_md_path).name == "transcript.md"
     assert result.transcript_json_path is None
+    assert result.transcript_format == "md"
+    assert result.transcript_file_text.startswith("# Transcript")
+    assert "Hello from Showreel." in result.transcript_file_text
     assert (Path(result.output_dir) / "transcript.md").is_file()
     assert not (Path(result.output_dir) / "transcript.txt").exists()
     assert not (Path(result.output_dir) / "transcript.json").exists()
@@ -176,6 +181,8 @@ def test_transcription_service_saves_only_selected_json(monkeypatch, tmp_path):
     assert result.transcript_txt_path is None
     assert result.transcript_md_path is None
     assert Path(result.transcript_json_path).name == "transcript.json"
+    assert result.transcript_format == "json"
+    assert json.loads(result.transcript_file_text)["text"] == "Hello from Showreel."
     assert (Path(result.output_dir) / "transcript.json").is_file()
 
 
@@ -249,6 +256,8 @@ def test_transcription_service_records_whisper_failure(monkeypatch, tmp_path):
     assert result.status == "failed"
     assert result.errors[0].code == "transcription_failed"
     assert "boom" in result.errors[0].technical_details
+    assert input_file.exists()
+    assert input_file.read_bytes() == b"audio"
 
 
 def test_transcription_service_updates_step_based_job_status(monkeypatch, tmp_path):

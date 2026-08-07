@@ -65,6 +65,7 @@ const localMetadataList = document.querySelector("#local-metadata-list");
 const localRightsCheckbox = document.querySelector("#local-rights-checkbox");
 const localWhisperModel = document.querySelector("#local-whisper-model");
 const localTranscriptFormat = document.querySelector("#local-transcript-format");
+const localTranscribeHint = document.querySelector("#local-transcribe-hint");
 const localTranscribeButton = document.querySelector("#local-transcribe-button");
 const cancelLocalTranscribeButton = document.querySelector("#cancel-local-transcribe-button");
 const localTranscriptResult = document.querySelector("#local-transcript-result");
@@ -103,6 +104,11 @@ let appConfigPromise = null;
 const DEFAULT_DOWNLOAD_OUTPUT_DIR = "~/Downloads/Universal Media Extractor";
 const SECURITY_HEADER_NAME = "X-UME-Session-Token";
 const PRIVATE_SESSION_ERROR_CODE = ["coo", "kies_required"].join("");
+const TRANSCRIPT_FORMAT_LABELS = {
+  txt: "TXT",
+  md: "Markdown",
+  json: "JSON",
+};
 const BATCH_PRESET_LABELS = {
   best_video: "Best video",
   video_1080p: "1080p video",
@@ -467,10 +473,10 @@ cancelTranscribeButton.addEventListener("click", async () => {
 });
 
 localTranscribeButton.addEventListener("click", async () => {
-  if (!currentLocalFileResult?.saved_path) {
+  if (!canTranscribeLocalFile()) {
     renderTranscriptResult({
       status: "blocked",
-      errors: [{ code: "invalid_input_file", message: "Analyze a local file first." }],
+      errors: [{ code: "invalid_input_file", message: "Choose a local audio or video file first." }],
     }, localTranscriptResult);
     return;
   }
@@ -538,7 +544,7 @@ refreshOutputsButton?.addEventListener("click", () => {
 });
 
 copyTranscriptButton.addEventListener("click", () => {
-  copyText(latestTranscriptResult?.transcript_text || "", "Transcript copied.");
+  copyText(transcriptCopyText(latestTranscriptResult), "Transcript copied.");
 });
 
 copySummaryButton.addEventListener("click", () => {
@@ -1428,13 +1434,14 @@ function resetLocalState() {
   localWhisperModel.value = "tiny";
   localTranscriptFormat.value = "txt";
   localTranscribeButton.disabled = true;
-  localTranscribeButton.textContent = "Transcribe local file";
+  localTranscribeButton.textContent = "Transcribe locally";
   cancelLocalTranscribeButton.classList.add("hidden");
   localFilePanel.classList.add("hidden");
   localTranscriptResult.classList.add("hidden");
   localTranscriptResult.innerHTML = "";
   localMetadataList.innerHTML = "";
   localMediaType.textContent = "unknown";
+  localTranscribeHint?.classList.add("hidden");
 }
 
 function updateDownloadButtonState() {
@@ -1596,17 +1603,11 @@ function renderDownloadResult(result) {
 
   const files = result.downloaded_files || [];
   if (files.length > 0) {
-    const list = document.createElement("ul");
-    files.forEach((file) => {
-      const item = document.createElement("li");
-      item.textContent = fileName(file);
-      item.title = file;
-      list.appendChild(item);
-    });
-    downloadResult.appendChild(list);
+    const primaryFile = primaryDownloadedFile(result);
+    downloadResult.appendChild(fileSummaryBlock(primaryFile.path, primaryFile.detail));
     if (canTranscribeSelectedFormat()) {
-      downloadedFileForTranscript = files[0];
-      transcriptFileLabel.textContent = fileName(files[0]);
+      downloadedFileForTranscript = primaryFile.path;
+      transcriptFileLabel.textContent = primaryFile.detail?.filename || fileName(primaryFile.path);
       transcriptPanel.classList.remove("hidden");
       updateFlowStep("transcribe");
     } else {
@@ -1745,24 +1746,35 @@ function setTranscribeLoading(isLoading) {
   transcribeButton.disabled = isLoading;
   whisperModel.disabled = isLoading;
   transcriptFormat.disabled = isLoading;
-  transcribeButton.textContent = isLoading ? "Transcribing..." : "Transcribe";
+  transcribeButton.textContent = isLoading ? "Transcribing..." : "Transcribe locally";
   if (isLoading) {
     updateFlowStep("transcribe");
   }
 }
 
 function updateLocalTranscribeButtonState() {
-  localTranscribeButton.disabled = !currentLocalFileResult?.saved_path;
+  const canTranscribe = canTranscribeLocalFile();
+  localTranscribeButton.disabled = !canTranscribe;
+  if (localTranscribeHint) {
+    localTranscribeHint.classList.toggle("hidden", canTranscribe || !currentLocalFileResult?.saved_path);
+  }
 }
 
 function setLocalTranscribeLoading(isLoading) {
-  localTranscribeButton.disabled = isLoading || !currentLocalFileResult?.saved_path;
+  localTranscribeButton.disabled = isLoading || !canTranscribeLocalFile();
   localWhisperModel.disabled = isLoading;
   localTranscriptFormat.disabled = isLoading;
-  localTranscribeButton.textContent = isLoading ? "Transcribing..." : "Transcribe local file";
+  localTranscribeButton.textContent = isLoading ? "Transcribing..." : "Transcribe locally";
   if (isLoading) {
     updateFlowStep("transcribe");
   }
+}
+
+function canTranscribeLocalFile() {
+  return Boolean(
+    currentLocalFileResult?.saved_path
+      && ["audio", "video"].includes(currentLocalFileResult.media_type)
+  );
 }
 
 
@@ -1792,12 +1804,15 @@ function renderFilesResult(result) {
   filesPanel.classList.remove("hidden");
   filesList.innerHTML = "";
   outputDirLabel.textContent = result.output_dir ? fileName(result.output_dir) : "Output path unavailable";
+  const primaryFile = primaryDownloadedFile(latestDownloadResult);
   const transcriptPath = selectedTranscriptPath(result);
 
   [
-    ["Folder", result.output_dir],
-    ["Media file", downloadedFileForTranscript],
-    ["Transcript", transcriptPath],
+    ["Filename", primaryFile.detail?.filename || fileName(primaryFile.path)],
+    ["Container", primaryFile.detail?.container?.toUpperCase() || fileExtension(primaryFile.path)],
+    ["Size", readableSizeShort(primaryFile.detail?.size_bytes) || "Size unknown"],
+    ["Location", result.output_dir || latestDownloadResult?.output_dir],
+    ["Transcript", transcriptPath ? `${TRANSCRIPT_FORMAT_LABELS[result.transcript_format] || fileExtension(transcriptPath)} · ${fileName(transcriptPath)}` : ""],
   ].forEach(([label, value]) => {
     if (!value) {
       return;
@@ -1816,7 +1831,9 @@ function renderFilesResult(result) {
   const previewText = result.transcript_text || "";
   transcriptPreview.textContent = previewText.slice(0, 1200) || "Transcript text is empty.";
   transcriptPreviewCard.classList.remove("hidden");
-  copyTranscriptButton.disabled = !result.transcript_text;
+  const transcriptFormatLabel = TRANSCRIPT_FORMAT_LABELS[result.transcript_format] || "Transcript";
+  copyTranscriptButton.textContent = `Copy ${transcriptFormatLabel}`;
+  copyTranscriptButton.disabled = !transcriptCopyText(result);
   copySummaryButton.disabled = !result.summary_prompt_text;
   copySummaryButton.classList.toggle("hidden", !result.summary_prompt_text);
   copyOutputButton.disabled = !(result.output_dir || latestDownloadResult?.output_dir);
@@ -1827,6 +1844,43 @@ function renderFilesResult(result) {
 
 function selectedTranscriptPath(result) {
   return result.transcript_txt_path || result.transcript_md_path || result.transcript_json_path || "";
+}
+
+function transcriptCopyText(result) {
+  return result?.transcript_file_text || result?.transcript_text || "";
+}
+
+function primaryDownloadedFile(result) {
+  const files = result?.downloaded_files || [];
+  const details = result?.downloaded_file_details || [];
+  const path = files[0] || details[0]?.path || downloadedFileForTranscript || "";
+  const detail = details.find((item) => item.path === path) || details[0] || null;
+  return { path, detail };
+}
+
+function fileSummaryBlock(path, detail) {
+  const block = document.createElement("div");
+  block.className = "saved-file-summary";
+  [
+    ["Filename", detail?.filename || fileName(path)],
+    ["Container", detail?.container?.toUpperCase() || fileExtension(path)],
+    ["Size", readableSizeShort(detail?.size_bytes) || "Size unknown"],
+    ["Location", parentPath(path)],
+  ].forEach(([label, value]) => {
+    if (!value) {
+      return;
+    }
+    const row = document.createElement("div");
+    row.className = "metadata-row";
+    const name = document.createElement("strong");
+    name.textContent = label;
+    const text = document.createElement("span");
+    text.textContent = value;
+    text.title = value;
+    row.append(name, text);
+    block.appendChild(row);
+  });
+  return block;
 }
 
 async function loadLibrary() {
@@ -2372,6 +2426,18 @@ function readableSizeShort(bytes) {
 
 function fileName(path) {
   return String(path).split("/").pop() || path;
+}
+
+function parentPath(path) {
+  const parts = String(path || "").split("/");
+  parts.pop();
+  return parts.join("/") || "";
+}
+
+function fileExtension(path) {
+  const name = fileName(path || "");
+  const dotIndex = name.lastIndexOf(".");
+  return dotIndex > -1 ? name.slice(dotIndex + 1).toUpperCase() : "";
 }
 
 function cssEscape(value) {

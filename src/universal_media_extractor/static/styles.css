@@ -989,6 +989,13 @@ button:disabled {
   font-weight: 500;
 }
 
+.field-help {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
 .path-field input {
   font-family: inherit;
 }
@@ -1148,7 +1155,8 @@ button:disabled {
 }
 
 #files-list,
-#local-metadata-list {
+#local-metadata-list,
+.saved-file-summary {
   display: grid;
   gap: 7px;
   margin-top: 10px;

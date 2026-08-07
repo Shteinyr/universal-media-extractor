@@ -2,6 +2,17 @@
 
 ## 2026-08-07
 
+- GitHub issue #50 Result and local transcription UX final pass is completed as public beta readiness work, not as a new roadmap block.
+- Saved result cards should show user-facing file details: filename, container, size when available, and location.
+- Transcription remains local-only through Whisper CLI and should be presented as `Transcribe locally`.
+- Local file transcription should be enabled only for analyzed audio/video media.
+- The app saves one selected transcript format per transcription run: TXT, Markdown, or JSON.
+- Copy transcript should target the selected transcript output content when available.
+- Whisper model copy must be honest about speed, disk usage, and quality tradeoffs.
+- Transcription failure must not modify or delete saved media files.
+
+## 2026-08-07
+
 - GitHub issue #49 Error normalization and diagnostics final pass is completed as public beta readiness work, not as a new roadmap block.
 - Public-beta error handling must use stable normalized categories before raw CLI details.
 - Raw CLI stderr may be available only behind technical details or redacted diagnostics, not as the primary user-facing message.

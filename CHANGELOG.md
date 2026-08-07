@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-08-07 - Public Beta Result And Local Transcription UX Final Pass
+
+- Implemented GitHub issue #50 from the GPT Pro final UI/UX public beta readiness set.
+- Added `downloaded_file_details` to `DownloadResult` so saved result cards can show filename, container, size, and location without guessing from raw paths.
+- Added `transcript_format` and `transcript_file_text` to `TranscriptionResult` so copy actions target the selected transcript output.
+- Updated the static UI to label the action as `Transcribe locally`, show selected transcript copy labels such as `Copy TXT`, and keep transcript preview readable.
+- Disabled local file transcription unless the analyzed local file is audio or video.
+- Added honest Whisper model copy about speed, disk usage, and quality tradeoffs.
+- Added tests for downloaded file metadata, selected transcript output content, implemented transcript formats only, and failure preserving saved media.
+- Created `docs/PUBLIC_BETA_RESULT_TRANSCRIPTION_UX_FINAL_PASS.md`.
+- Verification: JS syntax check passed, Python compile checks passed, focused tests passed with `78 passed`, full pytest passed outside sandbox with `231 passed`, and browser full-flow smoke passed in public product mode.
+- Saved proof screenshots under `proof/result_transcription_ux_final_pass/`.
+
 ## 2026-08-07 - Public Beta Error Diagnostics Final Pass
 
 - Implemented GitHub issue #49 from the GPT Pro final UI/UX public beta readiness set.

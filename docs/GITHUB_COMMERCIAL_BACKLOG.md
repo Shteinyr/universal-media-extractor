@@ -66,12 +66,12 @@ Completed follow-up issues:
 - #47 `[P0] Native filesystem integration`
 - #48 `[P0] Unified progress, cancel, retry, recovery`
 - #49 `[P0] Error normalization and diagnostics final pass`
+- #50 `[P1] Result and local transcription UX final pass`
 
-Result: #46 is implemented and documented in `docs/PUBLIC_BETA_DURABLE_QUEUE_LIBRARY.md`. #47 is implemented and documented in `docs/PUBLIC_BETA_NATIVE_FILESYSTEM_INTEGRATION.md`. #48 is implemented and documented in `docs/PUBLIC_BETA_PROGRESS_CANCEL_RETRY_RECOVERY.md`. #49 is implemented and documented in `docs/PUBLIC_BETA_ERROR_DIAGNOSTICS_FINAL_PASS.md`.
+Result: #46 is implemented and documented in `docs/PUBLIC_BETA_DURABLE_QUEUE_LIBRARY.md`. #47 is implemented and documented in `docs/PUBLIC_BETA_NATIVE_FILESYSTEM_INTEGRATION.md`. #48 is implemented and documented in `docs/PUBLIC_BETA_PROGRESS_CANCEL_RETRY_RECOVERY.md`. #49 is implemented and documented in `docs/PUBLIC_BETA_ERROR_DIAGNOSTICS_FINAL_PASS.md`. #50 is implemented and documented in `docs/PUBLIC_BETA_RESULT_TRANSCRIPTION_UX_FINAL_PASS.md`.
 
 Remaining follow-up issues:
 
-- #50 `[P1] Result and local transcription UX final pass`
 - #51 `[P1] Commercial desktop readiness final pass`
 
 All #41-#51 issues are in GitHub Project #7. After Public Beta UI/UX Refactor Block 1:
@@ -81,7 +81,8 @@ All #41-#51 issues are in GitHub Project #7. After Public Beta UI/UX Refactor Bl
 - #47 has `Roadmap Status=Done` and `Status=Done`.
 - #48 has `Roadmap Status=Done` and `Status=Done`.
 - #49 has `Roadmap Status=Done` and `Status=Done`.
-- #50-#51 remain follow-up public beta readiness work.
+- #50 has `Roadmap Status=Done` and `Status=Done`.
+- #51 remains follow-up public beta readiness work.
 - `Release=Public Beta` remains the release target for this UI/UX issue group.
 
 ## Recommended GitHub Project Fields
