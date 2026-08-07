@@ -283,9 +283,18 @@
           </summary>
           <div class="library-content">
             <div class="group-header">
-              <h2>Recent results</h2>
+              <h2>Queue and files</h2>
               <button id="refresh-outputs-button" type="button" class="small-button">Refresh</button>
             </div>
+            <section class="library-section" aria-labelledby="queue-history-title">
+              <h3 id="queue-history-title">Queue</h3>
+              <div id="queue-history-list" class="queue-history-list">
+                <p class="empty-line">No queues yet.</p>
+              </div>
+            </section>
+            <section class="library-section" aria-labelledby="recent-results-title">
+              <h3 id="recent-results-title">Files</h3>
+            </section>
             <div id="recent-results-list" class="recent-results-list">
               <p class="empty-line">No outputs loaded yet.</p>
             </div>

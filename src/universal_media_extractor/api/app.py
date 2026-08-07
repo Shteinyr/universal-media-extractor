@@ -35,6 +35,7 @@ from universal_media_extractor.api.schemas import (
 from universal_media_extractor.models import (
     Batch,
     BatchCreateRequest,
+    BatchListResult,
     BatchUrlImportRequest,
     BatchUrlImportResult,
     DiagnosticBundle,
@@ -113,6 +114,7 @@ def create_app(
     app.state.batch_service = BatchService(
         job_service=app.state.job_service,
         download_service=app.state.download_service,
+        db_path=app.state.job_db_path,
     )
     app.state.playlist_service = PlaylistService()
 
@@ -227,6 +229,11 @@ def create_app(
         if request.output_base_dir:
             app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()
         return batch_service.create_batch(request)
+
+    @app.get("/batch", response_model=BatchListResult)
+    def list_batches(limit: int = 50, status: str | None = None) -> BatchListResult:
+        batch_service: BatchService = app.state.batch_service
+        return BatchListResult(batches=batch_service.list_batches(limit=limit, status=status))
 
     @app.get("/batch/{batch_id}", response_model=Batch)
     def get_batch(batch_id: str) -> Batch:

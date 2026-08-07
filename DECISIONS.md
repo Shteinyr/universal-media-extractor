@@ -2,6 +2,16 @@
 
 ## 2026-08-07
 
+- GitHub issue #46 Durable Queue and Library finalization is completed as a public beta readiness block.
+- Batch groups now persist through SQLite snapshots in the existing local jobs database path.
+- Queue and Library responsibilities are separated: Queue is for batch groups/items/retry/recovery; Library is for saved managed output folders.
+- Interrupted queued/running batch groups recover to failed/recoverable states on startup.
+- Missing batch output paths are shown as `output_missing` instead of deleting or mutating history.
+- `GET /batch` is allowed as a small API addition required for durable Queue UI.
+- No Redis, Celery, external queue, full product database, licensing, payments, installer/signing, native filesystem bridge, AI summary, Chrome extension, public Course/Udemy support, React/Vite/CDN, or roadmap change was added.
+
+## 2026-08-07
+
 - Public Beta UI/UX Refactor Block 1 is approved and completed as the first executable block from the GPT Pro final UI/UX commercial spec.
 - Public product mode must not expose Course/Udemy/cookies/Chrome-session/manual-cookie UI surfaces.
 - Public product mode must not register internal Course/Udemy endpoints.

@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-08-07 - Durable Queue And Library Finalization
+
+- Implemented GitHub issue #46 from the GPT Pro final UI/UX public beta readiness set.
+- Added SQLite-backed durable batch queue snapshots alongside existing SQLite job history.
+- Added `GET /batch` to list recent persisted batch groups.
+- Added startup recovery for queued/running batch groups: interrupted queues now become failed/recoverable instead of stale running state.
+- Preserved original batch request snapshots so failed batch items can be retried after restart.
+- Added `output_missing` on batch item snapshots so missing saved files are visible and non-destructive.
+- Updated Library UI with separate Queue and Files sections.
+- Updated browser smoke to capture the Library/Queue surface.
+- Created `docs/PUBLIC_BETA_DURABLE_QUEUE_LIBRARY.md` and updated `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`.
+- Verification: JS syntax checks passed, targeted API/batch tests passed with `60 passed`, full pytest passed with `204 passed`, and browser smoke passed in public product mode.
+- Saved proof screenshots under `proof/durable_queue_library/`.
+
 ## 2026-08-07 - Public Beta UI/UX Refactor Block 1
 
 - Implemented GitHub issues #42-#45 from the GPT Pro final UI/UX spec.

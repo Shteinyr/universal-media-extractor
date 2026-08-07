@@ -144,6 +144,8 @@ def test_static_index_is_available(tmp_path):
     assert "~/Downloads/Universal Media Extractor" in response.text
     assert "Start batch" in response.text
     assert "Library" in response.text
+    assert "Queue and files" in response.text
+    assert "No queues yet" in response.text
     assert 'src="/static/option_normalizer.js"' in response.text
     assert 'src="/static/app.js"' in response.text
     for forbidden in ["Course", "Udemy", "cookies", "Chrome session", "Manual cookies"]:
@@ -164,7 +166,9 @@ def test_static_javascript_is_available(tmp_path):
     assert "/local/transcribe" in response.text
     assert "/outputs" in response.text
     assert "/batch/import" in response.text
+    assert "/batch?limit=8" in response.text
     assert "retry-failed" in response.text
+    assert "Output missing" in response.text
     assert "/config" in response.text
     assert "/jobs/" in response.text
     assert "cancelDownloadButton" in response.text
@@ -1156,6 +1160,7 @@ def test_batch_endpoint_runs_download_jobs_through_mock(tmp_path):
     app.state.batch_service = BatchService(
         job_service=app.state.job_service,
         download_service=app.state.download_service,
+        db_path=app.state.job_db_path,
     )
     client = _client(app)
 
@@ -1190,6 +1195,28 @@ def test_batch_endpoint_requires_confirmation_without_starting_download(tmp_path
     body = response.json()
     assert body["status"] == "failed"
     assert body["errors"][0]["code"] == "rights_confirmation_required"
+
+
+def test_batch_list_endpoint_restores_persisted_batches_after_restart(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    first_app = create_app(raw_output_base_dir=tmp_path, job_db_path=db_path)
+    first_client = _client(first_app)
+
+    created = first_client.post(
+        "/batch",
+        json={"items": [{"source_url": "https://example.test/one"}], "user_confirmed_rights": False},
+    )
+    assert created.status_code == 200
+    batch_id = created.json()["batch_id"]
+
+    restarted_client = _client(create_app(raw_output_base_dir=tmp_path, job_db_path=db_path))
+    response = restarted_client.get("/batch")
+
+    assert response.status_code == 200
+    batches = response.json()["batches"]
+    assert batches[0]["batch_id"] == batch_id
+    assert batches[0]["status"] == "failed"
+    assert batches[0]["errors"][0]["code"] == "rights_confirmation_required"
 
 
 def test_playlist_analyze_endpoint_uses_service_without_download(tmp_path):

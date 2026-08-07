@@ -1,14 +1,18 @@
 import sys
+import sqlite3
 import threading
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from universal_media_extractor.models import (
+    Batch,
     BatchCreateRequest,
     BatchDownloadItemRequest,
+    BatchItem,
     DownloadResult,
     ErrorState,
 )
@@ -140,3 +144,125 @@ def test_batch_video_720p_preset_uses_honest_height_cap(tmp_path):
     assert fake.calls[-1].mode == "combined"
     assert "height<=720" in fake.calls[-1].format_id
     assert fake.calls[-1].output_format == "mp4"
+
+
+def test_completed_batch_persists_across_service_restart(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    fake = FakeDownloadService()
+    service = BatchService(job_service=JobService(db_path), download_service=fake, db_path=db_path)
+    request = BatchCreateRequest(
+        items=[BatchDownloadItemRequest(source_url="https://example.test/video")],
+        user_confirmed_rights=True,
+        preset="audio_m4a",
+    )
+
+    batch = service.create_batch(request)
+    final = wait_for_batch(service, batch.batch_id)
+
+    reloaded = BatchService(job_service=JobService(db_path), download_service=fake, db_path=db_path)
+    restored = reloaded.get_batch(final.batch_id)
+
+    assert restored is not None
+    assert restored.status == "succeeded"
+    assert restored.succeeded_count == 1
+    assert reloaded.list_batches()[0].batch_id == final.batch_id
+
+
+def test_interrupted_batch_recovers_to_retryable_failed_state(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    service = BatchService(job_service=JobService(db_path), download_service=FakeDownloadService(), db_path=db_path)
+    request = BatchCreateRequest(
+        items=[BatchDownloadItemRequest(source_url="https://example.test/video")],
+        user_confirmed_rights=True,
+        preset="audio_m4a",
+    )
+    interrupted = Batch(
+        batch_id="batch-interrupted",
+        status="running",
+        preset="audio_m4a",
+        mode="audio",
+        concurrency=1,
+        items=[
+            BatchItem(
+                item_id="item-0001",
+                order=1,
+                source_url="https://example.test/video",
+                status="running",
+            )
+        ],
+    )
+    _insert_batch_snapshot(db_path, interrupted, request)
+
+    recovered_service = BatchService(job_service=JobService(db_path), download_service=FakeDownloadService(), db_path=db_path)
+    recovered = recovered_service.get_batch("batch-interrupted")
+
+    assert recovered is not None
+    assert recovered.status == "failed"
+    assert recovered.items[0].status == "failed"
+    assert recovered.items[0].error is not None
+    assert recovered.items[0].error.recoverable is True
+
+    recovered_service.retry_failed_items("batch-interrupted")
+    retried = wait_for_batch(recovered_service, "batch-interrupted")
+
+    assert retried.status == "succeeded"
+    assert retried.succeeded_count == 1
+
+
+def test_batch_snapshot_marks_missing_output_non_destructively(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    missing_dir = tmp_path / "deleted-output"
+    batch = Batch(
+        batch_id="batch-missing-output",
+        status="succeeded",
+        preset="audio_m4a",
+        mode="audio",
+        concurrency=1,
+        items=[
+            BatchItem(
+                item_id="item-0001",
+                order=1,
+                source_url="https://example.test/video",
+                status="succeeded",
+                result=DownloadResult(
+                    status="succeeded",
+                    source_url="https://example.test/video",
+                    selected_format_id="bestaudio",
+                    output_dir=str(missing_dir),
+                    downloaded_files=[str(missing_dir / "media" / "file.m4a")],
+                ),
+            )
+        ],
+    )
+    request = BatchCreateRequest(
+        items=[BatchDownloadItemRequest(source_url="https://example.test/video")],
+        user_confirmed_rights=True,
+        preset="audio_m4a",
+    )
+    service = BatchService(job_service=JobService(db_path), download_service=FakeDownloadService(), db_path=db_path)
+    _insert_batch_snapshot(db_path, batch, request)
+
+    reloaded = BatchService(job_service=JobService(db_path), download_service=FakeDownloadService(), db_path=db_path)
+    restored = reloaded.get_batch("batch-missing-output")
+
+    assert restored is not None
+    assert restored.items[0].output_missing is True
+    assert not missing_dir.exists()
+
+
+def _insert_batch_snapshot(db_path: Path, batch: Batch, request: BatchCreateRequest) -> None:
+    with sqlite3.connect(db_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO batches (batch_id, status, created_at, updated_at, batch_json, request_json)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                batch.batch_id,
+                batch.status,
+                batch.created_at.isoformat() if batch.created_at else datetime.now(timezone.utc).isoformat(),
+                batch.updated_at.isoformat() if batch.updated_at else datetime.now(timezone.utc).isoformat(),
+                batch.model_dump_json(),
+                request.model_dump_json(),
+            ),
+        )

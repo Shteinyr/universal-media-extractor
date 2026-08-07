@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness. Public Beta QA Round, Public Beta UI / UX Finalization Implementation, and Public Beta UI/UX Refactor Block 1 are completed.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness. Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, and Durable Queue/Library finalization are completed.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -53,7 +53,7 @@ Commercial direction after GPT Pro strategy review:
 - `yt-dlp` for URL analysis/download.
 - `ffmpeg`/`ffprobe` for media metadata, extraction, and conversion.
 - Whisper CLI for local transcription.
-- SQLite-backed persistent job system for download/transcription history.
+- SQLite-backed persistent job system for download/transcription history and durable batch queue snapshots.
 - Output indexing and safe delete for managed result folders.
 - Python Playwright for manual/dev browser smoke checks.
 - `pywebview` for the local desktop wrapper.
@@ -77,6 +77,32 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
+Durable Queue and Library finalization - done.
+
+Created doc:
+
+- `docs/PUBLIC_BETA_DURABLE_QUEUE_LIBRARY.md`
+
+Result: issue #46 is implemented. Queue and Library responsibilities are separated. Queue now persists batch group snapshots in SQLite, exposes `GET /batch`, recovers interrupted queued/running batches into failed/recoverable states on startup, preserves retry settings, and marks missing output paths as `output_missing`. Library remains output-folder based through `/outputs` and now shows separate Queue and Files sections in the UI.
+
+Verification:
+
+- `node --check src/universal_media_extractor/static/app.js`;
+- `node --check src/universal_media_extractor/static/option_normalizer.js`;
+- `python3 -m py_compile scripts/browser_smoke.py`;
+- `.venv/bin/python -m pytest tests/test_api_app.py tests/test_batch_service.py -q` -> `60 passed`;
+- `.venv/bin/python -m pytest -q` -> `204 passed`;
+- `.venv/bin/python scripts/browser_smoke.py --proof-dir proof/durable_queue_library`.
+
+Proof screenshots:
+
+- `proof/durable_queue_library/ui_initial.png`
+- `proof/durable_queue_library/ui_analyze_result.png`
+- `proof/durable_queue_library/ui_output_selected.png`
+- `proof/durable_queue_library/ui_library.png`
+
+Previous completed block:
+
 Public Beta UI/UX Refactor Block 1 - done.
 
 Created docs:
@@ -84,7 +110,7 @@ Created docs:
 - `docs/PUBLIC_BETA_UI_UX_REFACTOR_BLOCK_1.md`
 - `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`
 
-Result: issues #42-#45 are implemented. Public mode hides Course/Udemy/cookies/Chrome-session surfaces and does not register internal Course endpoints. The public UI now starts from a single `New task` composer that routes one URL, local files, multiple links, and `.txt/.csv` URL lists. Output choices use stable semantic presets: Best video, 1080p video, Up to 720p, Audio M4A, Audio MP3, and Subtitles. The source-of-truth doc records that SQLite jobs/history exists, but batch group state is still in-memory.
+Result: issues #42-#45 are implemented. Public mode hides Course/Udemy/cookies/Chrome-session surfaces and does not register internal Course endpoints. The public UI now starts from a single `New task` composer that routes one URL, local files, multiple links, and `.txt/.csv` URL lists. Output choices use stable semantic presets: Best video, 1080p video, Up to 720p, Audio M4A, Audio MP3, and Subtitles.
 
 Verification:
 
@@ -236,10 +262,10 @@ Commercial Blocks 1-14 are completed or prepared except for externally blocked A
 Recommended next user-approved commercial block, depending on user readiness:
 
 ```text
-Durable Queue and Library finalization
+Native filesystem integration
 ```
 
-Candidate direction: continue with issue #46 to make Queue/Library durable and coherent now that the public first-screen composer and presets are in place. If Apple Developer Program access and signing credentials are ready, macOS signed public beta release validation can be chosen instead.
+Candidate direction: continue with issue #47 to improve desktop file/folder selection and reveal/open behavior. If Apple Developer Program access and signing credentials are ready, macOS signed public beta release validation can be chosen instead.
 
 Do not start the next block until the user explicitly confirms. Do not start checkout or licensing enforcement until payment provider approval and user business details are ready.
 

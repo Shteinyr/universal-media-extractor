@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import sqlite3
 import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
@@ -33,17 +34,30 @@ from universal_media_extractor.services.job_service import JobService
 
 URL_PATTERN = re.compile(r"https?://[^\s<>\"']+")
 TERMINAL_ITEM_STATUSES = {"succeeded", "failed", "cancelled", "skipped"}
+TERMINAL_BATCH_STATUSES = {"succeeded", "failed", "cancelled"}
+ACTIVE_BATCH_STATUSES = {"queued", "running"}
 
 
 class BatchService:
     """Run small local download batches with controlled concurrency."""
 
-    def __init__(self, *, job_service: JobService, download_service: DownloadService) -> None:
+    def __init__(
+        self,
+        *,
+        job_service: JobService,
+        download_service: DownloadService,
+        db_path: Path | None = None,
+    ) -> None:
         self._job_service = job_service
         self._download_service = download_service
         self._batches: dict[str, Batch] = {}
         self._batch_requests: dict[str, BatchCreateRequest] = {}
         self._lock = Lock()
+        self._db_path = db_path.expanduser().resolve() if db_path else job_service.db_path
+        if self._db_path is not None:
+            self._init_db()
+            self._load_batches_from_db()
+            self.recover_interrupted_batches()
 
     def import_urls(self, text: str, *, source: str = "textarea") -> BatchUrlImportResult:
         seen: set[str] = set()
@@ -139,7 +153,43 @@ class BatchService:
     def get_batch(self, batch_id: str) -> Batch | None:
         with self._lock:
             batch = self._batches.get(batch_id)
-            return batch.model_copy(deep=True) if batch else None
+            return self._snapshot(batch) if batch else None
+
+    def list_batches(self, *, limit: int = 50, status: str | None = None) -> list[Batch]:
+        with self._lock:
+            batches = list(self._batches.values())
+        if status is not None:
+            batches = [batch for batch in batches if batch.status == status]
+        batches.sort(key=lambda batch: batch.created_at, reverse=True)
+        return [self._snapshot(batch) for batch in batches[: max(0, limit)]]
+
+    def recover_interrupted_batches(self) -> int:
+        now = datetime.now(timezone.utc)
+        recovered = 0
+        interruption_error = ErrorState(
+            code="unknown_error",
+            message="Queue was interrupted before it finished.",
+            technical_details="The app stopped while this batch was queued or running.",
+            recoverable=True,
+            suggested_user_action="Retry failed items if the sources are still available.",
+        )
+        with self._lock:
+            for batch_id, batch in list(self._batches.items()):
+                if batch.status not in ACTIVE_BATCH_STATUSES:
+                    continue
+                recovered += 1
+                for item in batch.items:
+                    if item.status in {"queued", "running"}:
+                        item.status = "failed"
+                        item.error = interruption_error
+                        item.updated_at = now
+                batch.status = "failed"
+                batch.errors = [interruption_error]
+                self._refresh_counts(batch)
+                self._persist_batch_locked(batch)
+                if batch_id in self._batch_requests:
+                    self._persist_request_locked(batch_id, self._batch_requests[batch_id])
+        return recovered
 
     def retry_failed_items(self, batch_id: str) -> Batch:
         with self._lock:
@@ -161,6 +211,7 @@ class BatchService:
             batch.status = "queued"
             batch.errors = []
             self._refresh_counts(batch)
+            self._persist_batch_locked(batch)
             snapshot = batch.model_copy(deep=True)
 
         request = original_request.model_copy(deep=True)
@@ -183,6 +234,7 @@ class BatchService:
                         pass
             batch.status = "cancelled"
             self._refresh_counts(batch)
+            self._persist_batch_locked(batch)
             return batch.model_copy(deep=True)
 
     def _start_runner(
@@ -210,6 +262,7 @@ class BatchService:
                 return
             batch.status = "running"
             self._refresh_counts(batch)
+            self._persist_batch_locked(batch)
             items = [item.model_copy(deep=True) for item in batch.items if item.status == "queued"]
             if item_ids is not None:
                 items = [item for item in items if item.item_id in item_ids]
@@ -230,6 +283,7 @@ class BatchService:
             if batch.status != "cancelled":
                 batch.status = "failed" if batch.failed_count else "succeeded"
                 batch.updated_at = datetime.now(timezone.utc)
+            self._persist_batch_locked(batch)
 
     def _run_item(self, batch_id: str, item: BatchItem, request: BatchCreateRequest) -> None:
         with self._lock:
@@ -239,6 +293,7 @@ class BatchService:
             stored.status = "running"
             stored.updated_at = datetime.now(timezone.utc)
             self._refresh_counts(self._batches[batch_id])
+            self._persist_batch_locked(self._batches[batch_id])
 
         download_request = self._download_request_for_item(item, request)
         job = self._job_service.create_job("download", download_request.model_dump())
@@ -253,6 +308,7 @@ class BatchService:
             if stored:
                 stored.job_id = job.job_id
                 stored.updated_at = datetime.now(timezone.utc)
+                self._persist_batch_locked(self._batches[batch_id])
 
         result = self._download_service.download_media(
             download_request,
@@ -302,6 +358,7 @@ class BatchService:
                 stored.error = error
                 stored.updated_at = datetime.now(timezone.utc)
                 self._refresh_counts(batch)
+                self._persist_batch_locked(batch)
 
     def _download_request_for_item(self, item: BatchItem, request: BatchCreateRequest) -> DownloadRequest:
         mode, format_id, output_format = self._preset_download_values(request.preset)
@@ -330,10 +387,12 @@ class BatchService:
     def _store(self, batch: Batch) -> None:
         with self._lock:
             self._batches[batch.batch_id] = batch
+            self._persist_batch_locked(batch)
 
     def _store_request(self, batch_id: str, request: BatchCreateRequest) -> None:
         with self._lock:
             self._batch_requests[batch_id] = request.model_copy(deep=True)
+            self._persist_request_locked(batch_id, self._batch_requests[batch_id])
 
     def _find_item(self, batch_id: str, item_id: str) -> BatchItem | None:
         batch = self._batches.get(batch_id)
@@ -350,6 +409,114 @@ class BatchService:
         batch.cancelled_count = sum(item.status == "cancelled" for item in batch.items)
         batch.skipped_count = sum(item.status == "skipped" for item in batch.items)
         batch.updated_at = datetime.now(timezone.utc)
+
+    def _snapshot(self, batch: Batch) -> Batch:
+        snapshot = batch.model_copy(deep=True)
+        for item in snapshot.items:
+            output_dir = item.result.output_dir if item.result else None
+            item.output_missing = bool(output_dir and not Path(output_dir).exists())
+        return snapshot
+
+    def _init_db(self) -> None:
+        assert self._db_path is not None
+        self._db_path.parent.mkdir(parents=True, exist_ok=True)
+        with sqlite3.connect(self._db_path) as connection:
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS batches (
+                    batch_id TEXT PRIMARY KEY,
+                    status TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    batch_json TEXT NOT NULL,
+                    request_json TEXT
+                )
+                """
+            )
+            connection.execute(
+                "CREATE INDEX IF NOT EXISTS idx_batches_created_at ON batches(created_at DESC)"
+            )
+            connection.execute(
+                "CREATE INDEX IF NOT EXISTS idx_batches_status ON batches(status)"
+            )
+
+    def _load_batches_from_db(self) -> None:
+        if self._db_path is None or not self._db_path.exists():
+            return
+        with sqlite3.connect(self._db_path) as connection:
+            rows = connection.execute(
+                "SELECT batch_json, request_json FROM batches"
+            ).fetchall()
+        batches: dict[str, Batch] = {}
+        requests: dict[str, BatchCreateRequest] = {}
+        for batch_json, request_json in rows:
+            try:
+                batch = Batch.model_validate_json(batch_json)
+            except Exception:
+                continue
+            batches[batch.batch_id] = batch
+            if request_json:
+                try:
+                    requests[batch.batch_id] = BatchCreateRequest.model_validate_json(request_json)
+                except Exception:
+                    pass
+        with self._lock:
+            self._batches = batches
+            self._batch_requests = requests
+
+    def _persist_batch_locked(self, batch: Batch) -> None:
+        if self._db_path is None:
+            return
+        request = self._batch_requests.get(batch.batch_id)
+        request_json = request.model_dump_json() if request else None
+        with sqlite3.connect(self._db_path) as connection:
+            connection.execute(
+                """
+                INSERT INTO batches (batch_id, status, created_at, updated_at, batch_json, request_json)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(batch_id) DO UPDATE SET
+                    status=excluded.status,
+                    created_at=excluded.created_at,
+                    updated_at=excluded.updated_at,
+                    batch_json=excluded.batch_json,
+                    request_json=COALESCE(excluded.request_json, batches.request_json)
+                """,
+                (
+                    batch.batch_id,
+                    batch.status,
+                    batch.created_at.isoformat(),
+                    batch.updated_at.isoformat(),
+                    batch.model_dump_json(),
+                    request_json,
+                ),
+            )
+
+    def _persist_request_locked(self, batch_id: str, request: BatchCreateRequest) -> None:
+        if self._db_path is None:
+            return
+        batch = self._batches.get(batch_id)
+        if batch is None:
+            return
+        with sqlite3.connect(self._db_path) as connection:
+            connection.execute(
+                """
+                INSERT INTO batches (batch_id, status, created_at, updated_at, batch_json, request_json)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(batch_id) DO UPDATE SET
+                    request_json=excluded.request_json,
+                    status=excluded.status,
+                    updated_at=excluded.updated_at,
+                    batch_json=excluded.batch_json
+                """,
+                (
+                    batch.batch_id,
+                    batch.status,
+                    batch.created_at.isoformat(),
+                    batch.updated_at.isoformat(),
+                    batch.model_dump_json(),
+                    request.model_dump_json(),
+                ),
+            )
 
     def _preset_mode(self, preset: str) -> str:
         return self._preset_download_values(preset)[0]

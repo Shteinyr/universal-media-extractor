@@ -31,6 +31,7 @@ Public mode endpoints:
 - `POST /batch/import`
 - `POST /playlists/analyze`
 - `POST /batch`
+- `GET /batch`
 - `GET /batch/{batch_id}`
 - `POST /batch/{batch_id}/retry-failed`
 - `POST /batch/{batch_id}/cancel`
@@ -56,30 +57,35 @@ Internal Course mode additionally registers:
 
 ## Persistence State
 
-SQLite is used for jobs/history.
+SQLite is used for jobs/history and durable batch queue snapshots.
 
 - `JobService` is backed by `data/jobs.sqlite3` by default, or by `<output_base_dir>/.ume/jobs.sqlite3` when `UME_OUTPUT_BASE_DIR` is set.
 - Jobs survive app restart.
 - Queued/running jobs found at startup are recovered into a failed, recoverable `interrupted` state.
 - Failed jobs can be retried.
 - Terminal job history can be cleared without deleting output files.
+- Batch groups survive app restart.
+- Queued/running batch groups found at startup are recovered into a failed, recoverable interruption state.
+- Failed batch items can be retried when the original request snapshot is available.
 
 SQLite is not yet a full product database.
 
-- Batch group state is still in-memory.
 - Output library/search is folder-index based, not database-backed.
 - Settings, licensing, accounts, payments, and user profiles are not stored in SQLite.
 
 ## Batch State
 
-Batch support exists, but it is not yet the final durable Queue/Library implementation.
+Batch support now has durable queue snapshots for public beta.
 
 - Multiple URLs can be imported from text or `.txt/.csv`.
 - Batch items create normal download jobs.
 - Child jobs are persisted through SQLite.
-- The batch group itself is in-memory and is not restored after restart.
+- Batch groups are persisted through SQLite.
+- Recent batch groups are listed through `GET /batch`.
+- Interrupted queued/running batches recover to failed/retryable states after restart.
+- Batch item snapshots expose `output_missing` when a previously saved output path no longer exists.
 
-This is the main follow-up for the next Queue/Library hardening block.
+The remaining Queue/Library follow-up is deeper product UX, not basic durability.
 
 ## Outputs
 
@@ -127,6 +133,5 @@ Not implemented:
 
 ## Follow-Ups
 
-- Durable Queue/Library finalization should persist batch groups and improve restart recovery.
 - Native filesystem integration should replace browser-only path copying/reveal limitations where needed.
 - Progress/cancel/retry recovery can be refined further for long-running media processes.

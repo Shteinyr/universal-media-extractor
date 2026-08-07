@@ -60,9 +60,14 @@ First executable block completed:
 
 Result: implemented in Public Beta UI/UX Refactor Block 1 and documented in `docs/PUBLIC_BETA_UI_UX_REFACTOR_BLOCK_1.md` plus `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`.
 
-Later follow-up issues:
+Completed follow-up issues:
 
 - #46 `[P0] Durable Queue and Library finalization`
+
+Result: implemented and documented in `docs/PUBLIC_BETA_DURABLE_QUEUE_LIBRARY.md`.
+
+Remaining follow-up issues:
+
 - #47 `[P0] Native filesystem integration`
 - #48 `[P0] Unified progress, cancel, retry, recovery`
 - #49 `[P0] Error normalization and diagnostics final pass`
@@ -72,7 +77,8 @@ Later follow-up issues:
 All #41-#51 issues are in GitHub Project #7. After Public Beta UI/UX Refactor Block 1:
 
 - #42-#45 have `Roadmap Status=Done` and `Status=Done`.
-- #46-#51 remain follow-up public beta readiness work.
+- #46 has `Roadmap Status=Done` and `Status=Done`.
+- #47-#51 remain follow-up public beta readiness work.
 - `Release=Public Beta` remains the release target for this UI/UX issue group.
 
 ## Recommended GitHub Project Fields

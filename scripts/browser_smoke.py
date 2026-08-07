@@ -93,6 +93,12 @@ def run_analysis_smoke(page: Page, base_url: str, source_url: str, proof_dir: Pa
     assert_visible_text(page, "Download")
     page.screenshot(path=proof_dir / "ui_output_selected.png", full_page=True)
 
+    page.get_by_text("Library", exact=True).click()
+    assert_visible_text(page, "Queue and files")
+    assert_visible_text(page, "Queue")
+    assert_visible_text(page, "Files")
+    page.screenshot(path=proof_dir / "ui_library.png", full_page=True)
+
 
 def run_full_flow(page: Page, proof_dir: Path) -> None:
     first_audio = page.get_by_role("button", name=re.compile("Audio M4A"))

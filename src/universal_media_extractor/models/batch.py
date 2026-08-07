@@ -114,6 +114,7 @@ class BatchItem(ContractModel):
     job_id: str | None = None
     result: DownloadResult | None = None
     error: ErrorState | None = None
+    output_missing: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -136,3 +137,7 @@ class Batch(ContractModel):
     errors: list[ErrorState] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class BatchListResult(ContractModel):
+    batches: list[Batch] = Field(default_factory=list)

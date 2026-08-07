@@ -496,9 +496,29 @@ button:disabled {
   margin-bottom: 8px;
 }
 
+.library-section {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.library-section h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.queue-history-list,
 .recent-results-list {
   display: grid;
   gap: 8px;
+}
+
+.queue-history-row {
+  border-color: rgba(134, 211, 194, 0.15);
 }
 
 .recent-output-row {

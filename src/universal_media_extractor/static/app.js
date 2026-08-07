@@ -78,6 +78,7 @@ const batchRetryButton = document.querySelector("#batch-retry-button");
 const batchCancelButton = document.querySelector("#batch-cancel-button");
 const batchResult = document.querySelector("#batch-result");
 const refreshOutputsButton = document.querySelector("#refresh-outputs-button");
+const queueHistoryList = document.querySelector("#queue-history-list");
 const recentResultsList = document.querySelector("#recent-results-list");
 const recentCard = document.querySelector(".recent-card");
 
@@ -459,7 +460,7 @@ cancelLocalTranscribeButton.addEventListener("click", async () => {
 });
 
 refreshOutputsButton?.addEventListener("click", () => {
-  loadRecentOutputs();
+  loadLibrary();
 });
 
 copyTranscriptButton.addEventListener("click", () => {
@@ -481,7 +482,7 @@ revealOutputButton?.addEventListener("click", () => {
 appConfigPromise = initializeAppConfig();
 
 if (recentCard && !recentCard.classList.contains("hidden")) {
-  loadRecentOutputs();
+  loadLibrary();
 }
 
 async function initializeAppConfig() {
@@ -803,6 +804,7 @@ async function cancelActiveBatch() {
 
 
 function renderBatchStatus(batch) {
+  showBatchPanel();
   batchPanel.classList.remove("hidden");
   batchResult.classList.remove("hidden");
   batchResult.innerHTML = "";
@@ -825,7 +827,7 @@ function renderBatchStatus(batch) {
   batchRetryButton.classList.toggle("hidden", !(batch.failed_count > 0));
   batchCancelButton.classList.toggle("hidden", !["queued", "running"].includes(batch.status));
   if (["succeeded", "failed", "cancelled"].includes(batch.status)) {
-    loadRecentOutputs();
+    loadLibrary();
   }
 }
 
@@ -1415,6 +1417,9 @@ function humanNoticeTitle(code) {
 
 function humanBatchItemMeta(item) {
   const parts = [humanStatusLabel(item.status)];
+  if (item.output_missing) {
+    parts.push("Output missing");
+  }
   if (item.error?.message) {
     parts.push(item.error.message);
   }
@@ -1622,7 +1627,7 @@ function renderTranscriptResult(result, container = transcriptResult) {
   if ((result.errors || []).length === 0 && result.status === "succeeded") {
     renderFilesResult(result);
     updateFlowStep("result");
-    loadRecentOutputs();
+    loadLibrary();
   }
 }
 
@@ -1665,6 +1670,81 @@ function renderFilesResult(result) {
 
 function selectedTranscriptPath(result) {
   return result.transcript_txt_path || result.transcript_md_path || result.transcript_json_path || "";
+}
+
+async function loadLibrary() {
+  await Promise.all([loadRecentBatches(), loadRecentOutputs()]);
+}
+
+async function loadRecentBatches() {
+  if (!queueHistoryList) {
+    return;
+  }
+  try {
+    const response = await apiFetch("/batch?limit=8");
+    if (!response.ok) {
+      queueHistoryList.innerHTML = "";
+      queueHistoryList.appendChild(emptyLine("Queue history is unavailable."));
+      return;
+    }
+    renderRecentBatches((await response.json()).batches || []);
+  } catch {
+    queueHistoryList.innerHTML = "";
+    queueHistoryList.appendChild(emptyLine("Queue history is unavailable."));
+  }
+}
+
+function renderRecentBatches(batches) {
+  queueHistoryList.innerHTML = "";
+  if (batches.length === 0) {
+    queueHistoryList.appendChild(emptyLine("No queues yet."));
+    return;
+  }
+
+  batches.slice(0, 8).forEach((batch) => {
+    const row = document.createElement("div");
+    row.className = "recent-output-row queue-history-row";
+
+    const title = document.createElement("div");
+    title.className = "recent-output-title";
+    title.textContent = `Queue · ${humanStatusLabel(batch.status)}`;
+
+    const meta = metaLine([
+      `${batch.total_count || 0} items`,
+      `${batch.succeeded_count || 0} saved`,
+      batch.failed_count ? `${batch.failed_count} failed` : "",
+      batch.cancelled_count ? `${batch.cancelled_count} cancelled` : "",
+      BATCH_PRESET_LABELS[batch.preset] || batch.preset,
+      formatDate(batch.created_at),
+    ]);
+
+    const actions = document.createElement("div");
+    actions.className = "recent-output-actions";
+    const viewButton = document.createElement("button");
+    viewButton.type = "button";
+    viewButton.className = "small-button";
+    viewButton.textContent = "View";
+    viewButton.addEventListener("click", () => {
+      activeBatchId = batch.batch_id;
+      renderBatchStatus(batch);
+    });
+    actions.appendChild(viewButton);
+
+    if (batch.failed_count > 0) {
+      const retryButton = document.createElement("button");
+      retryButton.type = "button";
+      retryButton.className = "small-button";
+      retryButton.textContent = "Retry failed";
+      retryButton.addEventListener("click", async () => {
+        activeBatchId = batch.batch_id;
+        await retryFailedBatchItems();
+      });
+      actions.appendChild(retryButton);
+    }
+
+    row.append(title, meta, actions);
+    queueHistoryList.appendChild(row);
+  });
 }
 
 async function loadRecentOutputs() {
@@ -1768,7 +1848,7 @@ async function deleteRecentOutput(outputId) {
     }
     const result = await response.json();
     apiStatus.textContent = result.message || "Output deleted.";
-    loadRecentOutputs();
+    loadLibrary();
   } catch (error) {
     apiStatus.textContent = normalizeNetworkError(error);
   }
