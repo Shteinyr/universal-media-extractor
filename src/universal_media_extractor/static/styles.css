@@ -263,6 +263,11 @@ h4 {
   padding: 16px;
 }
 
+.input-card.is-dragging {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--focus);
+}
+
 .advanced-field {
   margin-top: 8px;
 }
@@ -988,6 +993,16 @@ button:disabled {
   font-family: inherit;
 }
 
+.path-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.folder-picker-field {
+  min-width: 0;
+}
+
 .download-result {
   margin-top: 10px;
   padding: 10px;
@@ -1227,6 +1242,7 @@ button:disabled {
 
 @media (max-width: 520px) {
   .input-row,
+  .path-input-row,
   .save-options-grid,
   .source-card,
   .file-row,
@@ -1294,6 +1310,14 @@ textarea {
   font-size: 0.78rem;
   font-weight: 750;
   cursor: pointer;
+}
+
+.desktop-file-button {
+  font-family: inherit;
+}
+
+.has-desktop-bridge .browser-file-button {
+  display: none;
 }
 
 .batch-controls {

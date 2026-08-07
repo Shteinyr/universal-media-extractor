@@ -69,7 +69,7 @@ class DownloadService:
 
         _update_job_step(job_service, job_id, "preparing_download", 0)
         output_base_dir = (
-            Path(request.output_base_dir)
+            Path(request.output_base_dir).expanduser()
             if request.output_base_dir
             else DEFAULT_OUTPUT_BASE_DIR
         )
@@ -91,6 +91,20 @@ class DownloadService:
                 source_url=request.source_url,
                 selected_format_id=request.format_id,
                 output_dir=str(exc.args[0]) if exc.args else None,
+            )
+        except ValueError as exc:
+            return DownloadResult(
+                status="failed",
+                source_url=request.source_url,
+                selected_format_id=request.format_id,
+                errors=[
+                    ErrorState(
+                        code="permission_denied",
+                        message=str(exc),
+                        recoverable=True,
+                        suggested_user_action="Choose a writable folder and retry.",
+                    )
+                ],
             )
         metadata_dir = output_dir / ".metadata"
         log_path = output_dir / ".logs" / "download.log"

@@ -53,4 +53,5 @@ class OutputRevealResult(ContractModel):
     output_id: str
     status: OutputRevealStatus
     output_dir: str | None = Field(default=None)
+    revealed_path: str | None = Field(default=None)
     message: str

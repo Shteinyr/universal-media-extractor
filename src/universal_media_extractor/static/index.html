@@ -28,7 +28,8 @@
           ></textarea>
           <div class="actions-row compact-actions">
             <button id="analyze-button" type="submit">Get options</button>
-            <label class="file-import-button" for="local-file-input">Choose file</label>
+            <label class="file-import-button browser-file-button" for="local-file-input">Choose file</label>
+            <button id="native-local-file-button" type="button" class="file-import-button desktop-file-button hidden">Choose file</button>
             <label class="file-import-button" for="batch-text-file-input">Import list</label>
           </div>
           <input
@@ -129,10 +130,13 @@
               Choose an output to continue.
             </div>
             <div class="save-options-grid">
-              <label class="path-field" for="download-output-dir">
-                Save to
-                <input id="download-output-dir" type="text" value="~/Downloads/Universal Media Extractor" autocomplete="off" spellcheck="false">
-              </label>
+              <div class="path-field folder-picker-field">
+                <label for="download-output-dir">Save to</label>
+                <div class="path-input-row">
+                  <input id="download-output-dir" type="text" value="~/Downloads/Universal Media Extractor" autocomplete="off" spellcheck="false">
+                  <button id="download-choose-folder-button" type="button" class="small-button desktop-only hidden">Choose</button>
+                </div>
+              </div>
               <label class="path-field" for="download-output-format">
                 Format
                 <select id="download-output-format"></select>
@@ -245,9 +249,13 @@
                   <option value="3">3 at a time</option>
                 </select>
               </label>
-              <label class="path-field" for="batch-output-dir">Save to
-                <input id="batch-output-dir" type="text" value="~/Downloads/Universal Media Extractor" autocomplete="off" spellcheck="false">
-              </label>
+              <div class="path-field folder-picker-field">
+                <label for="batch-output-dir">Save to</label>
+                <div class="path-input-row">
+                  <input id="batch-output-dir" type="text" value="~/Downloads/Universal Media Extractor" autocomplete="off" spellcheck="false">
+                  <button id="batch-choose-folder-button" type="button" class="small-button desktop-only hidden">Choose</button>
+                </div>
+              </div>
             </div>
             <div class="actions-row">
               <button id="batch-start-button" type="button" disabled>Start batch</button>

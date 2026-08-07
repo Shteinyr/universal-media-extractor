@@ -38,6 +38,56 @@ DESKTOP_CLI_PATHS = (
     "/sbin",
 )
 
+MEDIA_FILE_TYPES = (
+    "Media files (*.mp3;*.m4a;*.wav;*.aac;*.flac;*.ogg;*.opus;*.mp4;*.m4v;*.mov;*.mkv;*.webm;*.avi)",
+    "All files (*.*)",
+)
+
+
+class DesktopFilesystemApi:
+    """Small pywebview bridge for native local file/folder selection."""
+
+    def __init__(self) -> None:
+        self.window: object | None = None
+
+    def set_window(self, window: object) -> None:
+        self.window = window
+
+    def choose_output_folder(self) -> str | None:
+        """Return one native-selected folder path, or None when cancelled."""
+
+        return self._choose_dialog("folder")
+
+    def choose_local_file(self) -> str | None:
+        """Return one native-selected media file path, or None when cancelled."""
+
+        return self._choose_dialog("open")
+
+    def _choose_dialog(self, dialog_kind: str) -> str | None:
+        if self.window is None:
+            return None
+        try:
+            import webview
+        except ImportError:
+            return None
+
+        dialog_type = (
+            webview.FileDialog.FOLDER
+            if dialog_kind == "folder"
+            else webview.FileDialog.OPEN
+        )
+        kwargs = {
+            "dialog_type": dialog_type,
+            "directory": str(Path.home()),
+            "allow_multiple": False,
+        }
+        if dialog_kind == "open":
+            kwargs["file_types"] = MEDIA_FILE_TYPES
+        result = self.window.create_file_dialog(**kwargs)
+        if not result:
+            return None
+        return str(result[0])
+
 
 def main() -> int:
     args = parse_args()
@@ -248,6 +298,7 @@ def open_desktop_window(app_url: str, *, smoke_seconds: float | None = None) -> 
         )
         raise SystemExit(1) from exc
 
+    desktop_api = DesktopFilesystemApi()
     window = webview.create_window(
         WINDOW_TITLE,
         app_url,
@@ -255,7 +306,9 @@ def open_desktop_window(app_url: str, *, smoke_seconds: float | None = None) -> 
         height=WINDOW_HEIGHT,
         min_size=WINDOW_MIN_SIZE,
         background_color="#111315",
+        js_api=desktop_api,
     )
+    desktop_api.set_window(window)
 
     if smoke_seconds is not None:
         webview.start(_close_after_delay, args=(window, smoke_seconds))

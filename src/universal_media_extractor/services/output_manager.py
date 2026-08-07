@@ -53,7 +53,7 @@ class OutputManager:
     ) -> Path:
         """Create a user-facing directory for one download attempt."""
 
-        base_path = base_dir.expanduser().resolve()
+        base_path = self.validate_output_base_dir(base_dir)
         dirname = render_output_template(
             output_template or "{title}",
             {
@@ -75,12 +75,35 @@ class OutputManager:
         (output_dir / ".logs").mkdir(parents=True, exist_ok=True)
         return output_dir
 
+    def validate_output_base_dir(self, base_dir: Path) -> Path:
+        """Resolve, create, and verify a writable user output base directory."""
+
+        base_path = base_dir.expanduser().resolve()
+        if base_path.exists() and not base_path.is_dir():
+            raise ValueError(f"Output path is not a folder: {base_path}")
+        try:
+            base_path.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            raise ValueError(f"Output folder could not be created: {base_path}") from exc
+
+        probe = base_path / f".ume_write_test_{uuid4().hex}"
+        try:
+            probe.write_text("ok", encoding="utf-8")
+        except OSError as exc:
+            raise ValueError(f"Output folder is not writable: {base_path}") from exc
+        finally:
+            try:
+                probe.unlink()
+            except FileNotFoundError:
+                pass
+        return base_path
+
     def create_local_file_output_dir(
         self, base_dir: Path, filename: str | None = None
     ) -> Path:
         """Create a structured directory for one local file workflow."""
 
-        base_path = base_dir.expanduser().resolve()
+        base_path = self.validate_output_base_dir(base_dir)
         safe_filename = _safe_slug_part(Path(filename or "local_file").stem)
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         dirname = f"local_{timestamp}_{safe_filename}"
@@ -197,6 +220,18 @@ class OutputManager:
             output_dir=str(output_dir),
             message="Output deleted.",
         )
+
+    def resolve_reveal_path(self, outputs_base_dir: Path, output_id: str) -> Path:
+        """Return the primary result file for an output, or the folder itself."""
+
+        output_dir = _resolve_output_id(outputs_base_dir, output_id)
+        if not output_dir.is_dir():
+            raise FileNotFoundError(f"Output not found: {output_id}")
+
+        for candidate in _primary_result_candidates(output_dir):
+            if candidate.is_file() and candidate.resolve().is_relative_to(output_dir):
+                return candidate.resolve()
+        return output_dir
 
 
 WINDOWS_RESERVED_NAMES = {
@@ -349,3 +384,25 @@ def _download_files(output_dir: Path) -> list[Path]:
         for item in output_dir.iterdir()
         if item.is_file() and not item.name.startswith(".")
     )
+
+
+def _primary_result_candidates(output_dir: Path) -> list[Path]:
+    candidates: list[Path] = []
+    candidates.extend(_download_files(output_dir))
+    for folder_name in ("media", "source"):
+        folder = output_dir / folder_name
+        if folder.is_dir():
+            candidates.extend(sorted(path for path in folder.iterdir() if path.is_file()))
+    for folder_name in ("transcripts", ""):
+        folder = output_dir / folder_name if folder_name else output_dir
+        if folder.is_dir():
+            candidates.extend(
+                folder / name
+                for name in (
+                    "transcript.txt",
+                    "transcript.md",
+                    "transcript.json",
+                    "summary_prompt.md",
+                )
+            )
+    return candidates

@@ -226,3 +226,38 @@ def test_output_manager_safe_delete_refuses_outputs_root(tmp_path):
 
     assert result.status == "blocked"
     assert tmp_path.exists()
+
+
+def test_output_manager_validate_output_base_expands_and_checks_writable(monkeypatch, tmp_path):
+    home_dir = tmp_path / "home"
+    monkeypatch.setenv("HOME", str(home_dir))
+
+    result = OutputManager().validate_output_base_dir(Path("~/Downloads/Universal Media Extractor"))
+
+    assert result == (home_dir / "Downloads" / "Universal Media Extractor").resolve()
+    assert result.is_dir()
+
+
+def test_output_manager_resolve_reveal_path_prefers_primary_file(tmp_path):
+    output_dir = tmp_path / "Showreel"
+    output_dir.mkdir()
+    media_file = output_dir / "Showreel.m4a"
+    media_file.write_bytes(b"audio")
+
+    result = OutputManager().resolve_reveal_path(tmp_path, "Showreel")
+
+    assert result == media_file.resolve()
+
+
+def test_output_manager_resolve_reveal_path_falls_back_to_folder(tmp_path):
+    output_dir = tmp_path / "Empty"
+    output_dir.mkdir()
+
+    result = OutputManager().resolve_reveal_path(tmp_path, "Empty")
+
+    assert result == output_dir.resolve()
+
+
+def test_output_manager_resolve_reveal_path_refuses_traversal(tmp_path):
+    with pytest.raises(ValueError):
+        OutputManager().resolve_reveal_path(tmp_path, "../outside")

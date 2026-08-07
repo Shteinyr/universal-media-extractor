@@ -1,10 +1,10 @@
 # Universal Media Extractor & Transcriber
 
-Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, Commercial Blocks 2-14, Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, and Durable Queue/Library finalization are completed or prepared as far as possible without external Apple/payment provider access.
+Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, Commercial Blocks 2-14, Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, Durable Queue/Library finalization, and Native filesystem integration are completed or prepared as far as possible without external Apple/payment provider access.
 
 This project is evaluating whether a local web app can accept a URL or local audio/video file, analyze available media variants, extract or download selected outputs, transcribe audio locally, and save structured results without paid APIs or cloud services.
 
-Current app status: local-only FastAPI backend with compact public-beta static downloader/file-manager UI, New task composer, URL analysis, preset-based output selection, selected-output download, internal/experimental Udemy course analyze/download mode, local file metadata analysis, Whisper transcription for downloaded/local files, SQLite-backed persistent job history and batch queue snapshots, output templates with duplicate handling, reveal-in-Finder output action, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, secondary Library with separate Queue and Files sections, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, macOS production `.app` build foundation, macOS signing/notarization readiness docs/scripts, DMG readiness docs/scripts, founder launch static site, beta onboarding copy, draft pricing/plans, payment provider pre-approval package, licensing model draft, generated transcript result actions, and structured output folders. Public product mode hides Course/Udemy surfaces and does not register Course endpoints. Chrome extension, final signed/notarized public `.app`, checkout, license activation/enforcement, auth, stored credentials, online service behavior, external queue, Archive Pack execution, and AI summary are not implemented.
+Current app status: local-only FastAPI backend with compact public-beta static downloader/file-manager UI, New task composer, URL analysis, preset-based output selection, selected-output download, internal/experimental Udemy course analyze/download mode, local file metadata analysis, desktop-native file/folder picking, Whisper transcription for downloaded/local files, SQLite-backed persistent job history and batch queue snapshots, output templates with duplicate handling, reveal-in-Finder output action, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, secondary Library with separate Queue and Files sections, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, macOS production `.app` build foundation, macOS signing/notarization readiness docs/scripts, DMG readiness docs/scripts, founder launch static site, beta onboarding copy, draft pricing/plans, payment provider pre-approval package, licensing model draft, generated transcript result actions, and structured output folders. Public product mode hides Course/Udemy surfaces and does not register Course endpoints. Chrome extension, final signed/notarized public `.app`, checkout, license activation/enforcement, auth, stored credentials, online service behavior, external queue, Archive Pack execution, and AI summary are not implemented.
 
 The visible UI has been finalized toward public beta: the sidebar focuses on source mode and input, output presets are user-facing, download options appear only after selecting an output, advanced save controls are collapsed, and Recent results live in a secondary Library surface.
 
@@ -41,6 +41,8 @@ GPT Pro final UI/UX tracking:
 - Docs: `docs/PUBLIC_BETA_UI_UX_REFACTOR_BLOCK_1.md`, `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`.
 - Durable Queue/Library finalization: #46 completed.
 - Doc: `docs/PUBLIC_BETA_DURABLE_QUEUE_LIBRARY.md`.
+- Native filesystem integration: #47 completed.
+- Doc: `docs/PUBLIC_BETA_NATIVE_FILESYSTEM_INTEGRATION.md`.
 
 Commercial foundation docs:
 
@@ -144,6 +146,8 @@ Run the desktop wrapper:
 ```
 
 The wrapper starts the same FastAPI app on `127.0.0.1` and opens the existing UI in a desktop window. If port `8000` is busy, it chooses the next free local port through `8020`.
+
+Desktop mode can use native file/folder pickers. `Choose file` selects a local media file without copying it just to analyze metadata, and `Choose` near `Save to` selects the output folder. Browser mode still uses browser upload and typed save paths.
 
 Development smoke helper:
 

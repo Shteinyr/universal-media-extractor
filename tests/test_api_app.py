@@ -97,6 +97,7 @@ def test_config_endpoint_defaults_to_internal_course_mode(tmp_path, monkeypatch)
         "public_product_mode": False,
         "course_mode_enabled": True,
         "session_token": body["session_token"],
+        "output_base_dir": str(api_app_module.DEFAULT_OUTPUT_BASE_DIR.resolve()),
     }
     assert len(body["session_token"]) >= 32
 
@@ -163,6 +164,7 @@ def test_static_javascript_is_available(tmp_path):
     assert "/download" in response.text
     assert "/transcribe" in response.text
     assert "/local/analyze" in response.text
+    assert "/local/analyze-path" in response.text
     assert "/local/transcribe" in response.text
     assert "/outputs" in response.text
     assert "/batch/import" in response.text
@@ -186,9 +188,12 @@ def test_static_javascript_is_available(tmp_path):
     assert "humanStatusLabel" in response.text
     assert "DEFAULT_DOWNLOAD_OUTPUT_DIR" in response.text
     assert "output_base_dir" in response.text
+    assert "downloadOutputDirInput.value = appConfig.output_base_dir" not in response.text
     assert "output_template" in response.text
     assert "duplicate_policy" in response.text
     assert "/reveal" in response.text
+    assert "choose_output_folder" in response.text
+    assert "choose_local_file" in response.text
     assert "source_title" in response.text
     assert "downloadOutputFormatSelect" in response.text
     assert "MP4" in response.text
@@ -618,6 +623,35 @@ def test_download_endpoint_uses_service_and_returns_result(tmp_path):
     assert calls["kwargs"]["job_id"] == started["job_id"]
 
 
+def test_download_endpoint_rejects_invalid_output_base_before_starting_job(tmp_path):
+    not_a_folder = tmp_path / "not-a-folder"
+    not_a_folder.write_text("file", encoding="utf-8")
+    app = create_app(raw_output_base_dir=tmp_path)
+
+    class FakeDownloadService:
+        def download_media(self, request, **kwargs):
+            raise AssertionError("download service must not be called")
+
+    app.state.download_service = FakeDownloadService()
+    client = _client(app)
+
+    response = client.post(
+        "/download",
+        json={
+            "source_url": "https://youtu.be/UUdxAp3kuKA",
+            "format_id": "140",
+            "mode": "audio",
+            "user_confirmed_rights": True,
+            "output_base_dir": str(not_a_folder),
+            "source_title": "Showreel",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "not a folder" in response.json()["detail"]
+    assert app.state.job_service.list_jobs() == []
+
+
 def test_transcribe_endpoint_uses_service_and_returns_result(tmp_path):
     app = create_app(raw_output_base_dir=tmp_path)
     calls = {}
@@ -718,6 +752,57 @@ def test_local_analyze_endpoint_saves_upload_and_returns_metadata(tmp_path):
     assert Path(body["saved_path"]).exists()
     assert calls["original_filename"] == "sample.wav"
     assert calls["output_dir"].name.startswith("local_")
+
+
+def test_local_analyze_path_endpoint_analyzes_in_place_without_copy(tmp_path):
+    output_base = tmp_path / "outputs"
+    source_dir = tmp_path / "external"
+    source_dir.mkdir()
+    source_file = source_dir / "sample.wav"
+    source_file.write_bytes(b"audio-bytes")
+    app = create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base)
+    calls = {}
+
+    class FakeLocalFileMetadataService:
+        def analyze_file(self, file_path, *, original_filename=None, output_dir=None):
+            calls["file_path"] = file_path
+            calls["original_filename"] = original_filename
+            calls["output_dir"] = output_dir
+            return LocalFileAnalyzeResult(
+                filename=original_filename,
+                saved_path=str(file_path),
+                output_dir=str(output_dir),
+                media_type="audio",
+                size_bytes=file_path.stat().st_size,
+            )
+
+    app.state.local_file_metadata_service = FakeLocalFileMetadataService()
+    client = _client(app)
+
+    response = client.post(
+        "/local/analyze-path",
+        json={"file_path": str(source_file)},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["saved_path"] == str(source_file.resolve())
+    assert Path(body["output_dir"]).is_relative_to(output_base.resolve())
+    assert calls["file_path"] == source_file.resolve()
+    assert calls["original_filename"] == "sample.wav"
+    assert not list(Path(body["output_dir"]).joinpath("source").iterdir())
+
+
+def test_local_analyze_path_endpoint_rejects_missing_file(tmp_path):
+    client = _client(create_app(raw_output_base_dir=tmp_path, output_base_dir=tmp_path / "outputs"))
+
+    response = client.post(
+        "/local/analyze-path",
+        json={"file_path": str(tmp_path / "missing.wav")},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Selected local file was not found."}
 
 
 def test_local_analyze_endpoint_rejects_empty_upload(tmp_path):
@@ -834,8 +919,51 @@ def test_local_transcribe_endpoint_rejects_file_outside_output_base(tmp_path):
 
     assert response.status_code == 400
     assert response.json() == {
-        "detail": "Saved local file must be inside the configured output folder."
+        "detail": "External local files require a managed output folder."
     }
+
+
+def test_local_transcribe_endpoint_allows_external_file_with_managed_output_dir(tmp_path):
+    outside_dir = tmp_path / "external"
+    outside_dir.mkdir()
+    input_file = outside_dir / "audio.wav"
+    input_file.write_bytes(b"audio")
+    output_base = tmp_path / "outputs"
+    output_dir = output_base / "local_20260807T000000Z_audio"
+    output_dir.mkdir(parents=True)
+    app = create_app(raw_output_base_dir=tmp_path, output_base_dir=output_base)
+    calls = {}
+
+    class FakeTranscriptionService:
+        def transcribe_file(self, request, **kwargs):
+            calls["request"] = request
+            return TranscriptionResult(
+                status="succeeded",
+                input_file_path=request.input_file_path,
+                output_dir=request.output_dir,
+                transcript_txt_path=str(output_dir / "transcripts" / "transcript.txt"),
+                transcript_text="external hello",
+            )
+
+    app.state.transcription_service = FakeTranscriptionService()
+    client = _client(app)
+
+    response = client.post(
+        "/local/transcribe",
+        json={
+            "saved_file_path": str(input_file),
+            "output_dir": str(output_dir),
+            "user_confirmed_rights": True,
+            "model": "tiny",
+            "source_kind": "audio",
+        },
+    )
+
+    assert response.status_code == 200
+    body = _wait_for_terminal_job(client, response.json()["job_id"])
+    assert body["status"] == "succeeded"
+    assert calls["request"].input_file_path == str(input_file.resolve())
+    assert calls["request"].output_dir == str(output_dir.resolve())
 
 
 def test_udemy_analyze_endpoint_uses_service(tmp_path):
@@ -948,7 +1076,7 @@ def test_output_detail_endpoint_returns_summary(tmp_path):
     assert response.json()["has_summary_prompt"] is True
 
 
-def test_reveal_output_endpoint_uses_os_open_without_shell(tmp_path, monkeypatch):
+def test_reveal_output_endpoint_selects_primary_result_file_without_shell(tmp_path, monkeypatch):
     output_base = tmp_path / "outputs"
     output_dir = output_base / "Showreel"
     output_dir.mkdir(parents=True)
@@ -969,8 +1097,9 @@ def test_reveal_output_endpoint_uses_os_open_without_shell(tmp_path, monkeypatch
     body = response.json()
     assert body["status"] == "opened"
     assert body["output_dir"] == str(output_dir.resolve())
+    assert body["revealed_path"] == str((output_dir / "clip.m4a").resolve())
     assert calls["kwargs"]["shell"] is False
-    assert str(output_dir.resolve()) in calls["command"]
+    assert str((output_dir / "clip.m4a").resolve()) in " ".join(calls["command"])
 
 
 def test_reveal_output_endpoint_refuses_missing_output(tmp_path, monkeypatch):

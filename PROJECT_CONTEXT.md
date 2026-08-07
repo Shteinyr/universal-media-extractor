@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness. Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, and Durable Queue/Library finalization are completed.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness. Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, Durable Queue/Library finalization, and Native filesystem integration are completed.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -76,6 +76,31 @@ Commercial direction after GPT Pro strategy review:
 - Block 11. Desktop Wrapper - done.
 
 ## Latest Completed Block
+
+Native filesystem integration - done.
+
+Created doc:
+
+- `docs/PUBLIC_BETA_NATIVE_FILESYSTEM_INTEGRATION.md`
+
+Result: issue #47 is implemented. Desktop mode exposes native file/folder pickers through the existing `pywebview` wrapper. Desktop-selected local files can be analyzed in place through `POST /local/analyze-path` without copying large media only for metadata. Downloads validate user-selected output folders before starting. Reveal/Open remains limited to managed output ids and prefers the primary result file where available. The main UI keeps the short default save path instead of expanding it into a long absolute path on startup.
+
+Verification:
+
+- `node --check src/universal_media_extractor/static/app.js`;
+- `node --check src/universal_media_extractor/static/option_normalizer.js`;
+- `.venv/bin/python -m pytest tests/test_api_app.py tests/test_output_manager.py tests/test_download_service.py tests/test_desktop_launcher.py -q` -> `94 passed` plus one sandbox-only socket permission failure;
+- `.venv/bin/python -m pytest -q` outside sandbox -> `216 passed`;
+- `.venv/bin/python scripts/browser_smoke.py --proof-dir proof/native_filesystem_integration`.
+
+Proof screenshots:
+
+- `proof/native_filesystem_integration/ui_initial.png`
+- `proof/native_filesystem_integration/ui_analyze_result.png`
+- `proof/native_filesystem_integration/ui_output_selected.png`
+- `proof/native_filesystem_integration/ui_library.png`
+
+Previous completed block:
 
 Durable Queue and Library finalization - done.
 
@@ -262,10 +287,10 @@ Commercial Blocks 1-14 are completed or prepared except for externally blocked A
 Recommended next user-approved commercial block, depending on user readiness:
 
 ```text
-Native filesystem integration
+Unified progress, cancel, retry, recovery
 ```
 
-Candidate direction: continue with issue #47 to improve desktop file/folder selection and reveal/open behavior. If Apple Developer Program access and signing credentials are ready, macOS signed public beta release validation can be chosen instead.
+Candidate direction: continue with issue #48 to refine long-running task behavior. If Apple Developer Program access and signing credentials are ready, macOS signed public beta release validation can be chosen instead.
 
 Do not start the next block until the user explicitly confirms. Do not start checkout or licensing enforcement until payment provider approval and user business details are ready.
 

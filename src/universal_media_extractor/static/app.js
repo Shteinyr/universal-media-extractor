@@ -4,6 +4,7 @@ const urlInput = document.querySelector("#url-input");
 const composerError = document.querySelector("#composer-error");
 const localFileInput = document.querySelector("#local-file-input");
 const localFileName = document.querySelector("#local-file-name");
+const nativeLocalFileButton = document.querySelector("#native-local-file-button");
 const batchUrlInput = urlInput;
 const batchTextFileInput = document.querySelector("#batch-text-file-input");
 const analyzeButton = document.querySelector("#analyze-button");
@@ -35,6 +36,7 @@ const selectedFormatLabel = document.querySelector("#selected-format-label");
 const selectedFormatSummary = document.querySelector("#selected-format-summary");
 const rightsCheckbox = document.querySelector("#rights-checkbox");
 const downloadOutputDirInput = document.querySelector("#download-output-dir");
+const downloadChooseFolderButton = document.querySelector("#download-choose-folder-button");
 const downloadOutputFormatSelect = document.querySelector("#download-output-format");
 const downloadOutputTemplateInput = document.querySelector("#download-output-template");
 const downloadDuplicatePolicySelect = document.querySelector("#download-duplicate-policy");
@@ -73,6 +75,7 @@ const batchList = document.querySelector("#batch-list");
 const batchPresetSelect = document.querySelector("#batch-preset");
 const batchConcurrencySelect = document.querySelector("#batch-concurrency");
 const batchOutputDirInput = document.querySelector("#batch-output-dir");
+const batchChooseFolderButton = document.querySelector("#batch-choose-folder-button");
 const batchStartButton = document.querySelector("#batch-start-button");
 const batchRetryButton = document.querySelector("#batch-retry-button");
 const batchCancelButton = document.querySelector("#batch-cancel-button");
@@ -159,6 +162,29 @@ localFileInput.addEventListener("change", async () => {
   await analyzeSelectedLocalFile(file);
 });
 
+nativeLocalFileButton?.addEventListener("click", async () => {
+  const filePath = await chooseNativeLocalFile();
+  if (filePath) {
+    localFileName.textContent = fileName(filePath);
+    clearComposerError();
+    await analyzeSelectedLocalPath(filePath);
+  }
+});
+
+downloadChooseFolderButton?.addEventListener("click", async () => {
+  const folderPath = await chooseNativeOutputFolder();
+  if (folderPath) {
+    downloadOutputDirInput.value = folderPath;
+  }
+});
+
+batchChooseFolderButton?.addEventListener("click", async () => {
+  const folderPath = await chooseNativeOutputFolder();
+  if (folderPath) {
+    batchOutputDirInput.value = folderPath;
+  }
+});
+
 batchTextFileInput?.addEventListener("change", async () => {
   const file = batchTextFileInput.files?.[0];
   if (!file) {
@@ -167,6 +193,32 @@ batchTextFileInput?.addEventListener("change", async () => {
   const text = await file.text();
   urlInput.value = text;
   await routeTextToBatch(text, "text_file");
+});
+
+form.addEventListener("dragover", (event) => {
+  event.preventDefault();
+  form.classList.add("is-dragging");
+});
+
+form.addEventListener("dragleave", () => {
+  form.classList.remove("is-dragging");
+});
+
+form.addEventListener("drop", async (event) => {
+  event.preventDefault();
+  form.classList.remove("is-dragging");
+  const file = event.dataTransfer?.files?.[0];
+  if (file) {
+    localFileName.textContent = `${file.name} · ${readableSize(file.size)}`;
+    clearComposerError();
+    await analyzeSelectedLocalFile(file);
+    return;
+  }
+  const text = event.dataTransfer?.getData("text/plain") || "";
+  if (text.trim()) {
+    urlInput.value = text.trim();
+    await routeNewTask();
+  }
 });
 
 batchStartButton?.addEventListener("click", startBatchQueue);
@@ -243,6 +295,28 @@ async function analyzeSelectedLocalFile(file) {
     });
     if (!response.ok) {
       renderFatalError("API error", await readErrorMessage(response));
+      return;
+    }
+    renderLocalAnalyzeResult(await response.json());
+  } catch (error) {
+    renderFatalError("API unavailable", normalizeNetworkError(error));
+  } finally {
+    setLocalLoading(false);
+  }
+}
+
+async function analyzeSelectedLocalPath(filePath) {
+  try {
+    setLocalLoading(true);
+    const response = await apiFetch("/local/analyze-path", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ file_path: filePath }),
+    });
+    if (!response.ok) {
+      renderFatalError("File error", await readErrorMessage(response));
       return;
     }
     renderLocalAnalyzeResult(await response.json());
@@ -480,6 +554,7 @@ revealOutputButton?.addEventListener("click", () => {
 });
 
 appConfigPromise = initializeAppConfig();
+initializeDesktopFilesystemBridge();
 
 if (recentCard && !recentCard.classList.contains("hidden")) {
   loadLibrary();
@@ -521,6 +596,50 @@ function applyFeatureConfig() {
   apiStatus.textContent = appConfig.public_product_mode
     ? "Public local build. API is locked to this device."
     : "Using local API at http://127.0.0.1:8000";
+}
+
+function initializeDesktopFilesystemBridge() {
+  document.addEventListener("pywebviewready", enableDesktopFilesystemControls);
+  window.setTimeout(enableDesktopFilesystemControls, 0);
+}
+
+function hasDesktopFilesystemBridge() {
+  return Boolean(window.pywebview?.api?.choose_output_folder);
+}
+
+function enableDesktopFilesystemControls() {
+  if (!hasDesktopFilesystemBridge()) {
+    return;
+  }
+  document.body.classList.add("has-desktop-bridge");
+  document.querySelectorAll(".desktop-only").forEach((item) => item.classList.remove("hidden"));
+  nativeLocalFileButton?.classList.remove("hidden");
+}
+
+async function chooseNativeOutputFolder() {
+  if (!hasDesktopFilesystemBridge()) {
+    apiStatus.textContent = "Folder picker is available in the desktop app. You can type a folder path here.";
+    return "";
+  }
+  try {
+    return await window.pywebview.api.choose_output_folder();
+  } catch (error) {
+    apiStatus.textContent = error instanceof Error ? error.message : "Could not open folder picker.";
+    return "";
+  }
+}
+
+async function chooseNativeLocalFile() {
+  if (!window.pywebview?.api?.choose_local_file) {
+    apiStatus.textContent = "Native file picker is available in the desktop app.";
+    return "";
+  }
+  try {
+    return await window.pywebview.api.choose_local_file();
+  } catch (error) {
+    apiStatus.textContent = error instanceof Error ? error.message : "Could not open file picker.";
+    return "";
+  }
 }
 
 function isValidUrl(value) {

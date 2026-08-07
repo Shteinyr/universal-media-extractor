@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-08-07 - Native Filesystem Integration
+
+- Implemented GitHub issue #47 from the GPT Pro final UI/UX public beta readiness set.
+- Added a `pywebview` desktop filesystem bridge for native local file and output folder selection.
+- Added `POST /local/analyze-path` so desktop-selected media files can be analyzed in place without copying large files just for metadata.
+- Added output base folder validation and write checks before download jobs start.
+- Kept the main UI default save path short as `~/Downloads/Universal Media Extractor` instead of auto-expanding it into a long absolute path.
+- Updated reveal/open behavior to select the primary saved result file when available and fall back to the output folder.
+- Preserved safe filesystem boundaries: reveal/delete remain limited to direct managed output folders and no arbitrary filesystem delete is exposed.
+- Created `docs/PUBLIC_BETA_NATIVE_FILESYSTEM_INTEGRATION.md` and updated `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`.
+- Verification: JS syntax checks passed, targeted filesystem/API tests passed except for a sandbox-only socket bind restriction, full pytest passed outside sandbox with `216 passed`, and browser smoke passed in public product mode.
+- Saved proof screenshots under `proof/native_filesystem_integration/`.
+
 ## 2026-08-07 - Durable Queue And Library Finalization
 
 - Implemented GitHub issue #46 from the GPT Pro final UI/UX public beta readiness set.

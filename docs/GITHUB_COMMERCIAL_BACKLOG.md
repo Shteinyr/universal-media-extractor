@@ -63,12 +63,12 @@ Result: implemented in Public Beta UI/UX Refactor Block 1 and documented in `doc
 Completed follow-up issues:
 
 - #46 `[P0] Durable Queue and Library finalization`
+- #47 `[P0] Native filesystem integration`
 
-Result: implemented and documented in `docs/PUBLIC_BETA_DURABLE_QUEUE_LIBRARY.md`.
+Result: #46 is implemented and documented in `docs/PUBLIC_BETA_DURABLE_QUEUE_LIBRARY.md`. #47 is implemented and documented in `docs/PUBLIC_BETA_NATIVE_FILESYSTEM_INTEGRATION.md`.
 
 Remaining follow-up issues:
 
-- #47 `[P0] Native filesystem integration`
 - #48 `[P0] Unified progress, cancel, retry, recovery`
 - #49 `[P0] Error normalization and diagnostics final pass`
 - #50 `[P1] Result and local transcription UX final pass`
@@ -78,7 +78,8 @@ All #41-#51 issues are in GitHub Project #7. After Public Beta UI/UX Refactor Bl
 
 - #42-#45 have `Roadmap Status=Done` and `Status=Done`.
 - #46 has `Roadmap Status=Done` and `Status=Done`.
-- #47-#51 remain follow-up public beta readiness work.
+- #47 has `Roadmap Status=Done` and `Status=Done`.
+- #48-#51 remain follow-up public beta readiness work.
 - `Release=Public Beta` remains the release target for this UI/UX issue group.
 
 ## Recommended GitHub Project Fields

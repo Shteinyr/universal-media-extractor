@@ -1,5 +1,7 @@
 import importlib.util
 import socket
+import sys
+import types
 from pathlib import Path
 
 
@@ -19,6 +21,7 @@ def test_run_desktop_import_does_not_start_gui():
     module = load_run_desktop_module()
 
     assert module.WINDOW_TITLE == "Universal Media Extractor"
+    assert callable(module.DesktopFilesystemApi)
     assert callable(module.find_available_port)
     assert callable(module.start_backend)
 
@@ -88,3 +91,60 @@ def test_ensure_cli_search_path_adds_homebrew_paths(monkeypatch):
     assert "/usr/local/bin" in paths
     assert "/custom/bin" in paths
     assert paths.count("/usr/bin") == 1
+
+
+def test_desktop_filesystem_api_chooses_output_folder(monkeypatch):
+    module = load_run_desktop_module()
+    calls = {}
+
+    class FileDialog:
+        FOLDER = "folder"
+        OPEN = "open"
+
+    class FakeWindow:
+        def create_file_dialog(self, **kwargs):
+            calls["kwargs"] = kwargs
+            return ("/Users/aleksandr/Downloads",)
+
+    monkeypatch.setitem(
+        sys.modules,
+        "webview",
+        types.SimpleNamespace(FileDialog=FileDialog),
+    )
+    api = module.DesktopFilesystemApi()
+    api.set_window(FakeWindow())
+
+    result = api.choose_output_folder()
+
+    assert result == "/Users/aleksandr/Downloads"
+    assert calls["kwargs"]["dialog_type"] == FileDialog.FOLDER
+    assert calls["kwargs"]["allow_multiple"] is False
+
+
+def test_desktop_filesystem_api_chooses_local_file(monkeypatch):
+    module = load_run_desktop_module()
+    calls = {}
+
+    class FileDialog:
+        FOLDER = "folder"
+        OPEN = "open"
+
+    class FakeWindow:
+        def create_file_dialog(self, **kwargs):
+            calls["kwargs"] = kwargs
+            return ("/Users/aleksandr/Movies/demo.mp4",)
+
+    monkeypatch.setitem(
+        sys.modules,
+        "webview",
+        types.SimpleNamespace(FileDialog=FileDialog),
+    )
+    api = module.DesktopFilesystemApi()
+    api.set_window(FakeWindow())
+
+    result = api.choose_local_file()
+
+    assert result == "/Users/aleksandr/Movies/demo.mp4"
+    assert calls["kwargs"]["dialog_type"] == FileDialog.OPEN
+    assert calls["kwargs"]["allow_multiple"] is False
+    assert calls["kwargs"]["file_types"]

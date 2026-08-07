@@ -134,6 +134,57 @@ def test_download_service_duplicate_policy_skip_does_not_run_ytdlp(monkeypatch, 
     assert result.downloaded_files == []
 
 
+def test_download_service_expands_user_output_folder(monkeypatch, tmp_path):
+    calls = {}
+    home_dir = tmp_path / "home"
+    monkeypatch.setenv("HOME", str(home_dir))
+
+    def fake_popen(command, **kwargs):
+        calls["command"] = command
+        return FakePopen(command, **kwargs)
+
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service.subprocess.Popen",
+        fake_popen,
+    )
+
+    request = DownloadRequest(
+        source_url="https://youtu.be/UUdxAp3kuKA",
+        format_id="140",
+        mode="audio",
+        user_confirmed_rights=True,
+        output_base_dir="~/Downloads/Universal Media Extractor",
+        source_title="Showreel",
+    )
+
+    result = DownloadService().download_media(request)
+
+    assert result.status == "succeeded"
+    assert Path(result.output_dir).is_relative_to(home_dir.resolve())
+    assert str(home_dir.resolve()) in " ".join(calls["command"])
+
+
+def test_download_service_returns_clear_error_for_unwritable_output_base(monkeypatch, tmp_path):
+    not_a_folder = tmp_path / "not-a-folder"
+    not_a_folder.write_text("file", encoding="utf-8")
+
+    def fail_popen(*args, **kwargs):
+        raise AssertionError("subprocess.Popen must not be called")
+
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service.subprocess.Popen",
+        fail_popen,
+    )
+
+    request = _request(tmp_path)
+    request.output_base_dir = str(not_a_folder)
+    result = DownloadService().download_media(request)
+
+    assert result.status == "failed"
+    assert result.errors[0].code == "permission_denied"
+    assert "not a folder" in result.errors[0].message
+
+
 def test_download_service_does_not_run_without_confirmation(monkeypatch, tmp_path):
     def fail_popen(*args, **kwargs):
         raise AssertionError("subprocess.Popen must not be called")

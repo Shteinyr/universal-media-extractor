@@ -2,6 +2,17 @@
 
 ## 2026-08-07
 
+- GitHub issue #47 Native filesystem integration is completed as public beta readiness work, not as a new roadmap block.
+- Desktop native file/folder picking uses the existing `pywebview` wrapper and does not add Electron, React/Vite, CDN assets, or a new frontend stack.
+- Browser mode remains supported through normal upload inputs and typed save paths; browser mode cannot promise a native folder picker.
+- The default public save location remains `~/Downloads/Universal Media Extractor`.
+- The main UI should keep short path labels by default and expose full absolute paths only through secondary/copy/reveal actions.
+- Desktop-selected local files may be analyzed in place, but transcription of external files must write into a managed output folder.
+- Reveal/Open and Delete actions remain constrained to direct managed output folders and must not accept arbitrary filesystem paths.
+- Native filesystem integration does not authorize licensing/payments, installer/signing/notarization, AI summary, Chrome extension, public Course/Udemy support, roadmap changes, database rewrite, or broad redesign.
+
+## 2026-08-07
+
 - GitHub issue #46 Durable Queue and Library finalization is completed as a public beta readiness block.
 - Batch groups now persist through SQLite snapshots in the existing local jobs database path.
 - Queue and Library responsibilities are separated: Queue is for batch groups/items/retry/recovery; Library is for saved managed output folders.

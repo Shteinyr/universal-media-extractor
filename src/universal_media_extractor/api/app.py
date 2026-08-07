@@ -26,6 +26,7 @@ from universal_media_extractor.api.schemas import (
     AnalyzeResponse,
     DownloadRequest,
     HealthResponse,
+    LocalFilePathAnalyzeRequest,
     LocalFileTranscriptionRequest,
     TranscriptionRequest,
     UdemyCourseAnalyzeRequest,
@@ -164,6 +165,7 @@ def create_app(
             public_product_mode=app.state.public_product_mode,
             course_mode_enabled=app.state.course_mode_enabled,
             session_token=app.state.session_token,
+            output_base_dir=str(Path(app.state.output_base_dir).expanduser().resolve()),
         )
         return JSONResponse(
             content=payload.model_dump(mode="json"),
@@ -226,8 +228,7 @@ def create_app(
     @app.post("/batch", response_model=Batch)
     def create_batch(request: BatchCreateRequest) -> Batch:
         batch_service: BatchService = app.state.batch_service
-        if request.output_base_dir:
-            app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()
+        _set_output_base_dir_from_request(app, request.output_base_dir)
         return batch_service.create_batch(request)
 
     @app.get("/batch", response_model=BatchListResult)
@@ -265,8 +266,7 @@ def create_app(
     def download(request: DownloadRequest) -> Job:
         job_service: JobService = app.state.job_service
         download_service: DownloadService = app.state.download_service
-        if request.output_base_dir:
-            app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()
+        _set_output_base_dir_from_request(app, request.output_base_dir)
         job = job_service.create_job("download", request.model_dump())
         _start_background_job(
             job_service,
@@ -299,8 +299,7 @@ def create_app(
         def udemy_download(request: UdemyCourseDownloadRequest) -> Job:
             job_service: JobService = app.state.job_service
             udemy_course_service: UdemyCourseService = app.state.udemy_course_service
-            if request.output_base_dir:
-                app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()
+            _set_output_base_dir_from_request(app, request.output_base_dir)
             job = job_service.create_job("udemy_download", request.model_dump())
             _start_background_job(
                 job_service,
@@ -338,10 +337,13 @@ def create_app(
 
         output_manager: OutputManager = app.state.output_manager
         metadata_service: LocalFileMetadataService = app.state.local_file_metadata_service
-        output_dir = output_manager.create_local_file_output_dir(
-            Path(app.state.output_base_dir),
-            filename=file.filename,
-        )
+        try:
+            output_dir = output_manager.create_local_file_output_dir(
+                Path(app.state.output_base_dir),
+                filename=file.filename,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from None
         saved_path = output_dir / "source" / _safe_filename(file.filename)
         size = await _save_upload(file, saved_path, max_bytes=app.state.max_upload_bytes)
         if size == 0:
@@ -353,16 +355,47 @@ def create_app(
             output_dir=output_dir,
         )
 
+    @app.post("/local/analyze-path", response_model=LocalFileAnalyzeResult)
+    def local_analyze_path(request: LocalFilePathAnalyzeRequest) -> LocalFileAnalyzeResult:
+        source_path = Path(request.file_path).expanduser().resolve()
+        if not source_path.is_file():
+            raise HTTPException(status_code=400, detail="Selected local file was not found.")
+
+        output_manager: OutputManager = app.state.output_manager
+        metadata_service: LocalFileMetadataService = app.state.local_file_metadata_service
+        try:
+            output_dir = output_manager.create_local_file_output_dir(
+                Path(app.state.output_base_dir),
+                filename=source_path.name,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from None
+        return metadata_service.analyze_file(
+            source_path,
+            original_filename=source_path.name,
+            output_dir=output_dir,
+        )
+
     @app.post("/local/transcribe", response_model=Job)
     def local_transcribe(request: LocalFileTranscriptionRequest) -> Job:
         saved_path = Path(request.saved_file_path).expanduser().resolve()
         if not saved_path.is_file():
             raise HTTPException(status_code=400, detail="Saved local file was not found.")
         output_base = Path(app.state.output_base_dir).expanduser().resolve()
-        if not saved_path.is_relative_to(output_base):
+        output_dir = (
+            Path(request.output_dir).expanduser().resolve()
+            if request.output_dir
+            else None
+        )
+        if output_dir is not None and not output_dir.is_relative_to(output_base):
             raise HTTPException(
                 status_code=400,
-                detail="Saved local file must be inside the configured output folder.",
+                detail="Local transcription output must stay inside the configured output folder.",
+            )
+        if not saved_path.is_relative_to(output_base) and output_dir is None:
+            raise HTTPException(
+                status_code=400,
+                detail="External local files require a managed output folder.",
             )
 
         job_service: JobService = app.state.job_service
@@ -410,6 +443,7 @@ def create_app(
         output_manager: OutputManager = app.state.output_manager
         try:
             summary = output_manager.summarize_output(Path(app.state.output_base_dir), output_id)
+            reveal_path = output_manager.resolve_reveal_path(Path(app.state.output_base_dir), output_id)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from None
         except FileNotFoundError:
@@ -417,19 +451,21 @@ def create_app(
 
         output_dir = Path(summary.output_dir).expanduser().resolve()
         try:
-            _reveal_output_path(output_dir)
+            _reveal_output_path(reveal_path)
         except OSError as exc:
             return OutputRevealResult(
                 output_id=output_id,
                 status="failed",
                 output_dir=str(output_dir),
+                revealed_path=str(reveal_path),
                 message=f"Could not reveal output folder: {exc}",
             )
         return OutputRevealResult(
             output_id=output_id,
             status="opened",
             output_dir=str(output_dir),
-            message="Output folder reveal requested.",
+            revealed_path=str(reveal_path),
+            message="Result reveal requested.",
         )
 
     @app.delete("/outputs/{output_id}", response_model=OutputDeleteResult)
@@ -498,13 +534,14 @@ def create_app(
     return app
 
 
-def _reveal_output_path(output_dir: Path) -> None:
+def _reveal_output_path(path: Path) -> None:
+    target = path.expanduser().resolve()
     if sys.platform == "darwin":
-        command = ["open", str(output_dir)]
+        command = ["open", "-R", str(target)] if target.is_file() else ["open", str(target)]
     elif sys.platform.startswith("win"):
-        command = ["explorer", str(output_dir)]
+        command = ["explorer", f"/select,{target}"] if target.is_file() else ["explorer", str(target)]
     else:
-        command = ["xdg-open", str(output_dir)]
+        command = ["xdg-open", str(target.parent if target.is_file() else target)]
     subprocess.run(
         command,
         check=False,
@@ -555,6 +592,20 @@ def _read_bool_env(name: str, *, default: bool) -> bool:
     if value is None:
         return default
     return value.strip().lower() not in {"0", "false", "no", "off"}
+
+
+def _set_output_base_dir_from_request(app: FastAPI, output_base_dir: str | None) -> None:
+    """Validate and store a user-selected output base folder."""
+
+    if not output_base_dir:
+        return
+    output_manager: OutputManager = app.state.output_manager
+    try:
+        app.state.output_base_dir = output_manager.validate_output_base_dir(
+            Path(output_base_dir)
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
 
 app = create_app()
 
@@ -612,8 +663,7 @@ def _start_retry_job(app: FastAPI, job: Job) -> None:
 
         if job.task_type == "download":
             request = DownloadRequest.model_validate(job.payload)
-            if request.output_base_dir:
-                app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()
+            _set_output_base_dir_from_request(app, request.output_base_dir)
             download_service: DownloadService = app.state.download_service
             _start_background_job(
                 job_service,
@@ -639,8 +689,7 @@ def _start_retry_job(app: FastAPI, job: Job) -> None:
                 )
                 return
             request = UdemyCourseDownloadRequest.model_validate(job.payload)
-            if request.output_base_dir:
-                app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()
+            _set_output_base_dir_from_request(app, request.output_base_dir)
             udemy_course_service: UdemyCourseService = app.state.udemy_course_service
             _start_background_job(
                 job_service,

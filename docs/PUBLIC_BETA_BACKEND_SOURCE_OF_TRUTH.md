@@ -38,6 +38,7 @@ Public mode endpoints:
 - `POST /download`
 - `POST /transcribe`
 - `POST /local/analyze`
+- `POST /local/analyze-path`
 - `POST /local/transcribe`
 - `GET /outputs`
 - `GET /outputs/{output_id}`
@@ -97,7 +98,36 @@ Implemented:
 - output detail through `GET /outputs/{output_id}`;
 - safe delete through `DELETE /outputs/{output_id}`;
 - reveal request through `POST /outputs/{output_id}/reveal`;
+- reveal prefers the primary result file when available and falls back to the output folder;
 - path validation so arbitrary paths cannot be deleted through output APIs.
+
+Default user output base:
+
+```text
+~/Downloads/Universal Media Extractor
+```
+
+The backend resolves and validates user-selected output folders before starting downloads.
+
+## Native Filesystem Integration
+
+Issue #47 adds desktop filesystem convenience without broad filesystem access.
+
+Implemented:
+
+- desktop mode exposes native file/folder pickers through the existing `pywebview` shell;
+- `POST /local/analyze-path` lets desktop-selected files be analyzed in place with `ffprobe`;
+- browser mode continues to use upload input and typed save paths;
+- the main UI keeps the short default save path instead of showing long absolute paths on startup;
+- copy/reveal actions remain user-triggered;
+- reveal/delete remain constrained to direct managed output folders.
+
+Not implemented:
+
+- arbitrary filesystem delete;
+- browser-native folder picker;
+- cloud file provider integration;
+- installer-level macOS/Windows permission setup.
 
 ## Diagnostics
 
@@ -133,5 +163,5 @@ Not implemented:
 
 ## Follow-Ups
 
-- Native filesystem integration should replace browser-only path copying/reveal limitations where needed.
 - Progress/cancel/retry recovery can be refined further for long-running media processes.
+- Native filesystem edge cases should be rechecked during Windows production packaging.

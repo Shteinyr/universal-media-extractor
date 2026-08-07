@@ -30,6 +30,7 @@ class AppConfigResponse(BaseModel):
     public_product_mode: bool = False
     course_mode_enabled: bool = True
     session_token: str = Field(min_length=32)
+    output_base_dir: str | None = None
 
 
 class HealthResponse(BaseModel):
@@ -102,3 +103,16 @@ class LocalFileTranscriptionRequest(BaseModel):
             return None
         stripped = value.strip()
         return stripped or None
+
+
+class LocalFilePathAnalyzeRequest(BaseModel):
+    """Request to analyze a user-selected local file path in desktop mode."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    file_path: str = Field(min_length=1)
+
+    @field_validator("file_path", mode="after")
+    @classmethod
+    def strip_file_path(cls, value: str) -> str:
+        return value.strip()
