@@ -85,6 +85,8 @@ const refreshOutputsButton = document.querySelector("#refresh-outputs-button");
 const queueHistoryList = document.querySelector("#queue-history-list");
 const recentResultsList = document.querySelector("#recent-results-list");
 const recentCard = document.querySelector(".recent-card");
+const settingsCard = document.querySelector("#settings-card");
+const settingsDefaultFolder = document.querySelector("#settings-default-folder");
 
 let currentAnalyzeResult = null;
 let currentLocalFileResult = null;
@@ -543,6 +545,8 @@ refreshOutputsButton?.addEventListener("click", () => {
   loadLibrary();
 });
 
+document.addEventListener("keydown", handleGlobalShortcuts);
+
 copyTranscriptButton.addEventListener("click", () => {
   copyText(transcriptCopyText(latestTranscriptResult), "Transcript copied.");
 });
@@ -602,6 +606,31 @@ function applyFeatureConfig() {
   apiStatus.textContent = appConfig.public_product_mode
     ? "Public local build. API is locked to this device."
     : "Using local API at http://127.0.0.1:8000";
+  if (settingsDefaultFolder && appConfig.output_base_dir) {
+    settingsDefaultFolder.textContent = appConfig.output_base_dir;
+  }
+}
+
+function handleGlobalShortcuts(event) {
+  const usesCommandKey = event.metaKey || event.ctrlKey;
+  if (!usesCommandKey || event.altKey || event.shiftKey) {
+    return;
+  }
+
+  const key = event.key.toLowerCase();
+  if (key === "k") {
+    event.preventDefault();
+    urlInput.focus();
+    urlInput.select();
+    return;
+  }
+
+  if (event.key === "," && settingsCard) {
+    event.preventDefault();
+    settingsCard.open = true;
+    settingsCard.scrollIntoView({ block: "nearest" });
+    settingsCard.querySelector("summary")?.focus();
+  }
 }
 
 function initializeDesktopFilesystemBridge() {

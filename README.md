@@ -1,10 +1,10 @@
 # Universal Media Extractor & Transcriber
 
-Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, Commercial Blocks 2-14, Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, Durable Queue/Library finalization, Native filesystem integration, Unified progress/cancel/retry/recovery, Error diagnostics final pass, and Result/transcription UX final pass are completed or prepared as far as possible without external Apple/payment provider access.
+Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, Commercial Blocks 2-14, Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, Durable Queue/Library finalization, Native filesystem integration, Unified progress/cancel/retry/recovery, Error diagnostics final pass, Result/transcription UX final pass, and Commercial desktop readiness final pass are completed or prepared as far as possible without external Apple/payment provider access.
 
 This project is evaluating whether a local web app can accept a URL or local audio/video file, analyze available media variants, extract or download selected outputs, transcribe audio locally, and save structured results without paid APIs or cloud services.
 
-Current app status: local-only FastAPI backend with compact public-beta static downloader/file-manager UI, New task composer, URL analysis, preset-based output selection, selected-output download, internal/experimental Udemy course analyze/download mode, local file metadata analysis, desktop-native file/folder picking, Whisper transcription for downloaded/local files, SQLite-backed persistent job history and batch queue snapshots, normalized job stages/progress modes, normalized public-beta error categories, redacted local diagnostics bundles, honest determinate/indeterminate progress display, output templates with duplicate handling, reveal-in-Finder output action, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts with safe temp cleanup, secondary Library with separate Queue and Files sections, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, macOS production `.app` build foundation, macOS signing/notarization readiness docs/scripts, DMG readiness docs/scripts, founder launch static site, beta onboarding copy, draft pricing/plans, payment provider pre-approval package, licensing model draft, user-facing saved result cards with filename/container/size/location, selected-format transcript copy actions, and structured output folders. Public product mode hides Course/Udemy surfaces and does not register Course endpoints. Chrome extension, final signed/notarized public `.app`, checkout, license activation/enforcement, auth, stored credentials, online service behavior, external queue, Archive Pack execution, and AI summary are not implemented.
+Current app status: local-only FastAPI backend with compact public-beta static downloader/file-manager UI, New task composer, URL analysis, preset-based output selection, selected-output download, internal/experimental Udemy course analyze/download mode, local file metadata analysis, desktop-native file/folder picking, Whisper transcription for downloaded/local files, SQLite-backed persistent job history and batch queue snapshots, normalized job stages/progress modes, normalized public-beta error categories, redacted local diagnostics bundles, honest determinate/indeterminate progress display, output templates with duplicate handling, reveal-in-Finder output action, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts with safe temp cleanup, secondary Library with separate Queue and Files sections, compact public-beta Settings, system light/dark appearance support, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, macOS production `.app` build foundation, macOS signing/notarization readiness docs/scripts, DMG readiness docs/scripts, founder launch static site, beta onboarding copy, draft pricing/plans, payment provider pre-approval package, licensing model draft, user-facing saved result cards with filename/container/size/location, selected-format transcript copy actions, and structured output folders. Public product mode hides Course/Udemy surfaces and does not register Course endpoints. Chrome extension, final signed/notarized public `.app`, automatic app updater, atomic media-engine updater, Windows installer, checkout, license activation/enforcement, auth, stored credentials, online service behavior, external queue, Archive Pack execution, and AI summary are not implemented.
 
 The visible UI has been finalized toward public beta: the sidebar focuses on source mode and input, output presets are user-facing, download options appear only after selecting an output, advanced save controls are collapsed, and Recent results live in a secondary Library surface.
 
@@ -49,6 +49,8 @@ GPT Pro final UI/UX tracking:
 - Doc: `docs/PUBLIC_BETA_ERROR_DIAGNOSTICS_FINAL_PASS.md`.
 - Result and local transcription UX final pass: #50 completed.
 - Doc: `docs/PUBLIC_BETA_RESULT_TRANSCRIPTION_UX_FINAL_PASS.md`.
+- Commercial desktop readiness final pass: #51 completed.
+- Docs: `docs/PUBLIC_BETA_COMMERCIAL_DESKTOP_READINESS.md`, `docs/APP_AND_MEDIA_ENGINE_UPDATE_PLAN.md`, `docs/WINDOWS_PRODUCTION_BUILD_PATH.md`.
 
 Commercial foundation docs:
 
@@ -212,6 +214,29 @@ Start here:
 - `docs/MACOS_SIGNING_NOTARIZATION_TROUBLESHOOTING.md`
 
 Do not ship the unsigned local DMG as a public release.
+
+## Commercial Desktop Readiness
+
+The final public-beta desktop readiness pass is documented in:
+
+```text
+docs/PUBLIC_BETA_COMMERCIAL_DESKTOP_READINESS.md
+```
+
+Related release-path docs:
+
+- `docs/APP_AND_MEDIA_ENGINE_UPDATE_PLAN.md`
+- `docs/WINDOWS_PRODUCTION_BUILD_PATH.md`
+
+Desktop readiness smoke:
+
+```bash
+.venv/bin/python scripts/browser_smoke.py \
+  --proof-dir proof/commercial_desktop_readiness_final_pass \
+  --desktop-readiness
+```
+
+This verifies the UI keyboard path, system light theme rendering, high-DPI screenshot, Settings access, and narrow-window overflow. It does not download or transcribe unless `--full-flow` is also passed.
 
 ## Public Beta QA Round
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-08-07 - Commercial Desktop Readiness Final Pass
+
+- Implemented GitHub issue #51 from the GPT Pro final UI/UX public beta readiness set.
+- Added a compact public-beta Settings surface with implemented defaults only: downloads, appearance, app updates, media engine updates, and privacy.
+- Kept License absent from the UI because checkout/licensing is not ready.
+- Added system light/dark appearance support through semantic CSS tokens.
+- Added keyboard shortcuts for `New task` focus and opening Settings.
+- Extended browser smoke with `--desktop-readiness` to verify keyboard analyze flow, light high-DPI rendering, Settings keyboard access, and narrow resize overflow.
+- Created `docs/PUBLIC_BETA_COMMERCIAL_DESKTOP_READINESS.md`, `docs/APP_AND_MEDIA_ENGINE_UPDATE_PLAN.md`, and `docs/WINDOWS_PRODUCTION_BUILD_PATH.md`.
+- Confirmed automatic app updater, atomic media-engine updater, signed/notarized public macOS artifact, Windows installer, checkout, and license activation remain not implemented or externally blocked.
+- Verification: JS syntax checks passed, Python compile checks passed, full pytest passed outside sandbox with `232 passed`, and browser desktop-readiness smoke passed in public product mode.
+- Saved proof screenshots under `proof/commercial_desktop_readiness_final_pass/`.
+
 ## 2026-08-07 - Public Beta Result And Local Transcription UX Final Pass
 
 - Implemented GitHub issue #50 from the GPT Pro final UI/UX public beta readiness set.

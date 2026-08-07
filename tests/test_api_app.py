@@ -155,6 +155,12 @@ def test_static_index_is_available(tmp_path):
     assert "Library" in response.text
     assert "Queue and files" in response.text
     assert "No queues yet" in response.text
+    assert "Settings" in response.text
+    assert "Public beta defaults" in response.text
+    assert "App updates" in response.text
+    assert "Media engine updates" in response.text
+    assert "Uses your system light or dark appearance" in response.text
+    assert "License" not in response.text
     assert 'src="/static/option_normalizer.js"' in response.text
     assert 'src="/static/app.js"' in response.text
     for forbidden in ["Course", "Udemy", "cookies", "Chrome session", "Manual cookies"]:
@@ -205,6 +211,8 @@ def test_static_javascript_is_available(tmp_path):
     assert "/reveal" in response.text
     assert "choose_output_folder" in response.text
     assert "choose_local_file" in response.text
+    assert "handleGlobalShortcuts" in response.text
+    assert "settingsCard.open = true" in response.text
     assert "source_title" in response.text
     assert "downloadOutputFormatSelect" in response.text
     assert "MP4" in response.text
@@ -229,6 +237,17 @@ def test_static_javascript_is_available(tmp_path):
     assert "Technical details" in response.text
     for forbidden in ["/udemy/analyze", "/udemy/download", "Course mode", "Udemy course", "Chrome session", "Manual cookies"]:
         assert forbidden not in response.text
+
+
+def test_static_css_supports_system_appearance(tmp_path):
+    client = _client(create_app(raw_output_base_dir=tmp_path))
+
+    response = client.get("/static/styles.css")
+
+    assert response.status_code == 200
+    assert "color-scheme: light dark" in response.text
+    assert "@media (prefers-color-scheme: light)" in response.text
+    assert ".settings-card" in response.text
 
 
 def test_static_option_normalizer_is_available(tmp_path):

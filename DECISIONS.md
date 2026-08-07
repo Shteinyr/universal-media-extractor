@@ -2,6 +2,15 @@
 
 ## 2026-08-07
 
+- GitHub issue #51 Commercial desktop readiness final pass is completed as public beta readiness work, not as a new roadmap block.
+- Public beta Settings may show only implemented defaults and prepared release paths; it must not expose raw backend ports, API tokens, cookies/auth controls, Course/Udemy controls, or premature license controls.
+- App updates and media-engine updates must remain separate concepts with separate future validation/rollback paths.
+- Light/dark appearance follows the OS in public beta; no custom theme settings are added until settings persistence is intentionally implemented.
+- License UI remains absent until checkout/licensing activation is ready.
+- macOS signing/notarization remains externally blocked on Apple Developer ID credentials; Windows installer work remains a future packaging track requiring Windows validation.
+
+## 2026-08-07
+
 - GitHub issue #50 Result and local transcription UX final pass is completed as public beta readiness work, not as a new roadmap block.
 - Saved result cards should show user-facing file details: filename, container, size when available, and location.
 - Transcription remains local-only through Whisper CLI and should be presented as `Transcribe locally`.

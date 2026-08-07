@@ -28,12 +28,16 @@ def main() -> int:
 
     with sync_playwright() as playwright:
         browser = launch_browser(playwright, headless=not args.headed)
-        page = browser.new_page(viewport={"width": 1440, "height": 1000})
+        context = browser.new_context(viewport={"width": 1440, "height": 1000})
+        page = context.new_page()
         try:
             run_analysis_smoke(page, args.base_url, args.url, proof_dir)
             if args.full_flow:
                 run_full_flow(page, proof_dir)
+            if args.desktop_readiness:
+                run_desktop_readiness_smoke(browser, args.base_url, args.url, proof_dir)
         finally:
+            context.close()
             browser.close()
 
     print(f"Browser smoke completed. Screenshots: {proof_dir.resolve()}")
@@ -65,6 +69,11 @@ def parse_args() -> argparse.Namespace:
         "--full-flow",
         action="store_true",
         help="Also download the selected audio format and transcribe it. Off by default.",
+    )
+    parser.add_argument(
+        "--desktop-readiness",
+        action="store_true",
+        help="Also check keyboard flow, system light theme, high-DPI, and narrow resizing.",
     )
     return parser.parse_args()
 
@@ -120,6 +129,37 @@ def run_full_flow(page: Page, proof_dir: Path) -> None:
     page.screenshot(path=proof_dir / "ui_transcribe_result.png", full_page=True)
 
 
+def run_desktop_readiness_smoke(browser, base_url: str, source_url: str, proof_dir: Path) -> None:
+    light_context = browser.new_context(
+        viewport={"width": 1280, "height": 820},
+        color_scheme="light",
+        device_scale_factor=2,
+    )
+    try:
+        page = light_context.new_page()
+        page.goto(base_url, wait_until="networkidle")
+        page.get_by_role("textbox", name="New task").wait_for(timeout=10_000)
+        page.screenshot(path=proof_dir / "ui_light_hidpi_initial.png", full_page=True)
+
+        page.get_by_role("textbox", name="New task").focus()
+        page.keyboard.insert_text(source_url)
+        page.keyboard.press("Tab")
+        page.keyboard.press("Enter")
+        page.locator("#media-title").get_by_text("Showreel", exact=True).wait_for(timeout=90_000)
+        assert_visible_text(page, "Choose output")
+        page.screenshot(path=proof_dir / "ui_keyboard_analyze_result.png", full_page=True)
+
+        page.keyboard.press("Meta+,")
+        assert_visible_text(page, "Public beta defaults")
+        page.screenshot(path=proof_dir / "ui_settings_keyboard.png", full_page=True)
+
+        page.set_viewport_size({"width": 390, "height": 900})
+        assert_no_horizontal_overflow(page)
+        page.screenshot(path=proof_dir / "ui_narrow_resize.png", full_page=True)
+    finally:
+        light_context.close()
+
+
 def assert_visible_text(page: Page, text: str) -> None:
     page.get_by_text(text, exact=False).first.wait_for(timeout=10_000)
 
@@ -134,6 +174,14 @@ def wait_for_status_text(page: Page, selector: str, text: str, *, timeout_ms: in
         except PlaywrightTimeoutError as exc:
             last_error = exc
     raise TimeoutError(f"Timed out waiting for {text!r} in {selector}") from last_error
+
+
+def assert_no_horizontal_overflow(page: Page) -> None:
+    has_overflow = page.evaluate(
+        "() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1"
+    )
+    if has_overflow:
+        raise AssertionError("Page has horizontal overflow in narrow desktop viewport.")
 
 
 if __name__ == "__main__":

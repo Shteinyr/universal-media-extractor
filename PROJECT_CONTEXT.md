@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness. Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, Durable Queue/Library finalization, Native filesystem integration, Unified progress/cancel/retry/recovery, Error normalization/diagnostics final pass, and Result/local transcription UX final pass are completed.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness. Public Beta QA Round, Public Beta UI / UX Finalization Implementation, Public Beta UI/UX Refactor Block 1, Durable Queue/Library finalization, Native filesystem integration, Unified progress/cancel/retry/recovery, Error normalization/diagnostics final pass, Result/local transcription UX final pass, and Commercial desktop readiness final pass are completed.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -77,6 +77,38 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
+Commercial desktop readiness final pass - done.
+
+Created doc:
+
+- `docs/PUBLIC_BETA_COMMERCIAL_DESKTOP_READINESS.md`
+- `docs/APP_AND_MEDIA_ENGINE_UPDATE_PLAN.md`
+- `docs/WINDOWS_PRODUCTION_BUILD_PATH.md`
+
+Result: issue #51 is implemented. The public beta UI now has a compact Settings surface limited to implemented defaults and prepared release paths. App updates and media-engine updates are documented as separate future systems. License UI remains absent until licensing is ready. System light/dark appearance, keyboard Settings/New task shortcuts, and desktop readiness browser smoke checks are added.
+
+Verification:
+
+- `node --check src/universal_media_extractor/static/app.js`;
+- `node --check src/universal_media_extractor/static/option_normalizer.js`;
+- `python3 -m py_compile scripts/browser_smoke.py scripts/run_desktop.py scripts/build_macos_app.py`;
+- `.venv/bin/python -m pytest -q` outside sandbox -> `232 passed`;
+- `.venv/bin/python scripts/browser_smoke.py --proof-dir proof/commercial_desktop_readiness_final_pass --desktop-readiness` in public product mode.
+
+Proof screenshots:
+
+- `proof/commercial_desktop_readiness_final_pass/ui_initial.png`
+- `proof/commercial_desktop_readiness_final_pass/ui_invalid_url.png`
+- `proof/commercial_desktop_readiness_final_pass/ui_analyze_result.png`
+- `proof/commercial_desktop_readiness_final_pass/ui_output_selected.png`
+- `proof/commercial_desktop_readiness_final_pass/ui_library.png`
+- `proof/commercial_desktop_readiness_final_pass/ui_light_hidpi_initial.png`
+- `proof/commercial_desktop_readiness_final_pass/ui_keyboard_analyze_result.png`
+- `proof/commercial_desktop_readiness_final_pass/ui_settings_keyboard.png`
+- `proof/commercial_desktop_readiness_final_pass/ui_narrow_resize.png`
+
+Previous completed block:
+
 Result and local transcription UX final pass - done.
 
 Created doc:
@@ -84,24 +116,6 @@ Created doc:
 - `docs/PUBLIC_BETA_RESULT_TRANSCRIPTION_UX_FINAL_PASS.md`
 
 Result: issue #50 is implemented. Saved result cards show actual filename, container, size when available, and location. `Transcribe locally` is enabled only for transcribable media. Transcript preview stays readable, copy actions target the selected transcript output content, and only implemented transcript formats are exposed. Whisper model copy now communicates speed, disk, and quality tradeoffs.
-
-Verification:
-
-- `node --check src/universal_media_extractor/static/app.js`;
-- `python3 -m py_compile scripts/browser_smoke.py src/universal_media_extractor/models/download.py src/universal_media_extractor/models/transcript.py src/universal_media_extractor/services/download_service.py src/universal_media_extractor/services/transcription_service.py`;
-- `.venv/bin/python -m pytest tests/test_download_service.py tests/test_transcription_service.py tests/test_api_app.py -q` -> `78 passed`;
-- `.venv/bin/python -m pytest -q` outside sandbox -> `231 passed`;
-- `.venv/bin/python scripts/browser_smoke.py --proof-dir proof/result_transcription_ux_final_pass --full-flow`.
-
-Proof screenshots:
-
-- `proof/result_transcription_ux_final_pass/ui_initial.png`
-- `proof/result_transcription_ux_final_pass/ui_invalid_url.png`
-- `proof/result_transcription_ux_final_pass/ui_analyze_result.png`
-- `proof/result_transcription_ux_final_pass/ui_output_selected.png`
-- `proof/result_transcription_ux_final_pass/ui_download_result.png`
-- `proof/result_transcription_ux_final_pass/ui_transcribe_result.png`
-- `proof/result_transcription_ux_final_pass/ui_library.png`
 
 Previous completed block:
 
@@ -279,10 +293,9 @@ GitHub:
 - #43 `[P0] Backend source-of-truth audit and endpoint inventory`
 - #44 `[P0] Universal New Task composer`
 - #45 `[P0] Stable semantic preset resolver`
-- #46-#50 completed follow-up final UI/UX readiness tasks
-- #51 remaining follow-up final UI/UX readiness task
+- #46-#51 completed follow-up final UI/UX readiness tasks
 
-Public Beta UI/UX Refactor Block 1 issues #42-#45 are completed; follow-up issues #46-#50 are completed public beta readiness work; #51 remains later public beta readiness work.
+Public Beta UI/UX Refactor Block 1 issues #42-#45 are completed; follow-up issues #46-#51 are completed public beta readiness work.
 
 Result: the current beta baseline passed browser/API/local-file/batch/diagnostics/output QA. Verified JS syntax, `196 passed`, browser smoke screenshots, URL analyze/download/transcribe, local synthetic file analyze/transcribe, one-item batch download, diagnostics redaction, output safe delete, and public mode Course hiding. No blocker product bug was found. Documented in `docs/PUBLIC_BETA_QA_ROUND.md`.
 
@@ -346,15 +359,15 @@ Udemy command path is documented in `docs/UDEMY_COURSE_EXPORT.md`.
 
 ## Planned Next Block
 
-Commercial Blocks 1-14 are completed or prepared except for externally blocked Apple/payment work and the still-open Archive Pack execution issue. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
+Commercial Blocks 1-14 and GPT Pro final public-beta readiness issues #42-#51 are completed or prepared except for externally blocked Apple/payment work and the still-open Archive Pack execution issue. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy recommends prioritizing commercial packaging/release readiness before extension work.
 
 Recommended next user-approved commercial block, depending on user readiness:
 
 ```text
-Commercial desktop readiness final pass
+User decision required for next commercial block
 ```
 
-Candidate direction: continue with issue #51 to complete the remaining commercial desktop readiness review. If Apple Developer Program access and signing credentials are ready, macOS signed public beta release validation can be chosen instead.
+Candidate directions: Archive Pack execution, macOS signed public beta release validation after Apple Developer credentials are ready, Windows build planning/proof, or public beta visual polish if the user wants interface work next.
 
 Do not start the next block until the user explicitly confirms. Do not start checkout or licensing enforcement until payment provider approval and user business details are ready.
 

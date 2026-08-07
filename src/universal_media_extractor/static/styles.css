@@ -1,5 +1,5 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
   --bg: #111213;
   --sidebar: #151617;
   --panel: #1a1c1f;
@@ -19,6 +19,29 @@
   --focus: rgba(111, 211, 190, 0.28);
   --shadow: 0 20px 50px rgba(0, 0, 0, 0.24);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f4f5f2;
+    --sidebar: #edeFEB;
+    --panel: #ffffff;
+    --panel-soft: #f1f3f2;
+    --panel-raised: #e8ecea;
+    --text: #161a1d;
+    --muted: #626a73;
+    --faint: #8a929b;
+    --line: #d7ddd9;
+    --line-strong: #bdc7c1;
+    --accent: #227d70;
+    --accent-soft: rgba(34, 125, 112, 0.11);
+    --accent-strong: #125f55;
+    --warning: #8a5b13;
+    --error: #b43d3d;
+    --success: #28764b;
+    --focus: rgba(34, 125, 112, 0.24);
+    --shadow: 0 18px 42px rgba(27, 38, 35, 0.11);
+  }
 }
 
 * {
@@ -451,14 +474,16 @@ button:disabled {
   padding: 0;
 }
 
-.library-card {
+.library-card,
+.settings-card {
   margin-top: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(26, 28, 31, 0.72);
+  background: var(--panel);
 }
 
-.library-card summary {
+.library-card summary,
+.settings-card summary {
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -468,26 +493,31 @@ button:disabled {
   list-style: none;
 }
 
-.library-card summary::-webkit-details-marker {
+.library-card summary::-webkit-details-marker,
+.settings-card summary::-webkit-details-marker {
   display: none;
 }
 
-.library-card summary::after {
+.library-card summary::after,
+.settings-card summary::after {
   content: "Open";
   color: var(--muted);
   font-size: 0.72rem;
   font-weight: 750;
 }
 
-.library-card[open] summary {
+.library-card[open] summary,
+.settings-card[open] summary {
   border-bottom: 1px solid var(--line);
 }
 
-.library-card[open] summary::after {
+.library-card[open] summary::after,
+.settings-card[open] summary::after {
   content: "Close";
 }
 
-.library-card summary span:first-child {
+.library-card summary span:first-child,
+.settings-card summary span:first-child {
   color: var(--text);
   font-size: 0.82rem;
   font-weight: 750;
@@ -495,6 +525,53 @@ button:disabled {
 
 .library-content {
   padding: 12px 14px 14px;
+}
+
+.settings-content {
+  display: grid;
+  gap: 12px;
+  padding: 12px 14px 14px;
+}
+
+.settings-section {
+  display: grid;
+  gap: 7px;
+}
+
+.settings-section h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.settings-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.settings-list div {
+  display: grid;
+  grid-template-columns: minmax(88px, 0.42fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+
+.settings-list dt {
+  color: var(--text);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.settings-list dd,
+.settings-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
 }
 
 .library-content .group-header {
@@ -1283,6 +1360,11 @@ button:disabled {
 
   button {
     width: 100%;
+  }
+
+  .settings-list div {
+    grid-template-columns: 1fr;
+    gap: 2px;
   }
 }
 
