@@ -1,7 +1,7 @@
 (function attachOptionNormalizer(global) {
   "use strict";
 
-  const MIN_VIDEO_QUALITY = 1080;
+  const MIN_VIDEO_QUALITY = 720;
 
   function buildFormatPickerData(result) {
     const mediaOptions = result?.media_options || {};
@@ -28,21 +28,20 @@
     const source = buildFormatPickerData(result);
     const bestVideo = chooseBestVideo(source.video);
     const fullHdVideo = chooseVideoByQuality(source.video, 1080);
-    const smallerVideo = chooseSmallerVideo(source.video);
-    const audioM4a = chooseAudioForContainer(source.audio, "m4a") || chooseBestAudio(source.audio);
-    const audioMp3 = chooseBestAudio(source.audio);
+    const upTo720Video = chooseVideoAtOrBelow(source.video, 720);
+    const m4aAudio = chooseAudioForContainer(source.audio, "m4a") || chooseBestAudio(source.audio);
+    const mp3Audio = chooseBestAudio(source.audio);
     const subtitles = chooseBestSubtitle(source.subtitles);
 
     return {
-      presets: [
-        videoPreset("best_video", "Best Video", "Highest quality available", bestVideo),
-        videoPreset("video_1080p", "1080p", "Standard full HD video", fullHdVideo),
-        videoPreset("smaller_video", "Smaller Video", "Smallest available video at 1080p or higher", smallerVideo),
-        audioPreset("audio_m4a", "Audio M4A", "Good quality, Apple-friendly audio", audioM4a, "m4a"),
-        audioPreset("audio_mp3", "Audio MP3", "Most compatible audio file", audioMp3, "mp3"),
+      presets: dedupeUserFacingPresets([
+        videoPreset("best_video", "Best video", "Highest quality playable file", bestVideo),
+        videoPreset("video_1080p", "1080p video", "Standard full HD playable file", fullHdVideo),
+        videoPreset("video_720p", "Up to 720p", "Smaller playable video file", upTo720Video),
+        audioPreset("audio_m4a", "Audio M4A", "Save the audio track", m4aAudio, "m4a"),
+        audioPreset("audio_mp3", "Audio MP3", "Convert audio to MP3", mp3Audio, "mp3"),
         subtitlePreset("subtitles", "Subtitles", "Save available subtitles", subtitles),
-        unavailablePreset("archive_pack", "Archive Pack", "Planned: media, subtitles, metadata, and transcript together."),
-      ],
+      ]),
       source,
     };
   }
@@ -145,15 +144,17 @@
       .sort((a, b) => videoPreferenceScore(b) - videoPreferenceScore(a))[0] || null;
   }
 
-  function chooseSmallerVideo(options) {
-    const candidates = toArray(options).filter((option) => videoQualityNumber(option) >= MIN_VIDEO_QUALITY);
+  function chooseVideoAtOrBelow(options, targetQuality) {
+    const candidates = toArray(options).filter((option) => {
+      const quality = videoQualityNumber(option);
+      return quality > 0 && quality <= targetQuality;
+    });
     return candidates.sort((a, b) => {
-      const aSize = Number(a.filesize || a.filesize_approx || Number.MAX_SAFE_INTEGER);
-      const bSize = Number(b.filesize || b.filesize_approx || Number.MAX_SAFE_INTEGER);
-      if (aSize !== bSize) {
-        return aSize - bSize;
+      const qualityDiff = videoQualityNumber(b) - videoQualityNumber(a);
+      if (qualityDiff !== 0) {
+        return qualityDiff;
       }
-      return videoQualityNumber(a) - videoQualityNumber(b);
+      return videoPreferenceScore(b) - videoPreferenceScore(a);
     })[0] || null;
   }
 
@@ -218,6 +219,25 @@
       String(option.language || "all").toUpperCase(),
       option.subtitle_type === "automatic" ? "Auto captions" : "Manual subtitles",
     ].filter(Boolean).join(" · ");
+  }
+
+  function dedupeUserFacingPresets(presets) {
+    const seenVideoOutputs = new Set();
+    return toArray(presets).filter((preset) => {
+      if (!preset.preset_available || !["video", "combined"].includes(preset.type)) {
+        return true;
+      }
+      const key = [
+        preset.preset_output_format || normalizedContainer(preset),
+        videoQualityNumber(preset),
+        preset.format_id || "",
+      ].join("|");
+      if (seenVideoOutputs.has(key)) {
+        return false;
+      }
+      seenVideoOutputs.add(key);
+      return true;
+    });
   }
 
   function readableSize(size) {

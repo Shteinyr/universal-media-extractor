@@ -6,7 +6,7 @@ Universal Media Extractor & Transcriber is intended to be a local web app with a
 
 ## Current Stage
 
-Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Commercial Block 2 issues #6-#7 are completed. Commercial Block 3 issue #9 is completed. Commercial Block 4 issue #8 is completed. Commercial Block 5 issue #10 is completed. Commercial Block 6 issue #11 is completed. Commercial Blocks 7-10 prepared macOS packaging/public release readiness up to the Apple Developer ID blocker. Commercial Block 11 prepared the founder launch surface around issues #19-#21. Commercial Block 12 prepared payment provider pre-approval and licensing model docs for issues #22-#23. Commercial Block 13 added batch queue foundation, playlist/clipboard/text import, controlled concurrency, and retry failed items for issues #25-#28. Issue #29 Archive Pack remains open/planned. Commercial Block 14 polished the existing static UI for public beta readiness without API or roadmap changes. Public beta security/diagnostics/QA sanity checks are completed without roadmap changes: `/config` and diagnostics use no-store headers, non-local Host rejection is covered, and failed/cancelled background jobs expose a local redacted diagnostics copy action. Beta website/download flow packaging is documented without deploying a production site, adding checkout, changing installers, or changing core app code. Public Beta QA Round is completed with browser/API/local-file/batch/diagnostics/output proof and no blocker product bugs found. Recommended next work remains Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work. After Block 12, real checkout/licensing remains gated by provider approval and user business details.
+Blocks 1-11 completed. Roadmap v2 documented. GPT Pro commercial strategy imported. Commercial Foundation issues #1-#5 are completed. Commercial Block 2 issues #6-#7 are completed. Commercial Block 3 issue #9 is completed. Commercial Block 4 issue #8 is completed. Commercial Block 5 issue #10 is completed. Commercial Block 6 issue #11 is completed. Commercial Blocks 7-10 prepared macOS packaging/public release readiness up to the Apple Developer ID blocker. Commercial Block 11 prepared the founder launch surface around issues #19-#21. Commercial Block 12 prepared payment provider pre-approval and licensing model docs for issues #22-#23. Commercial Block 13 added batch queue foundation, playlist/clipboard/text import, controlled concurrency, and retry failed items for issues #25-#28. Issue #29 Archive Pack remains open/planned. Commercial Block 14 polished the existing static UI for public beta readiness without API or roadmap changes. Public beta security/diagnostics/QA sanity checks are completed without roadmap changes: `/config` and diagnostics use no-store headers, non-local Host rejection is covered, and failed/cancelled background jobs expose a local redacted diagnostics copy action. Beta website/download flow packaging is documented without deploying a production site, adding checkout, changing installers, or changing core app code. Public Beta QA Round and Public Beta UI / UX Finalization Implementation are completed. Public Beta UI/UX Refactor Block 1 issues #42-#45 are completed: public Course surfaces are removed, public Course endpoints are disabled, the public UI uses one New task composer, and output choices use stable semantic presets. Recommended next work remains Public Beta Readiness from the GitHub commercial roadmap, not automatic Chrome Extension work. After Block 12, real checkout/licensing remains gated by provider approval and user business details.
 
 ## Already Installed And Reported By User
 
@@ -117,6 +117,44 @@ Public beta security/diagnostics/QA sanity checks add no-store headers for token
 Beta website/download flow is documented in `docs/BETA_WEBSITE_DOWNLOAD_FLOW.md`. It defines public positioning, landing/download page sections, macOS/Windows availability copy, early-access CTA, privacy/no-cloud copy, limitations, and support/diagnostics messaging. No production website, checkout, signing, licensing, or core app code was changed.
 
 Public Beta QA Round is documented in `docs/PUBLIC_BETA_QA_ROUND.md`. It verified the current beta baseline across browser launch, URL analyze/download/transcribe, local synthetic file analyze/transcribe, one-item batch, diagnostics redaction, output safe delete, public mode Course hiding, JS syntax, pytest, and browser smoke proof. No product blocker or runtime regression was found.
+
+Public Beta UI / UX Finalization Implementation is documented in `docs/PUBLIC_BETA_UI_UX_FINALIZATION_IMPLEMENTATION.md`. It implements the approved blueprint without backend/API/roadmap changes: Link/File/Batch stay clear, Course remains internal/config-gated, URL output presets are simplified to Best video, 1080p video, Smaller video, Audio only, and Subtitles, save options are compact and appear after selection, advanced save controls are collapsed, and Recent results moved into a secondary Library surface. Verification: JS syntax checks, browser smoke, and `.venv/bin/python -m pytest -q` with `196 passed`.
+
+Public Beta UI/UX Refactor Block 1 is documented in `docs/PUBLIC_BETA_UI_UX_REFACTOR_BLOCK_1.md` and `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`. It implements issues #42-#45: public builds hide Course/Udemy/cookie surfaces and do not register internal Course routes, the public UI starts from a single New task composer, and output presets are stable/deduped with `Up to 720p`, `Audio M4A`, and `Audio MP3`. Verification: JS syntax checks, targeted tests with `62 passed`, full pytest with `200 passed`, and browser smoke proof under `proof/final_ui_ux_refactor_block_1/`.
+
+UI/UX research package for GPT Pro was expanded into a full context pack. It preserves the GPT Pro strategy competitor list as the baseline, adds supplemental references, maps the current product functions and likely screens, captures public competitor visual references, captures current app UI screenshots, and prepares a copy-ready GPT Pro synthesis prompt. Docs:
+
+- `docs/UI_UX_COMPETITOR_VISUAL_AUDIT.md`
+- `docs/UI_UX_PRODUCT_FUNCTION_INVENTORY.md`
+- `docs/UI_UX_REFERENCE_SCREEN_MAP.md`
+- `docs/UI_UX_GPT_PRO_BRIEF.md`
+- `docs/UI_UX_GPT_PRO_CONTEXT_PACK.md`
+- `docs/UI_UX_COMPETITOR_VISUAL_LOGIC_PACK.md`
+- `docs/UI_UX_OUR_APP_VISUAL_LOGIC_PACK.md`
+- `docs/UI_UX_GPT_PRO_ANALYSIS_PROMPT.md`
+
+Proof screenshots:
+
+- `proof/ui_ux_gpt_pro_pack/competitors/`
+- `proof/ui_ux_gpt_pro_pack/our_app/`
+
+Public Beta UI / UX Finalization Blueprint was created after the research package. It defines the final public beta screen structure, user chains, visible buttons, advanced/internal areas, output preset placement, save/format/transcript controls, progress/error/diagnostics behavior, Library/History role, public-build Course/Udemy hiding, competitor patterns to borrow, patterns not to copy, and acceptance criteria for the next implementation block. Doc:
+
+- `docs/PUBLIC_BETA_UI_UX_FINALIZATION_BLUEPRINT.md`
+
+GPT Pro final UI/UX commercial spec was imported and tracked. It recommends moving the public beta UI toward `New task -> Queue -> Library -> Settings`, with `Link/File/Batch` treated as source types rather than the top-level mental model. Docs:
+
+- `docs/UNIVERSAL_MEDIA_EXTRACTOR_FINAL_UI_UX_COMMERCIAL_SPEC.md`
+- `docs/FINAL_UI_UX_IMPLEMENTATION_PLAN.md`
+
+GitHub issues #41-#51 were created and added to Project #7. First recommended implementation block is #42-#45:
+
+- #42 `[P0] Public build Course surface removal hardening`
+- #43 `[P0] Backend source-of-truth audit and endpoint inventory`
+- #44 `[P0] Universal New Task composer`
+- #45 `[P0] Stable semantic preset resolver`
+
+Do not start #42-#45 until the user explicitly confirms the implementation block.
 
 
 `PROJECT_CONTEXT.md` now exists as the long-term project context file. Read it before large tasks and update it after completed large blocks.

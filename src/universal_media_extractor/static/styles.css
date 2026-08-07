@@ -56,7 +56,9 @@ a:hover {
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
@@ -93,7 +95,7 @@ select:focus-visible {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 292px minmax(0, 1fr);
+  grid-template-columns: minmax(248px, 282px) minmax(0, 1fr);
   min-height: 100vh;
   background: var(--bg);
 }
@@ -113,13 +115,14 @@ select:focus-visible {
 .result-panel {
   min-width: 0;
   overflow: auto;
-  padding: 24px;
+  padding: 24px 20px;
 }
 
 .result-content,
 .empty-result,
-.loading-state {
-  width: min(760px, 100%);
+.loading-state,
+.library-card {
+  width: min(820px, 100%);
   margin: 0 auto;
 }
 
@@ -194,7 +197,7 @@ h4 {
 
 .mode-tabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
   gap: 7px;
   padding: 14px 16px;
 }
@@ -279,6 +282,7 @@ h4 {
 }
 
 input[type="url"],
+input[type="text"],
 input[type="file"],
 select {
   width: 100%;
@@ -299,6 +303,7 @@ input[type="file"] {
 }
 
 input[type="url"]:focus,
+input[type="text"]:focus,
 input[type="file"]:focus,
 select:focus {
   border-color: var(--accent);
@@ -438,13 +443,56 @@ button:disabled {
 }
 
 .recent-card {
-  flex: 1;
-  min-height: 0;
-  padding: 16px;
-  overflow: auto;
+  padding: 0;
 }
 
-.recent-card .group-header {
+.library-card {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(26, 28, 31, 0.72);
+}
+
+.library-card summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+  padding: 12px 14px;
+  list-style: none;
+}
+
+.library-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.library-card summary::after {
+  content: "Open";
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.library-card[open] summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.library-card[open] summary::after {
+  content: "Close";
+}
+
+.library-card summary span:first-child {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.library-content {
+  padding: 12px 14px 14px;
+}
+
+.library-content .group-header {
   margin-bottom: 8px;
 }
 
@@ -533,8 +581,8 @@ button:disabled {
 .loading-state {
   display: grid;
   place-items: center;
-  min-height: calc(100vh - 48px);
-  padding: 40px;
+  min-height: 220px;
+  padding: 28px;
   text-align: center;
 }
 
@@ -733,7 +781,7 @@ button:disabled {
 }
 
 .preset-row {
-  min-height: 48px;
+  min-height: 44px;
 }
 
 .preset-row:disabled {
@@ -862,6 +910,17 @@ button:disabled {
   padding: 9px 10px;
   color: var(--muted);
   font-size: 0.82rem;
+}
+
+.save-options-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(112px, 150px);
+  gap: 10px;
+  align-items: end;
+}
+
+.save-advanced-options .save-options-grid {
+  margin-top: 9px;
 }
 
 .checkbox-row,
@@ -1132,17 +1191,13 @@ button:disabled {
     overflow: visible;
   }
 
-  .recent-card {
-    max-height: 240px;
-  }
-
   .result-panel {
     padding: 16px;
   }
 
   .empty-result,
   .loading-state {
-    min-height: 340px;
+    min-height: 220px;
   }
 
   .source-card {
@@ -1152,6 +1207,7 @@ button:disabled {
 
 @media (max-width: 520px) {
   .input-row,
+  .save-options-grid,
   .source-card,
   .file-row,
   .metadata-row {
@@ -1184,13 +1240,19 @@ textarea {
   font: 0.78rem/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-textarea:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
+.new-task-card textarea {
+  min-height: 98px;
 }
 
-.mode-tabs {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.inline-error {
+  margin: 10px 0 0;
+  border: 1px solid rgba(240, 121, 121, 0.45);
+  border-radius: 6px;
+  background: rgba(240, 121, 121, 0.08);
+  color: var(--error);
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .compact-actions {

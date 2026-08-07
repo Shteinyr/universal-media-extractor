@@ -130,28 +130,24 @@ def test_static_index_is_available(tmp_path):
 
     assert response.status_code == 200
     assert "Universal Media Extractor" in response.text
-    assert "Ready to analyze" in response.text
-    assert "MVP flow" in response.text
+    assert "New task" in response.text
+    assert "Get options" in response.text
+    assert "Choose file" in response.text
+    assert "Import list" in response.text
+    assert "Choose output" in response.text
     assert "Whisper model" in response.text
-    assert "Copy text" in response.text
+    assert "Copy transcript" in response.text
     assert "Save to" in response.text
-    assert "Name template" in response.text
+    assert "Folder name" in response.text
     assert "If exists" in response.text
     assert "Reveal in Finder" in response.text
     assert "~/Downloads/Universal Media Extractor" in response.text
-    assert "Local file mode" in response.text
-    assert "Analyze local file" in response.text
-    assert "Course mode" in response.text
-    assert "Batch mode" in response.text
-    assert "Import URLs" in response.text
-    assert "Start queue" in response.text
-    assert "Analyze course" in response.text
-    assert "Course export" in response.text
-    assert "Chrome session" in response.text
-    assert "Manual cookies.txt" in response.text
-    assert "Recent results" in response.text
+    assert "Start batch" in response.text
+    assert "Library" in response.text
     assert 'src="/static/option_normalizer.js"' in response.text
     assert 'src="/static/app.js"' in response.text
+    for forbidden in ["Course", "Udemy", "cookies", "Chrome session", "Manual cookies"]:
+        assert forbidden not in response.text
 
 
 def test_static_javascript_is_available(tmp_path):
@@ -166,11 +162,8 @@ def test_static_javascript_is_available(tmp_path):
     assert "/transcribe" in response.text
     assert "/local/analyze" in response.text
     assert "/local/transcribe" in response.text
-    assert "/udemy/analyze" in response.text
-    assert "/udemy/download" in response.text
     assert "/outputs" in response.text
     assert "/batch/import" in response.text
-    assert "/playlists/analyze" in response.text
     assert "retry-failed" in response.text
     assert "/config" in response.text
     assert "/jobs/" in response.text
@@ -182,8 +175,8 @@ def test_static_javascript_is_available(tmp_path):
     assert "copySummaryButton" in response.text
     assert "selectedFormatSummary" in response.text
     assert "whisperModel.value" in response.text
-    assert "URL required" in response.text
-    assert "File required" in response.text
+    assert "Enter a valid http or https link" in response.text
+    assert "analyzeSelectedLocalFile" in response.text
     assert "API unavailable" in response.text
     assert "canTranscribeSelectedFormat" in response.text
     assert "humanStatusLabel" in response.text
@@ -195,14 +188,14 @@ def test_static_javascript_is_available(tmp_path):
     assert "source_title" in response.text
     assert "downloadOutputFormatSelect" in response.text
     assert "MP4" in response.text
-    assert "courseAuthSourceSelect" in response.text
-    assert "cookies_path" in response.text
     assert "X-UME-Session-Token" in response.text
     assert "apiFetch" in response.text
     assert "session_token" in response.text
     assert response.headers["cache-control"] == "no-store"
     assert "Copy diagnostics" in response.text
     assert "/diagnostics/jobs/" in response.text
+    for forbidden in ["/udemy/analyze", "/udemy/download", "Course", "Udemy", "cookies", "Chrome session", "Manual cookies"]:
+        assert forbidden not in response.text
 
 
 def test_static_option_normalizer_is_available(tmp_path):
@@ -214,6 +207,27 @@ def test_static_option_normalizer_is_available(tmp_path):
     assert "buildFormatPickerData" in response.text
     assert "dedupeSubtitleOptions" in response.text
     assert "MIN_VIDEO_QUALITY" in response.text
+
+
+def test_public_product_mode_does_not_register_internal_course_endpoints(tmp_path, monkeypatch):
+    monkeypatch.setenv("UME_PUBLIC_PRODUCT_MODE", "1")
+    monkeypatch.delenv("UME_ENABLE_COURSE_MODE", raising=False)
+    client = _client(create_app(raw_output_base_dir=tmp_path))
+
+    analyze_response = client.post(
+        "/udemy/analyze",
+        json={"course_url": "https://www.udemy.com/course/python/"},
+    )
+    download_response = client.post(
+        "/udemy/download",
+        json={
+            "course_url": "https://www.udemy.com/course/python/",
+            "user_confirmed_rights": True,
+        },
+    )
+
+    assert analyze_response.status_code == 404
+    assert download_response.status_code == 404
 
 
 def test_protected_endpoint_requires_session_token(tmp_path):

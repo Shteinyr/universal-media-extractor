@@ -17,6 +17,7 @@ BatchItemStatus = Literal["queued", "running", "succeeded", "failed", "cancelled
 BatchPreset = Literal[
     "best_video",
     "video_1080p",
+    "video_720p",
     "smaller_video",
     "audio_m4a",
     "audio_mp3",

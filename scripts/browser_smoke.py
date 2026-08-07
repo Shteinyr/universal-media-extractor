@@ -72,21 +72,26 @@ def parse_args() -> argparse.Namespace:
 def run_analysis_smoke(page: Page, base_url: str, source_url: str, proof_dir: Path) -> None:
     page.goto(base_url, wait_until="networkidle")
     page.get_by_role("heading", name="Universal Media Extractor").wait_for(timeout=10_000)
+    page.get_by_role("textbox", name="New task").wait_for(timeout=10_000)
     page.screenshot(path=proof_dir / "ui_initial.png", full_page=True)
 
     page.locator("#url-input").fill(source_url)
     page.locator("#analyze-button").click()
     page.locator("#media-title").get_by_text("Showreel", exact=True).wait_for(timeout=90_000)
 
-    assert_visible_text(page, "Best Video")
+    assert_visible_text(page, "Best video")
     assert_visible_text(page, "1080p")
-    assert_visible_text(page, "Smaller Video")
+    assert_visible_text(page, "Up to 720p")
     assert_visible_text(page, "Audio M4A")
-    assert_visible_text(page, "Audio MP3")
     assert_visible_text(page, "Subtitles")
-    assert_visible_text(page, "Archive Pack")
 
     page.screenshot(path=proof_dir / "ui_analyze_result.png", full_page=True)
+
+    page.get_by_role("button", name=re.compile("Best video")).click()
+    assert_visible_text(page, "Save to")
+    assert_visible_text(page, "Format")
+    assert_visible_text(page, "Download")
+    page.screenshot(path=proof_dir / "ui_output_selected.png", full_page=True)
 
 
 def run_full_flow(page: Page, proof_dir: Path) -> None:
@@ -99,8 +104,8 @@ def run_full_flow(page: Page, proof_dir: Path) -> None:
     page.locator("#whisper-model").select_option("tiny")
     page.locator("#transcribe-button").click()
     wait_for_status_text(page, "#transcript-result", "Transcript saved", timeout_ms=900_000)
-    assert_visible_text(page, "Saved files")
-    assert_visible_text(page, "Copy prompt")
+    assert_visible_text(page, "Saved result")
+    assert_visible_text(page, "Copy transcript")
     page.screenshot(path=proof_dir / "ui_transcribe_result.png", full_page=True)
 
 

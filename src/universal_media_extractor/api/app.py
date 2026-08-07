@@ -88,11 +88,16 @@ def create_app(
         description="Local-only analysis API for Universal Media Extractor.",
         version="0.1.0",
     )
+    public_mode = _read_bool_env("UME_PUBLIC_PRODUCT_MODE", default=False)
+    course_default = not public_mode
+    app.state.public_product_mode = public_mode
+    app.state.course_mode_enabled = _read_bool_env("UME_ENABLE_COURSE_MODE", default=course_default)
     app.state.analyze_service = AnalyzeService()
     app.state.download_service = DownloadService()
     app.state.diagnostics_service = DiagnosticsService()
     app.state.transcription_service = TranscriptionService()
-    app.state.udemy_course_service = UdemyCourseService()
+    if app.state.course_mode_enabled:
+        app.state.udemy_course_service = UdemyCourseService()
     app.state.local_file_metadata_service = LocalFileMetadataService()
     app.state.output_manager = OutputManager()
     app.state.raw_output_base_dir = raw_output_base_dir or DEFAULT_RAW_OUTPUT_BASE_DIR
@@ -153,11 +158,9 @@ def create_app(
 
     @app.get("/config", response_model=AppConfigResponse)
     def config() -> JSONResponse:
-        public_mode = _read_bool_env("UME_PUBLIC_PRODUCT_MODE", default=False)
-        course_default = not public_mode
         payload = AppConfigResponse(
-            public_product_mode=public_mode,
-            course_mode_enabled=_read_bool_env("UME_ENABLE_COURSE_MODE", default=course_default),
+            public_product_mode=app.state.public_product_mode,
+            course_mode_enabled=app.state.course_mode_enabled,
             session_token=app.state.session_token,
         )
         return JSONResponse(
@@ -270,38 +273,39 @@ def create_app(
         )
         return job_service.get_job(job.job_id) or job
 
-    @app.post("/udemy/analyze", response_model=UdemyCourseAnalyzeResponse)
-    def udemy_analyze(request: UdemyCourseAnalyzeRequest) -> UdemyCourseAnalyzeResponse:
-        output_manager: OutputManager = app.state.output_manager
-        udemy_course_service: UdemyCourseService = app.state.udemy_course_service
-        raw_output_dir = output_manager.create_analysis_output_dir(
-            Path(app.state.raw_output_base_dir),
-            source_id=request.course_url,
-        )
-        result: UdemyCourseAnalyzeResult = udemy_course_service.analyze_course(
-            request,
-            raw_output_dir=raw_output_dir,
-        )
-        return UdemyCourseAnalyzeResponse(result=result)
-
-    @app.post("/udemy/download", response_model=Job)
-    def udemy_download(request: UdemyCourseDownloadRequest) -> Job:
-        job_service: JobService = app.state.job_service
-        udemy_course_service: UdemyCourseService = app.state.udemy_course_service
-        if request.output_base_dir:
-            app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()
-        job = job_service.create_job("udemy_download", request.model_dump())
-        _start_background_job(
-            job_service,
-            job.job_id,
-            initial_step="preparing_udemy_download",
-            operation=lambda: udemy_course_service.download_course(
+    if app.state.course_mode_enabled:
+        @app.post("/udemy/analyze", response_model=UdemyCourseAnalyzeResponse)
+        def udemy_analyze(request: UdemyCourseAnalyzeRequest) -> UdemyCourseAnalyzeResponse:
+            output_manager: OutputManager = app.state.output_manager
+            udemy_course_service: UdemyCourseService = app.state.udemy_course_service
+            raw_output_dir = output_manager.create_analysis_output_dir(
+                Path(app.state.raw_output_base_dir),
+                source_id=request.course_url,
+            )
+            result: UdemyCourseAnalyzeResult = udemy_course_service.analyze_course(
                 request,
-                job_service=job_service,
-                job_id=job.job_id,
-            ),
-        )
-        return job_service.get_job(job.job_id) or job
+                raw_output_dir=raw_output_dir,
+            )
+            return UdemyCourseAnalyzeResponse(result=result)
+
+        @app.post("/udemy/download", response_model=Job)
+        def udemy_download(request: UdemyCourseDownloadRequest) -> Job:
+            job_service: JobService = app.state.job_service
+            udemy_course_service: UdemyCourseService = app.state.udemy_course_service
+            if request.output_base_dir:
+                app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()
+            job = job_service.create_job("udemy_download", request.model_dump())
+            _start_background_job(
+                job_service,
+                job.job_id,
+                initial_step="preparing_udemy_download",
+                operation=lambda: udemy_course_service.download_course(
+                    request,
+                    job_service=job_service,
+                    job_id=job.job_id,
+                ),
+            )
+            return job_service.get_job(job.job_id) or job
 
     @app.post("/transcribe", response_model=Job)
     def transcribe(request: TranscriptionRequest) -> Job:
@@ -617,6 +621,16 @@ def _start_retry_job(app: FastAPI, job: Job) -> None:
             return
 
         if job.task_type == "udemy_download":
+            if not app.state.course_mode_enabled:
+                job_service.fail_job(
+                    job.job_id,
+                    ErrorState(
+                        code="unsupported_source",
+                        message="This internal job type is unavailable in public product mode.",
+                        recoverable=False,
+                    ),
+                )
+                return
             request = UdemyCourseDownloadRequest.model_validate(job.payload)
             if request.output_base_dir:
                 app.state.output_base_dir = Path(request.output_base_dir).expanduser().resolve()

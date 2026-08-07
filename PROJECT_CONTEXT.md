@@ -5,7 +5,7 @@
 - Name: Universal Media Extractor.
 - Working directory: `/Users/aleksandr/Developer/Codex/Projects/Universal Media Extractor`.
 - Product: local media downloader/transcriber for URLs and local audio/video files.
-- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness.
+- Current status: Blocks 1-11 completed; Udemy Course Offline Export with Chrome session auth added and refined after real user testing; commercial strategy imported; GitHub roadmap created; Commercial Foundation issues #1-#5 completed; Commercial Blocks 2-14 completed/prepared across diagnostics, presets, localhost security, SQLite jobs/history, output templates, macOS packaging readiness, founder launch surface, and payment/licensing pre-approval docs, batch queue foundation, and public beta UI readiness. Public Beta QA Round, Public Beta UI / UX Finalization Implementation, and Public Beta UI/UX Refactor Block 1 are completed.
 - Roadmap source: `docs/ROADMAP_V2.md`.
 - Commercial strategy source: `docs/UNIVERSAL_MEDIA_EXTRACTOR_PRODUCT_STRATEGY.md`.
 - GitHub commercial roadmap board: `https://github.com/users/Shteinyr/projects/7`.
@@ -77,7 +77,97 @@ Commercial direction after GPT Pro strategy review:
 
 ## Latest Completed Block
 
+Public Beta UI/UX Refactor Block 1 - done.
+
+Created docs:
+
+- `docs/PUBLIC_BETA_UI_UX_REFACTOR_BLOCK_1.md`
+- `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`
+
+Result: issues #42-#45 are implemented. Public mode hides Course/Udemy/cookies/Chrome-session surfaces and does not register internal Course endpoints. The public UI now starts from a single `New task` composer that routes one URL, local files, multiple links, and `.txt/.csv` URL lists. Output choices use stable semantic presets: Best video, 1080p video, Up to 720p, Audio M4A, Audio MP3, and Subtitles. The source-of-truth doc records that SQLite jobs/history exists, but batch group state is still in-memory.
+
+Verification:
+
+- `node --check src/universal_media_extractor/static/app.js`;
+- `node --check src/universal_media_extractor/static/option_normalizer.js`;
+- `.venv/bin/python -m pytest tests/test_batch_service.py tests/test_ui_option_normalizer.py tests/test_api_app.py -q` -> `62 passed`;
+- `.venv/bin/python -m pytest -q` -> `200 passed`;
+- `.venv/bin/python scripts/browser_smoke.py --proof-dir proof/final_ui_ux_refactor_block_1`.
+
+Proof screenshots:
+
+- `proof/final_ui_ux_refactor_block_1/ui_initial.png`
+- `proof/final_ui_ux_refactor_block_1/ui_analyze_result.png`
+- `proof/final_ui_ux_refactor_block_1/ui_output_selected.png`
+
+Previous completed block:
+
+Public Beta UI / UX Finalization Implementation - done.
+
+Created doc:
+
+- `docs/PUBLIC_BETA_UI_UX_FINALIZATION_IMPLEMENTATION.md`
+
+Result: the static UI now follows the approved blueprint without adding backend/API scope or roadmap changes. The first screen is source-first, URL presets are user-facing, save options appear only after output selection, advanced save controls are collapsed, Local file metadata is simplified, Recent results moved to a collapsed Library surface, and browser smoke now captures initial, analyzed, and output-selected states.
+
+Verification:
+
+- `node --check src/universal_media_extractor/static/app.js`;
+- `node --check src/universal_media_extractor/static/option_normalizer.js`;
+- `python3 -m py_compile scripts/browser_smoke.py`;
+- `.venv/bin/python -m pytest -q` -> `196 passed`;
+- browser smoke proof under `proof/public_beta_ui_ux_finalization/`.
+
+Previous completed block:
+
 Public Beta QA Round - done.
+
+## Latest UX Blueprint
+
+Public Beta UI / UX Finalization Blueprint - done.
+
+Created doc:
+
+- `docs/PUBLIC_BETA_UI_UX_FINALIZATION_BLUEPRINT.md`
+
+Final UI direction: compact local desktop downloader/file-manager utility. Public beta structure should use clear `Link / File / Batch` modes, keep Course/Udemy hidden in public builds, lead with source input, then output presets, save options, honest processing state, saved result, and optional post-processing transcription.
+
+## Latest Research Package
+
+UI/UX Research / Context Pack for GPT Pro - done.
+
+Created docs:
+
+- `docs/UI_UX_COMPETITOR_VISUAL_AUDIT.md`
+- `docs/UI_UX_PRODUCT_FUNCTION_INVENTORY.md`
+- `docs/UI_UX_REFERENCE_SCREEN_MAP.md`
+- `docs/UI_UX_GPT_PRO_BRIEF.md`
+- `docs/UI_UX_GPT_PRO_CONTEXT_PACK.md`
+- `docs/UI_UX_COMPETITOR_VISUAL_LOGIC_PACK.md`
+- `docs/UI_UX_OUR_APP_VISUAL_LOGIC_PACK.md`
+- `docs/UI_UX_GPT_PRO_ANALYSIS_PROMPT.md`
+
+The GPT Pro strategy competitor list is the required baseline and must not be ignored during UI finalization. Supplemental references may be used only to improve visual/flow judgment, not to change roadmap scope. Public screenshots and current app screenshots are saved under `proof/ui_ux_gpt_pro_pack/`.
+
+## Latest GPT Pro Final UI/UX Spec Tracking
+
+GPT Pro final UI/UX commercial spec is imported and tracked.
+
+Docs:
+
+- `docs/UNIVERSAL_MEDIA_EXTRACTOR_FINAL_UI_UX_COMMERCIAL_SPEC.md`
+- `docs/FINAL_UI_UX_IMPLEMENTATION_PLAN.md`
+
+GitHub:
+
+- #41 `[UI/UX] Final public beta UX refactor tracker`
+- #42 `[P0] Public build Course surface removal hardening`
+- #43 `[P0] Backend source-of-truth audit and endpoint inventory`
+- #44 `[P0] Universal New Task composer`
+- #45 `[P0] Stable semantic preset resolver`
+- #46-#51 later follow-up final UI/UX readiness tasks
+
+Public Beta UI/UX Refactor Block 1 issues #42-#45 are completed; follow-up issues #46-#51 remain later public beta readiness work.
 
 Result: the current beta baseline passed browser/API/local-file/batch/diagnostics/output QA. Verified JS syntax, `196 passed`, browser smoke screenshots, URL analyze/download/transcribe, local synthetic file analyze/transcribe, one-item batch download, diagnostics redaction, output safe delete, and public mode Course hiding. No blocker product bug was found. Documented in `docs/PUBLIC_BETA_QA_ROUND.md`.
 
@@ -143,13 +233,13 @@ Udemy command path is documented in `docs/UDEMY_COURSE_EXPORT.md`.
 
 Commercial Blocks 1-14 are completed or prepared except for externally blocked Apple/payment work and the still-open Archive Pack execution issue. The previous Roadmap v2 next block was Block 12 Chrome Extension, but commercialization strategy now recommends prioritizing Public Beta Readiness before extension work.
 
-Recommended next user-approved commercial block:
+Recommended next user-approved commercial block, depending on user readiness:
 
 ```text
-Public Beta UI / UX Finalization
+Durable Queue and Library finalization
 ```
 
-Candidate direction: use the QA baseline to polish the final public beta interface before taking screenshots for the website or packaging broader beta builds.
+Candidate direction: continue with issue #46 to make Queue/Library durable and coherent now that the public first-screen composer and presets are in place. If Apple Developer Program access and signing credentials are ready, macOS signed public beta release validation can be chosen instead.
 
 Do not start the next block until the user explicitly confirms. Do not start checkout or licensing enforcement until payment provider approval and user business details are ready.
 

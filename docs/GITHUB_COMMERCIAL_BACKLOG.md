@@ -38,6 +38,42 @@ Current setup:
 - Commercial Foundation issues #1-#5, Commercial Block 2 issues #6-#7, Commercial Block 3 issue #9, Commercial Block 4 issue #8, Commercial Block 5 issue #10, and Commercial Block 6 issue #11 are completed and should be tracked as `Done`.
 - Commercial Blocks 7-10 prepared macOS production/signing/DMG/public release readiness. Issues #13 and #14 remain open and `In Progress` because final acceptance needs Apple Developer ID credentials and real notarization/Gatekeeper validation.
 - Commercial Block 11 prepares the founder launch surface for issues #19-#21: landing page, beta onboarding, and Free / Founder Pro / Pro / Business plan documentation.
+- GPT Pro final UI/UX commercial spec was imported after the first UI/UX research pack. New stricter final-public-beta issues #41-#51 were created under the `Public Beta Readiness` milestone and added to the Project. Old closed issues remain closed; #41-#51 represent the next stricter UI/UX readiness layer.
+
+## GPT Pro Final UI/UX Issues
+
+Source:
+
+- `docs/UNIVERSAL_MEDIA_EXTRACTOR_FINAL_UI_UX_COMMERCIAL_SPEC.md`
+- `docs/FINAL_UI_UX_IMPLEMENTATION_PLAN.md`
+
+Tracker:
+
+- #41 `[UI/UX] Final public beta UX refactor tracker`
+
+First executable block completed:
+
+- #42 `[P0] Public build Course surface removal hardening`
+- #43 `[P0] Backend source-of-truth audit and endpoint inventory`
+- #44 `[P0] Universal New Task composer`
+- #45 `[P0] Stable semantic preset resolver`
+
+Result: implemented in Public Beta UI/UX Refactor Block 1 and documented in `docs/PUBLIC_BETA_UI_UX_REFACTOR_BLOCK_1.md` plus `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`.
+
+Later follow-up issues:
+
+- #46 `[P0] Durable Queue and Library finalization`
+- #47 `[P0] Native filesystem integration`
+- #48 `[P0] Unified progress, cancel, retry, recovery`
+- #49 `[P0] Error normalization and diagnostics final pass`
+- #50 `[P1] Result and local transcription UX final pass`
+- #51 `[P1] Commercial desktop readiness final pass`
+
+All #41-#51 issues are in GitHub Project #7. After Public Beta UI/UX Refactor Block 1:
+
+- #42-#45 have `Roadmap Status=Done` and `Status=Done`.
+- #46-#51 remain follow-up public beta readiness work.
+- `Release=Public Beta` remains the release target for this UI/UX issue group.
 
 ## Recommended GitHub Project Fields
 

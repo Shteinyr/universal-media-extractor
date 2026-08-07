@@ -363,8 +363,8 @@ class BatchService:
             return "subtitles", "all", "srt"
         if preset == "video_1080p":
             return "combined", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best", "mp4"
-        if preset == "smaller_video":
-            return "combined", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best", "mp4"
+        if preset in {"video_720p", "smaller_video"}:
+            return "combined", "bestvideo[height<=720]+bestaudio/best[height<=720]/best", "mp4"
         return "combined", "bestvideo+bestaudio/best", "mp4"
 
     def _clean_url(self, url: str) -> str:

@@ -1,5 +1,48 @@
 # Changelog
 
+## 2026-08-07 - Public Beta UI/UX Refactor Block 1
+
+- Implemented GitHub issues #42-#45 from the GPT Pro final UI/UX spec.
+- Removed public Course/Udemy/cookies/Chrome-session surfaces from the static public UI bundle.
+- Made Course/Udemy API routes internal-only: public product mode no longer registers `/udemy/analyze` or `/udemy/download`.
+- Replaced the top-level URL/File/Batch mental model with a single `New task` composer that routes one URL, local files, multiple links, and `.txt/.csv` URL lists.
+- Added inline composer errors for empty/invalid input.
+- Updated semantic output presets to Best video, 1080p video, Up to 720p, Audio M4A, Audio MP3, and Subtitles.
+- Added user-facing preset dedupe and kept raw stream IDs/codec strings out of the main UI.
+- Created `docs/PUBLIC_BETA_UI_UX_REFACTOR_BLOCK_1.md` and `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`.
+- Updated browser smoke proof for the new first screen.
+- Verification: JS syntax checks passed, targeted tests passed with `62 passed`, full pytest passed with `200 passed`, and browser smoke passed in public product mode.
+- Saved proof screenshots under `proof/final_ui_ux_refactor_block_1/`.
+
+## 2026-08-07 - Public Beta UI / UX Finalization Implementation
+
+- Implemented the approved public beta UI/UX blueprint without backend feature changes, new API endpoints, roadmap changes, checkout/licensing, extension work, AI summary, React/Vite/CDN, or public Udemy positioning.
+- Changed the default UI toward `Source -> Analyze -> Output preset -> Save options -> Process -> Result`.
+- Kept Link, File, and Batch as the public-facing modes; Course remains internal/config-gated through `/config` and public product mode.
+- Simplified URL output presets to Best video, 1080p video, Smaller video, Audio only, and Subtitles.
+- Removed Archive Pack from the normal URL output picker while leaving it planned/disabled in Batch mode.
+- Hid Save options until an output is selected, kept `Save to` and `Format` visible, and moved folder naming/duplicate policy into collapsed Advanced save options.
+- Moved Recent results into a collapsed Library surface instead of the sidebar.
+- Updated tests and browser smoke to match the finalized public beta labels and proof expectations.
+- Ran JS syntax checks, browser smoke, and `.venv/bin/python -m pytest -q`; result: `196 passed`.
+- Saved proof screenshots under `proof/public_beta_ui_ux_finalization/`.
+
+## 2026-08-07 - Public Beta UI / UX Finalization Blueprint
+
+- Created `docs/PUBLIC_BETA_UI_UX_FINALIZATION_BLUEPRINT.md`.
+- Defined the final public beta screen structure, main user chains, buttons, advanced/internal areas, output preset placement, progress/error/diagnostics behavior, Library/History role, and Course/Udemy public-build hiding rule.
+- Confirmed the next UI implementation block should preserve existing backend scope and avoid new features, roadmap changes, React/Vite/CDN migration, checkout, extension, AI summary, and public Udemy positioning.
+- Updated project memory and README references.
+- No application code, API, backend, frontend implementation, or roadmap behavior was changed.
+
+## 2026-08-07 - UI/UX Research Pack For GPT Pro
+
+- Created a competitor visual audit before Public Beta UI / UX Finalization.
+- Preserved the GPT Pro strategy competitor list as the required baseline: 4K Video Downloader Plus, Downie, SnapDownloader, PullTube, MediaHuman, Parabolic, Cobalt, Stacher, Buzz, and MacWhisper.
+- Added supplemental references: yt-dlp.app, Wondershare UniConverter, VideoProc, and HitPaw Video Converter / Univd.
+- Created product function inventory, reference screen map, and a GPT Pro brief for UI/UX synthesis.
+- No application code, roadmap, backend, API, or UI implementation was changed.
+
 ## 2026-08-06 - Public Beta QA Round
 
 - Completed a public beta QA pass without adding features or changing the roadmap.
@@ -674,3 +717,22 @@
 - Closed GitHub issues #25, #26, #27, and #28.
 - Set GitHub Project `Status=Done` and `Roadmap Status=Done` for issues #25-#28.
 - Commented on issue #29 and left it open because Archive Pack execution remains planned/disabled.
+## 2026-08-07 - GPT Pro Final UI/UX Commercial Spec Tracking
+
+- Imported `docs/UNIVERSAL_MEDIA_EXTRACTOR_FINAL_UI_UX_COMMERCIAL_SPEC.md` from the GPT Pro result.
+- Created `docs/FINAL_UI_UX_IMPLEMENTATION_PLAN.md`.
+- Created GitHub issue #41 as the final public beta UX refactor tracker.
+- Created GitHub issues #42-#45 for the first recommended UI/UX refactor block.
+- Created GitHub issues #46-#51 for later final UI/UX readiness work.
+- Added #41-#51 to GitHub Project #7 with `Roadmap Status=Backlog`, `Status=Todo`, and `Release=Public Beta`.
+- Did not implement UI/backend/product code changes.
+
+## 2026-08-07 - UI/UX GPT Pro Research Context Pack
+
+- Created `docs/UI_UX_GPT_PRO_CONTEXT_PACK.md`.
+- Created `docs/UI_UX_COMPETITOR_VISUAL_LOGIC_PACK.md`.
+- Created `docs/UI_UX_OUR_APP_VISUAL_LOGIC_PACK.md`.
+- Created `docs/UI_UX_GPT_PRO_ANALYSIS_PROMPT.md`.
+- Captured public visual reference screenshots under `proof/ui_ux_gpt_pro_pack/competitors/`.
+- Captured current app UI screenshots under `proof/ui_ux_gpt_pro_pack/our_app/`.
+- Kept product code, backend, frontend, and roadmap unchanged.

@@ -1,12 +1,12 @@
 # Universal Media Extractor & Transcriber
 
-Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, and Commercial Blocks 2-14 are completed or prepared as far as possible without external Apple/payment provider access.
+Status: Commercial strategy imported; Blocks 1-11, Udemy Course Offline Export, Commercial Foundation, Commercial Blocks 2-14, Public Beta QA Round, Public Beta UI / UX Finalization Implementation, and Public Beta UI/UX Refactor Block 1 are completed or prepared as far as possible without external Apple/payment provider access.
 
 This project is evaluating whether a local web app can accept a URL or local audio/video file, analyze available media variants, extract or download selected outputs, transcribe audio locally, and save structured results without paid APIs or cloud services.
 
-Current app status: local-only FastAPI backend with compact static downloader/file-manager UI, URL analysis, preset-based output selection, selected-output download, Udemy course analyze/download mode with Chrome session auth by default and manual cookies as advanced fallback, local file metadata analysis, Whisper transcription for downloaded/local files, SQLite-backed persistent job history, output templates with duplicate handling, reveal-in-Finder output action, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, Recent results output management, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, macOS production `.app` build foundation, macOS signing/notarization readiness docs/scripts, DMG readiness docs/scripts, founder launch static site, beta onboarding copy, draft pricing/plans, payment provider pre-approval package, licensing model draft, generated transcript result actions, and structured output folders. Chrome extension, final signed/notarized public `.app`, checkout, license activation/enforcement, auth, stored credentials, online service behavior, external queue, Archive Pack execution, and AI summary are not implemented. Batch queue foundation is implemented.
+Current app status: local-only FastAPI backend with compact public-beta static downloader/file-manager UI, New task composer, URL analysis, preset-based output selection, selected-output download, internal/experimental Udemy course analyze/download mode, local file metadata analysis, Whisper transcription for downloaded/local files, SQLite-backed persistent job history, output templates with duplicate handling, reveal-in-Finder output action, job polling/cancel for download/transcription, practical `yt-dlp` progress parsing, active subprocess cancellation attempts, secondary Library/Recent results output management, local session-token security, strict local origin checks, upload size limits, browser smoke screenshots, desktop wrapper launcher, macOS production `.app` build foundation, macOS signing/notarization readiness docs/scripts, DMG readiness docs/scripts, founder launch static site, beta onboarding copy, draft pricing/plans, payment provider pre-approval package, licensing model draft, generated transcript result actions, and structured output folders. Public product mode hides Course/Udemy surfaces and does not register Course endpoints. Chrome extension, final signed/notarized public `.app`, checkout, license activation/enforcement, auth, stored credentials, online service behavior, external queue, Archive Pack execution, and AI summary are not implemented. Batch queue foundation is implemented.
 
-The visible UI has been simplified for a more final user-facing surface: the sidebar now focuses on mode selection and input, while development-oriented status, flow checklist, helper copy, and Recent results are hidden from the main screen.
+The visible UI has been finalized toward public beta: the sidebar focuses on source mode and input, output presets are user-facing, download options appear only after selecting an output, advanced save controls are collapsed, and Recent results live in a secondary Library surface.
 
 Roadmap note: new work is now organized by larger blocks, not new Phase numbers, unless the user explicitly authorizes new Phase numbering.
 
@@ -15,6 +15,30 @@ Roadmap v2 is recorded in `docs/ROADMAP_V2.md`. Blocks 1-11 are completed. A GPT
 Commercial direction: move toward a paid local desktop utility for macOS and Windows. The recommended public positioning is “Local Media Downloader & Organizer,” not “universal downloader for every site.” Udemy Course mode should stay internal/experimental unless separately approved for public release.
 
 GitHub commercial roadmap board: [https://github.com/users/Shteinyr/projects/7](https://github.com/users/Shteinyr/projects/7).
+
+UI/UX research before Public Beta UI / UX Finalization:
+
+- `docs/UI_UX_COMPETITOR_VISUAL_AUDIT.md`
+- `docs/UI_UX_PRODUCT_FUNCTION_INVENTORY.md`
+- `docs/UI_UX_REFERENCE_SCREEN_MAP.md`
+- `docs/UI_UX_GPT_PRO_BRIEF.md`
+- `docs/UI_UX_GPT_PRO_CONTEXT_PACK.md`
+- `docs/UI_UX_COMPETITOR_VISUAL_LOGIC_PACK.md`
+- `docs/UI_UX_OUR_APP_VISUAL_LOGIC_PACK.md`
+- `docs/UI_UX_GPT_PRO_ANALYSIS_PROMPT.md`
+- screenshots/proof: `proof/ui_ux_gpt_pro_pack/`
+- `docs/UNIVERSAL_MEDIA_EXTRACTOR_FINAL_UI_UX_COMMERCIAL_SPEC.md`
+- `docs/FINAL_UI_UX_IMPLEMENTATION_PLAN.md`
+- `docs/PUBLIC_BETA_UI_UX_FINALIZATION_BLUEPRINT.md`
+- `docs/PUBLIC_BETA_UI_UX_FINALIZATION_IMPLEMENTATION.md`
+
+These files preserve the GPT Pro competitor list, add supplemental visual references, map current product functions, package competitor/app screenshots and product logic for GPT Pro, and define the final public beta UI/UX blueprint for the next implementation block.
+
+GPT Pro final UI/UX tracking:
+
+- GitHub tracker: [#41 Final public beta UX refactor tracker](https://github.com/Shteinyr/universal-media-extractor/issues/41)
+- Public Beta UI/UX Refactor Block 1: #42, #43, #44, #45 completed.
+- Docs: `docs/PUBLIC_BETA_UI_UX_REFACTOR_BLOCK_1.md`, `docs/PUBLIC_BETA_BACKEND_SOURCE_OF_TRUTH.md`.
 
 Commercial foundation docs:
 

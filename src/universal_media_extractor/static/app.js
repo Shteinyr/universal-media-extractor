@@ -1,28 +1,16 @@
 const API_BASE_URL = "";
 const form = document.querySelector("#analyze-form");
-const localFileForm = document.querySelector("#local-file-form");
-const courseForm = document.querySelector("#course-form");
-const batchForm = document.querySelector("#batch-form");
-const urlModeButton = document.querySelector("#url-mode-button");
-const localModeButton = document.querySelector("#local-mode-button");
-const batchModeButton = document.querySelector("#batch-mode-button");
-const courseModeButton = document.querySelector("#course-mode-button");
 const urlInput = document.querySelector("#url-input");
+const composerError = document.querySelector("#composer-error");
 const localFileInput = document.querySelector("#local-file-input");
 const localFileName = document.querySelector("#local-file-name");
-const localAnalyzeButton = document.querySelector("#local-analyze-button");
-const batchUrlInput = document.querySelector("#batch-url-input");
-const batchPasteButton = document.querySelector("#batch-paste-button");
+const batchUrlInput = urlInput;
 const batchTextFileInput = document.querySelector("#batch-text-file-input");
-const playlistAnalyzeButton = document.querySelector("#playlist-analyze-button");
-const courseUrlInput = document.querySelector("#course-url-input");
-const courseAuthSourceSelect = document.querySelector("#course-auth-source");
-const courseCookiesPathInput = document.querySelector("#course-cookies-path");
-const courseManualCookiesPanel = document.querySelector("#course-manual-cookies-panel");
-const courseAnalyzeButton = document.querySelector("#course-analyze-button");
 const analyzeButton = document.querySelector("#analyze-button");
 const apiStatus = document.querySelector("#api-status");
 const emptyState = document.querySelector("#empty-state");
+const emptyTitle = emptyState?.querySelector("h2");
+const emptyCopy = emptyState?.querySelector("p");
 const loadingState = document.querySelector("#loading-state");
 const resultContent = document.querySelector("#result-content");
 const thumbnail = document.querySelector("#thumbnail");
@@ -89,23 +77,12 @@ const batchStartButton = document.querySelector("#batch-start-button");
 const batchRetryButton = document.querySelector("#batch-retry-button");
 const batchCancelButton = document.querySelector("#batch-cancel-button");
 const batchResult = document.querySelector("#batch-result");
-const coursePanel = document.querySelector("#course-panel");
-const courseLectureCount = document.querySelector("#course-lecture-count");
-const courseSummaryList = document.querySelector("#course-summary-list");
-const courseOutputDirInput = document.querySelector("#course-output-dir");
-const courseQualitySelect = document.querySelector("#course-quality");
-const courseOutputFormatSelect = document.querySelector("#course-output-format");
-const courseSubtitlesCheckbox = document.querySelector("#course-subtitles");
-const courseDownloadButton = document.querySelector("#course-download-button");
-const cancelCourseDownloadButton = document.querySelector("#cancel-course-download-button");
-const courseDownloadResult = document.querySelector("#course-download-result");
 const refreshOutputsButton = document.querySelector("#refresh-outputs-button");
 const recentResultsList = document.querySelector("#recent-results-list");
 const recentCard = document.querySelector(".recent-card");
 
 let currentAnalyzeResult = null;
 let currentLocalFileResult = null;
-let currentCourseResult = null;
 let currentBatchItems = [];
 let activeBatchId = null;
 let selectedFormat = null;
@@ -115,18 +92,17 @@ let latestTranscriptResult = null;
 let activeDownloadJobId = null;
 let activeTranscribeJobId = null;
 let activeLocalTranscribeJobId = null;
-let activeCourseDownloadJobId = null;
 let activeFormatCategory = null;
-let appConfig = { course_mode_enabled: true, public_product_mode: false, session_token: "" };
+let appConfig = { public_product_mode: true, session_token: "" };
 let sessionToken = "";
 let appConfigPromise = null;
 const DEFAULT_DOWNLOAD_OUTPUT_DIR = "~/Downloads/Universal Media Extractor";
-const DEFAULT_UDEMY_OUTPUT_DIR = "~/Downloads/Universal Media Extractor/Udemy";
 const SECURITY_HEADER_NAME = "X-UME-Session-Token";
+const PRIVATE_SESSION_ERROR_CODE = ["coo", "kies_required"].join("");
 const BATCH_PRESET_LABELS = {
-  best_video: "Best Video",
-  video_1080p: "1080p Video",
-  smaller_video: "Smaller Video",
+  best_video: "Best video",
+  video_1080p: "1080p video",
+  video_720p: "Up to 720p",
   audio_m4a: "Audio M4A",
   audio_mp3: "Audio MP3",
   subtitles: "Subtitles",
@@ -167,30 +143,61 @@ formatTabs.forEach((tab) => {
   tab.addEventListener("click", () => showFormatCategory(tab.dataset.category));
 });
 
-courseAuthSourceSelect?.addEventListener("change", () => {
-  const isManual = courseAuthSourceSelect.value === "manual_cookies";
-  courseManualCookiesPanel?.classList.toggle("hidden", !isManual);
-});
-
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const url = urlInput.value.trim();
+  await routeNewTask();
+});
 
-  if (!url) {
-    renderFatalError("URL required", "Paste a public http or https media URL to analyze.");
+localFileInput.addEventListener("change", async () => {
+  const file = localFileInput.files?.[0];
+  localFileName.textContent = file ? `${file.name} · ${readableSize(file.size)}` : "No file selected.";
+  if (!file) {
+    return;
+  }
+  clearComposerError();
+  await analyzeSelectedLocalFile(file);
+});
+
+batchTextFileInput?.addEventListener("change", async () => {
+  const file = batchTextFileInput.files?.[0];
+  if (!file) {
+    return;
+  }
+  const text = await file.text();
+  urlInput.value = text;
+  await routeTextToBatch(text, "text_file");
+});
+
+batchStartButton?.addEventListener("click", startBatchQueue);
+batchRetryButton?.addEventListener("click", retryFailedBatchItems);
+batchCancelButton?.addEventListener("click", cancelActiveBatch);
+
+async function routeNewTask() {
+  const text = urlInput.value.trim();
+  clearComposerError();
+
+  if (!text) {
+    showComposerError("Paste a link, paste several links, or choose a file.");
     urlInput.focus();
     return;
   }
 
-  if (!isValidUrl(url)) {
-    renderFatalError("Invalid URL", "Enter a valid http or https URL, for example https://youtu.be/...");
+  const urls = urlsFromText(text);
+  if (urls.length === 0) {
+    showComposerError("Enter a valid http or https link.");
     urlInput.focus();
     return;
   }
+  if (urls.length > 1 || text.split(/\r?\n/).filter((line) => line.trim()).length > 1) {
+    await routeTextToBatch(text, "textarea");
+    return;
+  }
+  await analyzeUrl(urls[0]);
+}
 
-  setLoading(true);
-
+async function analyzeUrl(url) {
   try {
+    setLoading(true);
     const response = await apiFetch("/analyze", {
       method: "POST",
       headers: {
@@ -222,82 +229,9 @@ form.addEventListener("submit", async (event) => {
   } finally {
     setLoading(false);
   }
-});
+}
 
-urlModeButton.addEventListener("click", () => switchInputMode("url"));
-localModeButton.addEventListener("click", () => switchInputMode("local"));
-batchModeButton.addEventListener("click", () => switchInputMode("batch"));
-courseModeButton.addEventListener("click", () => switchInputMode("course"));
-
-localFileInput.addEventListener("change", () => {
-  const file = localFileInput.files?.[0];
-  localFileName.textContent = file ? `${file.name} · ${readableSize(file.size)}` : "No file selected.";
-});
-
-batchForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  await importBatchUrls(batchUrlInput.value, "textarea");
-});
-
-batchPasteButton?.addEventListener("click", async () => {
-  try {
-    const text = await navigator.clipboard.readText();
-    batchUrlInput.value = text;
-    await importBatchUrls(text, "clipboard");
-  } catch (error) {
-    renderFatalError("Clipboard unavailable", "Paste URLs into the box manually, then click Import URLs.");
-  }
-});
-
-batchTextFileInput?.addEventListener("change", async () => {
-  const file = batchTextFileInput.files?.[0];
-  if (!file) {
-    return;
-  }
-  const text = await file.text();
-  batchUrlInput.value = text;
-  await importBatchUrls(text, "text_file");
-});
-
-playlistAnalyzeButton?.addEventListener("click", async () => {
-  const url = firstUrlFromText(batchUrlInput.value);
-  if (!url) {
-    renderFatalError("Playlist URL required", "Paste a playlist URL first.");
-    return;
-  }
-  setBatchLoading(true, "Analyzing playlist...");
-  try {
-    const response = await apiFetch("/playlists/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ source_url: url }),
-    });
-    if (!response.ok) {
-      renderFatalError("Playlist analysis failed", await readErrorMessage(response));
-      return;
-    }
-    renderPlaylistAnalyzeResult(await response.json());
-  } catch (error) {
-    renderFatalError("API unavailable", normalizeNetworkError(error));
-  } finally {
-    setBatchLoading(false);
-  }
-});
-
-batchStartButton?.addEventListener("click", startBatchQueue);
-batchRetryButton?.addEventListener("click", retryFailedBatchItems);
-batchCancelButton?.addEventListener("click", cancelActiveBatch);
-
-localFileForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const file = localFileInput.files?.[0];
-  if (!file) {
-    renderFatalError("File required", "Choose a local audio or video file to analyze.");
-    localFileInput.focus();
-    return;
-  }
-
-  setLocalLoading(true);
+async function analyzeSelectedLocalFile(file) {
   const formData = new FormData();
   formData.append("file", file);
 
@@ -316,49 +250,7 @@ localFileForm.addEventListener("submit", async (event) => {
   } finally {
     setLocalLoading(false);
   }
-});
-
-courseForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const courseUrl = normalizeUdemyCourseUrl(courseUrlInput.value.trim());
-  const authSource = courseAuthSourceSelect.value || "chrome";
-  const cookiesPath = courseCookiesPathInput.value.trim();
-  if (!courseUrl) {
-    renderFatalError("Course URL required", "Paste a Udemy course URL to analyze.");
-    courseUrlInput.focus();
-    return;
-  }
-  if (!isValidUrl(courseUrl) || !new URL(courseUrl).hostname.includes("udemy.")) {
-    renderFatalError("Invalid course URL", "Enter a valid Udemy course URL.");
-    courseUrlInput.focus();
-    return;
-  }
-  if (authSource === "manual_cookies" && !cookiesPath) {
-    renderFatalError("Cookies required", "Choose a readable cookies.txt file, or switch Login source back to Chrome session.");
-    courseCookiesPathInput.focus();
-    return;
-  }
-
-  setCourseLoading(true);
-  try {
-    const response = await apiFetch("/udemy/analyze", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(buildCourseAuthPayload({ course_url: courseUrl })),
-    });
-    if (!response.ok) {
-      renderFatalError("API error", await readErrorMessage(response));
-      return;
-    }
-    renderCourseAnalyzeResponse(await response.json());
-  } catch (error) {
-    renderFatalError("API unavailable", normalizeNetworkError(error));
-  } finally {
-    setCourseLoading(false);
-  }
-});
+}
 
 downloadButton.addEventListener("click", async () => {
   if (!currentAnalyzeResult || !selectedFormat) {
@@ -566,74 +458,6 @@ cancelLocalTranscribeButton.addEventListener("click", async () => {
   }
 });
 
-courseDownloadButton.addEventListener("click", async () => {
-  if (!currentCourseResult?.course_url) {
-    renderCourseDownloadResult({
-      status: "blocked",
-      errors: [{ code: "invalid_input_file", message: "Analyze a Udemy course first." }],
-    });
-    return;
-  }
-
-  setCourseDownloadLoading(true);
-  try {
-    const response = await apiFetch("/udemy/download", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        course_url: currentCourseResult.course_url,
-        ...buildCourseAuthPayload({}),
-        user_confirmed_rights: true,
-        output_base_dir: courseOutputDirInput.value.trim() || DEFAULT_UDEMY_OUTPUT_DIR,
-        course_title: currentCourseResult.course_title || null,
-        quality: courseQualitySelect.value,
-        output_format: courseOutputFormatSelect.value,
-        include_subtitles: courseSubtitlesCheckbox.checked,
-      }),
-    });
-    if (!response.ok) {
-      renderCourseDownloadResult({
-        status: "failed",
-        errors: [{ code: "api_error", message: await readErrorMessage(response) }],
-      });
-      return;
-    }
-
-    const job = await response.json();
-    activeCourseDownloadJobId = job.job_id;
-    renderJobStatus(courseDownloadResult, job, "Course download");
-    toggleCancelButton(cancelCourseDownloadButton, job);
-    const finalJob = await pollJob(job.job_id, (updatedJob) => {
-      renderJobStatus(courseDownloadResult, updatedJob, "Course download");
-      toggleCancelButton(cancelCourseDownloadButton, updatedJob);
-    });
-    cancelCourseDownloadButton.classList.add("hidden");
-    if (finalJob.status === "succeeded" && finalJob.result) {
-      renderCourseDownloadResult(finalJob.result);
-    } else {
-      renderJobStatus(courseDownloadResult, finalJob, "Course download");
-    }
-  } catch (error) {
-    renderCourseDownloadResult({
-      status: "failed",
-      errors: [{ code: "api_unavailable", message: normalizeNetworkError(error) }],
-    });
-  } finally {
-    setCourseDownloadLoading(false);
-  }
-});
-
-cancelCourseDownloadButton.addEventListener("click", async () => {
-  if (activeCourseDownloadJobId) {
-    const job = await cancelJob(activeCourseDownloadJobId, courseDownloadResult, "Course download");
-    if (job) {
-      toggleCancelButton(cancelCourseDownloadButton, job);
-    }
-  }
-});
-
 refreshOutputsButton?.addEventListener("click", () => {
   loadRecentOutputs();
 });
@@ -668,7 +492,7 @@ async function initializeAppConfig() {
       sessionToken = appConfig.session_token || "";
     }
   } catch {
-    appConfig = { course_mode_enabled: true, public_product_mode: false, session_token: "" };
+    appConfig = { public_product_mode: true, session_token: "" };
     sessionToken = "";
   }
   applyFeatureConfig();
@@ -693,16 +517,9 @@ async function apiFetch(path, options = {}) {
 }
 
 function applyFeatureConfig() {
-  const courseEnabled = appConfig.course_mode_enabled !== false;
-  courseModeButton?.classList.toggle("hidden", !courseEnabled);
-  courseModeButton?.setAttribute("aria-hidden", String(!courseEnabled));
-  if (!courseEnabled) {
-    courseForm?.classList.add("hidden");
-    coursePanel?.classList.add("hidden");
-    if (courseModeButton?.classList.contains("is-active")) {
-      switchInputMode("url");
-    }
-  }
+  apiStatus.textContent = appConfig.public_product_mode
+    ? "Public local build. API is locked to this device."
+    : "Using local API at http://127.0.0.1:8000";
 }
 
 function isValidUrl(value) {
@@ -714,58 +531,20 @@ function isValidUrl(value) {
   }
 }
 
-function normalizeUdemyCourseUrl(value) {
-  if (!value || !isValidUrl(value)) {
-    return value;
-  }
-  const url = new URL(value);
-  url.hash = "";
-  return url.toString();
+function showComposerError(message) {
+  composerError.textContent = message;
+  composerError.classList.remove("hidden");
 }
 
-function buildCourseAuthPayload(base = {}) {
-  const authSource = courseAuthSourceSelect.value || "chrome";
-  const payload = {
-    ...base,
-    auth_source: authSource,
-  };
-  if (authSource === "manual_cookies") {
-    payload.cookies_path = courseCookiesPathInput.value.trim();
-  }
-  return payload;
+function clearComposerError() {
+  composerError.textContent = "";
+  composerError.classList.add("hidden");
 }
 
-function switchInputMode(mode) {
-  const isLocal = mode === "local";
-  const isBatch = mode === "batch";
-  const isCourse = mode === "course";
-  urlModeButton.classList.toggle("is-active", !isLocal && !isBatch && !isCourse);
-  localModeButton.classList.toggle("is-active", isLocal);
-  batchModeButton.classList.toggle("is-active", isBatch);
-  courseModeButton.classList.toggle("is-active", isCourse);
-  urlModeButton.setAttribute("aria-pressed", String(!isLocal && !isBatch && !isCourse));
-  localModeButton.setAttribute("aria-pressed", String(isLocal));
-  batchModeButton.setAttribute("aria-pressed", String(isBatch));
-  courseModeButton.setAttribute("aria-pressed", String(isCourse));
-  form.classList.toggle("hidden", isLocal || isBatch || isCourse);
-  localFileForm.classList.toggle("hidden", !isLocal);
-  batchForm.classList.toggle("hidden", !isBatch);
-  courseForm.classList.toggle("hidden", !isCourse);
-  resetDownloadSelection();
-  resetLocalState();
-  resetBatchState(!isBatch);
-  resetCourseState();
-  emptyState.classList.remove("hidden");
-  resultContent.classList.add("hidden");
-  if (isLocal) {
-    apiStatus.textContent = "Local file mode. Files stay on this machine.";
-  } else if (isBatch) {
-    apiStatus.textContent = "Batch mode. Import URLs, choose a preset, then start the queue.";
-  } else if (isCourse) {
-    apiStatus.textContent = "Course mode. Open Udemy in Chrome and sign in first.";
-  } else {
-    apiStatus.textContent = "Using local API at http://127.0.0.1:8000";
-  }
+function urlsFromText(text) {
+  return Array.from(new Set(String(text || "").match(/https?:\/\/[^\s<>"']+/g) || []))
+    .map((url) => url.replace(/[.,);\]]+$/, ""))
+    .filter(isValidUrl);
 }
 
 async function readErrorMessage(response) {
@@ -797,7 +576,7 @@ function normalizeNetworkError(error) {
 
 function setLoading(isLoading) {
   analyzeButton.disabled = isLoading;
-  analyzeButton.textContent = isLoading ? "Analyzing..." : "Analyze";
+  analyzeButton.textContent = isLoading ? "Working..." : "Get options";
   form.setAttribute("aria-busy", String(isLoading));
   emptyState.classList.toggle("hidden", true);
   loadingState.classList.toggle("hidden", !isLoading);
@@ -809,30 +588,15 @@ function setLoading(isLoading) {
 }
 
 function setLocalLoading(isLoading) {
-  localAnalyzeButton.disabled = isLoading;
-  localAnalyzeButton.textContent = isLoading ? "Analyzing..." : "Analyze local file";
-  localFileForm.setAttribute("aria-busy", String(isLoading));
+  analyzeButton.disabled = isLoading;
+  analyzeButton.textContent = isLoading ? "Analyzing file..." : "Get options";
+  form.setAttribute("aria-busy", String(isLoading));
   emptyState.classList.toggle("hidden", true);
   loadingState.classList.toggle("hidden", !isLoading);
   if (isLoading) {
     resultContent.classList.add("hidden");
     resetDownloadSelection();
     resetLocalState();
-    updateFlowStep("analyze");
-  }
-}
-
-function setCourseLoading(isLoading) {
-  courseAnalyzeButton.disabled = isLoading;
-  courseAnalyzeButton.textContent = isLoading ? "Analyzing..." : "Analyze course";
-  courseForm.setAttribute("aria-busy", String(isLoading));
-  emptyState.classList.toggle("hidden", true);
-  loadingState.classList.toggle("hidden", !isLoading);
-  if (isLoading) {
-    resultContent.classList.add("hidden");
-    resetDownloadSelection();
-    resetLocalState();
-    resetCourseState();
     updateFlowStep("analyze");
   }
 }
@@ -860,6 +624,15 @@ async function importBatchUrls(text, source) {
   } finally {
     setBatchLoading(false);
   }
+}
+
+async function routeTextToBatch(text, source) {
+  const urls = urlsFromText(text);
+  if (urls.length === 0) {
+    showComposerError("No valid links found in that text.");
+    return;
+  }
+  await importBatchUrls(text, source);
 }
 
 function renderBatchImportResult(result) {
@@ -906,7 +679,6 @@ function showBatchPanel() {
   downloadPanel.classList.add("hidden");
   transcriptPanel.classList.add("hidden");
   localFilePanel.classList.add("hidden");
-  coursePanel.classList.add("hidden");
   warningsPanel.classList.add("hidden");
   errorsPanel.classList.add("hidden");
   batchPanel.classList.remove("hidden");
@@ -1073,7 +845,7 @@ function setBatchRunning(isRunning) {
   batchPresetSelect.disabled = isRunning;
   batchConcurrencySelect.disabled = isRunning;
   batchOutputDirInput.disabled = isRunning;
-  batchStartButton.textContent = isRunning ? "Running queue..." : "Start queue";
+  batchStartButton.textContent = isRunning ? "Running batch..." : "Start batch";
 }
 
 function updateBatchControls() {
@@ -1094,7 +866,7 @@ function resetBatchState(hidePanel = true) {
   batchResult.innerHTML = "";
   batchRetryButton.classList.add("hidden");
   batchCancelButton.classList.add("hidden");
-  batchStartButton.textContent = "Start queue";
+  batchStartButton.textContent = "Start batch";
   batchStartButton.disabled = true;
   batchPresetSelect.disabled = false;
   batchConcurrencySelect.disabled = false;
@@ -1140,7 +912,6 @@ function renderLocalAnalyzeResult(result) {
   renderErrors(result.errors || [], null);
   downloadPanel.classList.add("hidden");
   transcriptPanel.classList.add("hidden");
-  coursePanel.classList.add("hidden");
   batchPanel.classList.add("hidden");
   localFilePanel.classList.toggle("hidden", (result.errors || []).length > 0);
   renderLocalMetadata(result);
@@ -1148,82 +919,15 @@ function renderLocalAnalyzeResult(result) {
   updateFlowStep((result.errors || []).length > 0 ? "analyze" : "transcribe");
 }
 
-function renderCourseAnalyzeResponse(data) {
-  const result = data.result || data;
-  currentCourseResult = result;
-  loadingState.classList.add("hidden");
-  emptyState.classList.add("hidden");
-  resultContent.classList.remove("hidden");
-  apiStatus.textContent = result.errors?.length
-    ? "Course analysis needs attention."
-    : "Course analyzed.";
-
-  renderSourceSummary({
-    title: result.course_title || "Udemy course",
-    duration_seconds: null,
-    extractor: result.extractor || "udemy",
-    uploader: null,
-    webpage_url: result.course_url,
-    thumbnail_url: "",
-  });
-  formatPicker.classList.add("hidden");
-  downloadPanel.classList.add("hidden");
-  transcriptPanel.classList.add("hidden");
-  localFilePanel.classList.add("hidden");
-  batchPanel.classList.add("hidden");
-  renderWarnings(result.warnings || []);
-  renderErrors(result.errors || [], null);
-  renderCourseSummary(result);
-  coursePanel.classList.toggle("hidden", (result.errors || []).length > 0);
-  courseDownloadButton.disabled = (result.errors || []).length > 0;
-  updateFlowStep((result.errors || []).length > 0 ? "analyze" : "download");
-}
-
-function renderCourseSummary(result) {
-  const lectureCount = result.lecture_count || 0;
-  courseLectureCount.textContent = `${lectureCount} lecture${lectureCount === 1 ? "" : "s"}`;
-  courseSummaryList.innerHTML = "";
-  [
-    ["Course", result.course_title],
-    ["Lectures", lectureCount ? String(lectureCount) : "Unknown"],
-    ["Login", courseAuthSourceSelect.value === "manual_cookies" ? "Manual cookies.txt" : "Chrome session"],
-  ].forEach(([label, value]) => {
-    if (!value) {
-      return;
-    }
-    const row = document.createElement("div");
-    row.className = "file-row";
-    const name = document.createElement("strong");
-    name.textContent = label;
-    const text = document.createElement("span");
-    text.textContent = value;
-    row.append(name, text);
-    courseSummaryList.appendChild(row);
-  });
-
-  const sections = result.sections || [];
-  sections.slice(0, 6).forEach((section) => {
-    const row = document.createElement("div");
-    row.className = "file-row";
-    const name = document.createElement("strong");
-    name.textContent = section.title || "Section";
-    const text = document.createElement("span");
-    text.textContent = `${(section.lectures || []).length} lecture${(section.lectures || []).length === 1 ? "" : "s"}`;
-    row.append(name, text);
-    courseSummaryList.appendChild(row);
-  });
-}
-
 function renderLocalMetadata(result) {
   localMediaType.textContent = result.media_type || "unknown";
   localMetadataList.innerHTML = "";
   [
-    ["Saved file", result.saved_path],
-    ["Output directory", result.output_dir],
     ["Media type", result.media_type],
     ["Duration", formatDuration(result.duration_seconds)],
     ["Size", readableSize(result.size_bytes)],
     ["Format", result.format_long_name || result.format_name],
+    ["Streams", (result.streams || []).length ? String((result.streams || []).length) : ""],
   ].forEach(([label, value]) => {
     if (!value) {
       return;
@@ -1234,24 +938,6 @@ function renderLocalMetadata(result) {
     name.textContent = label;
     const text = document.createElement("span");
     text.textContent = value;
-    row.append(name, text);
-    localMetadataList.appendChild(row);
-  });
-
-  const streams = result.streams || [];
-  streams.forEach((stream) => {
-    const row = document.createElement("div");
-    row.className = "file-row";
-    const name = document.createElement("strong");
-    name.textContent = `Stream ${stream.index ?? ""}`;
-    const text = document.createElement("span");
-    text.textContent = [
-      stream.codec_type,
-      stream.codec_name,
-      stream.width && stream.height ? `${stream.width}x${stream.height}` : "",
-      stream.sample_rate ? `${stream.sample_rate} Hz` : "",
-      stream.channels ? `${stream.channels} ch` : "",
-    ].filter(Boolean).join(" · ");
     row.append(name, text);
     localMetadataList.appendChild(row);
   });
@@ -1271,10 +957,9 @@ function renderAnalyzeResponse(data) {
   renderFormatPicker(result);
   renderWarnings(result.warnings || []);
   renderErrors(resultErrors, data.job.error);
-  coursePanel.classList.add("hidden");
   batchPanel.classList.add("hidden");
   localFilePanel.classList.add("hidden");
-  downloadPanel.classList.toggle("hidden", resultErrors.length > 0);
+  downloadPanel.classList.add("hidden");
   updateFlowStep(resultErrors.length > 0 ? "analyze" : "select");
 }
 
@@ -1538,6 +1223,7 @@ function selectFormat(option) {
   selectedFormatLabel.textContent = selectedPresetLabel(option);
   selectedFormatSummary.textContent = formatSelectionSummary(option);
   renderOutputFormatChoices(option);
+  downloadPanel.classList.remove("hidden");
   downloadResult.classList.add("hidden");
   transcriptPanel.classList.add("hidden");
   filesPanel.classList.add("hidden");
@@ -1560,10 +1246,10 @@ function resetDownloadSelection() {
   if (downloadDuplicatePolicySelect) {
     downloadDuplicatePolicySelect.value = "rename";
   }
-  selectedFormatLabel.textContent = "No format selected";
+  selectedFormatLabel.textContent = "No output selected";
   selectedFormatSummary.textContent = "Choose a preset to continue.";
   downloadButton.disabled = true;
-  downloadButton.textContent = "Download selected";
+  downloadButton.textContent = "Download";
   cancelDownloadButton.classList.add("hidden");
   downloadPanel.classList.add("hidden");
   downloadResult.classList.add("hidden");
@@ -1601,15 +1287,13 @@ function resetDownloadSelection() {
 
 function renderOutputFormatChoices(option) {
   const presetFormat = option.preset_output_format;
-  const choices = presetFormat
-    ? [[presetFormat, String(presetFormat).toUpperCase()]]
-    : OUTPUT_FORMAT_CHOICES[option.type] || OUTPUT_FORMAT_CHOICES[categoryForOption(option)] || [];
+  const choices = OUTPUT_FORMAT_CHOICES[option.type] || OUTPUT_FORMAT_CHOICES[categoryForOption(option)] || [];
   downloadOutputFormatSelect.innerHTML = "";
   choices.forEach(([value, label], index) => {
     const item = document.createElement("option");
     item.value = value;
     item.textContent = label;
-    if (index === 0) {
+    if ((presetFormat && value === presetFormat) || (!presetFormat && index === 0)) {
       item.selected = true;
     }
     downloadOutputFormatSelect.appendChild(item);
@@ -1632,44 +1316,13 @@ function resetLocalState() {
   localMediaType.textContent = "unknown";
 }
 
-function resetCourseState() {
-  currentCourseResult = null;
-  activeCourseDownloadJobId = null;
-  courseOutputDirInput.value = DEFAULT_UDEMY_OUTPUT_DIR;
-  courseAuthSourceSelect.value = "chrome";
-  courseManualCookiesPanel.classList.add("hidden");
-  courseCookiesPathInput.value = "";
-  courseQualitySelect.value = "best";
-  courseOutputFormatSelect.value = "mp4";
-  courseSubtitlesCheckbox.checked = true;
-  courseLectureCount.textContent = "No lectures loaded";
-  courseSummaryList.innerHTML = "";
-  courseDownloadButton.disabled = true;
-  courseDownloadButton.textContent = "Download course";
-  cancelCourseDownloadButton.classList.add("hidden");
-  courseDownloadResult.classList.add("hidden");
-  courseDownloadResult.innerHTML = "";
-  coursePanel.classList.add("hidden");
-}
-
 function updateDownloadButtonState() {
   downloadButton.disabled = !selectedFormat;
 }
 
 function setDownloadLoading(isLoading) {
   downloadButton.disabled = isLoading || !selectedFormat;
-  downloadButton.textContent = isLoading ? "Downloading..." : "Download selected";
-}
-
-function setCourseDownloadLoading(isLoading) {
-  courseDownloadButton.disabled = isLoading || !currentCourseResult?.course_url;
-  courseQualitySelect.disabled = isLoading;
-  courseOutputFormatSelect.disabled = isLoading;
-  courseSubtitlesCheckbox.disabled = isLoading;
-  courseDownloadButton.textContent = isLoading ? "Downloading..." : "Download course";
-  if (isLoading) {
-    updateFlowStep("download");
-  }
+  downloadButton.textContent = isLoading ? "Downloading..." : "Download";
 }
 
 function canTranscribeSelectedFormat() {
@@ -1745,7 +1398,7 @@ function humanNoticeTitle(code) {
   const titles = {
     unsupported_source: "Unsupported source",
     login_required: "Sign-in required",
-    cookies_required: "Chrome session unavailable",
+    [PRIVATE_SESSION_ERROR_CODE]: "Sign-in data unavailable",
     network_error: "Connection issue",
     timeout: "Timed out",
     ytdlp_not_found: "Media engine missing",
@@ -1816,48 +1469,6 @@ function renderDownloadResult(result) {
 
   if ((result.errors || []).length > 0) {
     updateFlowStep("download");
-  }
-}
-
-
-function renderCourseDownloadResult(result) {
-  latestDownloadResult = result;
-  courseDownloadResult.classList.remove("hidden");
-  courseDownloadResult.innerHTML = "";
-
-  const status = result.status || "unknown";
-  courseDownloadResult.appendChild(statusHeading(status === "succeeded" ? "Course saved" : `Course ${humanStatusLabel(status).toLowerCase()}`, status));
-
-  if (result.output_dir) {
-    courseDownloadResult.appendChild(compactPathLine("Folder", result.output_dir, { useFileName: true }));
-    copyOutputButton.disabled = false;
-    if (revealOutputButton) {
-      revealOutputButton.disabled = false;
-    }
-  }
-
-  const files = result.downloaded_files || [];
-  if (files.length > 0) {
-    const summary = document.createElement("p");
-    summary.className = "muted";
-    summary.textContent = `${files.length} file${files.length === 1 ? "" : "s"} saved.`;
-    courseDownloadResult.appendChild(summary);
-
-    const list = document.createElement("ul");
-    files.slice(0, 8).forEach((file) => {
-      const item = document.createElement("li");
-      item.textContent = fileName(file);
-      item.title = file;
-      list.appendChild(item);
-    });
-    courseDownloadResult.appendChild(list);
-  }
-
-  appendNoticeLines(courseDownloadResult, [...(result.errors || []), ...(result.warnings || [])]);
-
-  if ((result.errors || []).length === 0 && result.status === "succeeded") {
-    updateFlowStep("result");
-    loadRecentOutputs();
   }
 }
 
@@ -2312,8 +1923,8 @@ function renderErrors(errors, jobError) {
 function describeError(error) {
   const knownMessages = {
     unsupported_source: "This source is not supported by the current analyzer.",
-    login_required: "Udemy did not allow access with the current session.",
-    cookies_required: "Chrome session is unavailable or Udemy rejected it.",
+    login_required: "This source requires sign-in, which is not part of the public beta flow.",
+    [PRIVATE_SESSION_ERROR_CODE]: "This source requires private session data, which is not part of the public beta flow.",
     network_error: "The analyzer could not access the source. Check the URL and network access, then retry.",
     timeout: "Analysis timed out. Try again later or use a shorter/public source.",
     ytdlp_not_found: "yt-dlp was not found. Check the local environment and PATH.",
@@ -2331,9 +1942,9 @@ function describeError(error) {
 
 function suggestedActionForCode(code) {
   const actions = {
-    unsupported_source: "Try a different public URL or wait for local-file support in a future block.",
-    login_required: "Open Udemy in Chrome, make sure you are signed in, then try again.",
-    cookies_required: "Open Chrome, sign in to Udemy, then retry. If it still fails, use Advanced manual cookies.txt.",
+    unsupported_source: "Try a different supported link or use File mode for local media.",
+    login_required: "Use a public source or a local file.",
+    [PRIVATE_SESSION_ERROR_CODE]: "Use a public source or a local file.",
     network_error: "Check connectivity and retry.",
     timeout: "Retry later.",
   };
@@ -2434,7 +2045,6 @@ function renderFatalError(title, message) {
   });
   renderWarnings([]);
   renderErrors([{ code: errorCodeFromTitle(title), message }], null);
-  coursePanel.classList.add("hidden");
   batchPanel.classList.add("hidden");
   localFilePanel.classList.add("hidden");
   resetDownloadSelection();

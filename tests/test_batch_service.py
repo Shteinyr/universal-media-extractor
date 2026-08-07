@@ -122,3 +122,21 @@ def test_retry_failed_items_reuses_batch_settings(tmp_path):
     assert retried.status == "succeeded"
     assert retried.succeeded_count == 1
     assert fake.calls[-1].output_format == "mp3"
+
+
+def test_batch_video_720p_preset_uses_honest_height_cap(tmp_path):
+    fake = FakeDownloadService()
+    service = BatchService(job_service=JobService(tmp_path / "jobs.sqlite3"), download_service=fake)
+    request = BatchCreateRequest(
+        items=[BatchDownloadItemRequest(source_url="https://example.test/video")],
+        user_confirmed_rights=True,
+        preset="video_720p",
+    )
+
+    batch = service.create_batch(request)
+    final = wait_for_batch(service, batch.batch_id)
+
+    assert final.status == "succeeded"
+    assert fake.calls[-1].mode == "combined"
+    assert "height<=720" in fake.calls[-1].format_id
+    assert fake.calls[-1].output_format == "mp4"

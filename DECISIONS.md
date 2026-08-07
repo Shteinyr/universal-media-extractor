@@ -1,5 +1,17 @@
 # Decisions
 
+## 2026-08-07
+
+- Public Beta UI/UX Refactor Block 1 is approved and completed as the first executable block from the GPT Pro final UI/UX commercial spec.
+- Public product mode must not expose Course/Udemy/cookies/Chrome-session/manual-cookie UI surfaces.
+- Public product mode must not register internal Course/Udemy endpoints.
+- The public first screen now uses one `New task` composer instead of making URL/File/Batch the user's primary mental model.
+- The composer routes one URL to URL analysis, local audio/video files to local analysis, and multiple URLs or `.txt/.csv` lists to batch import/review.
+- Public output choices should use stable semantic presets rather than raw stream IDs or codec-oriented labels.
+- `Smaller video` is replaced by `Up to 720p`; the legacy `smaller_video` value remains only as a compatibility alias.
+- SQLite is the source of truth for jobs/history, but not a full product database. Batch group state remains in-memory until durable Queue/Library work.
+- Browser smoke remains a manual/dev command, not part of ordinary pytest.
+
 ## 2026-05-29
 
 - Start with a local web app rather than an online service.
@@ -226,3 +238,17 @@
 - Child download jobs continue to use existing SQLite-backed `JobService`.
 - Batch concurrency is limited to 1-3 local workers to avoid overwhelming sources or the machine.
 - Archive Pack remains planned/disabled until a dedicated multi-output execution flow is approved.
+
+## 2026-08-07 - GPT Pro UI/UX Research Pack Boundary
+
+- The UI/UX GPT Pro context pack is research input only.
+- Competitor screenshots and flow notes may inform future design decisions, but they do not authorize copying competitor UI or changing the roadmap.
+- GPT Pro recommendations must be reviewed before any new UI implementation block starts.
+- Product code, backend behavior, and public feature scope remain unchanged by this research pack.
+
+## 2026-08-07 - GPT Pro Final UI/UX Spec Tracking
+
+- The final GPT Pro UI/UX commercial spec is accepted as the current UI/UX planning direction.
+- It is tracked as stricter new GitHub issues #41-#51 rather than reopening older completed issues.
+- First recommended implementation block is #42-#45 together: public Course hardening, backend source-of-truth audit, universal New Task composer, and stable semantic preset resolver.
+- Later tasks #46-#51 must not start automatically before user confirmation.
