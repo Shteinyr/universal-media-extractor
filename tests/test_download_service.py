@@ -107,6 +107,28 @@ def test_download_service_can_use_chrome_session_without_shell(monkeypatch, tmp_
     assert calls["kwargs"]["shell"] is False
 
 
+def test_download_service_audio_selector_falls_back_to_best_audio(monkeypatch, tmp_path):
+    calls = {}
+
+    def fake_popen(command, **kwargs):
+        calls["command"] = command
+        return FakePopen(command, **kwargs)
+
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service.subprocess.Popen",
+        fake_popen,
+    )
+
+    request = _request(tmp_path)
+    request.format_id = "251"
+    request.output_format = "mp3"
+    result = DownloadService(timeout_seconds=5).download_media(request)
+
+    assert result.status == "succeeded"
+    format_index = calls["command"].index("-f") + 1
+    assert calls["command"][format_index] == "251/bestaudio/best"
+
+
 def test_download_service_retries_access_error_with_chrome_session(monkeypatch, tmp_path):
     calls = []
 

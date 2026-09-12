@@ -347,6 +347,7 @@ def _build_ytdlp_command(request: DownloadRequest, output_dir: Path) -> list[str
             video_format,
         ]
     elif request.mode == "audio" and request.output_format:
+        format_selector = f"{request.format_id}/bestaudio/best"
         audio_format = _safe_output_format(
             request.output_format,
             AUDIO_OUTPUT_FORMATS,
