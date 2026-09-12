@@ -83,6 +83,30 @@ def test_download_service_builds_safe_ytdlp_command(monkeypatch, tmp_path):
     assert Path(result.log_path).name == "download.log"
 
 
+def test_download_service_can_use_chrome_session_without_shell(monkeypatch, tmp_path):
+    calls = {}
+
+    def fake_popen(command, **kwargs):
+        calls["command"] = command
+        calls["kwargs"] = kwargs
+        return FakePopen(command, **kwargs)
+
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service.subprocess.Popen",
+        fake_popen,
+    )
+
+    request = _request(tmp_path)
+    request.auth_source = "chrome"
+    result = DownloadService(timeout_seconds=5).download_media(request)
+
+    assert result.status == "succeeded"
+    assert "--cookies-from-browser" in calls["command"]
+    assert "chrome" in calls["command"]
+    assert "--cookies" not in calls["command"]
+    assert calls["kwargs"]["shell"] is False
+
+
 def test_download_service_passes_output_template_and_duplicate_policy(monkeypatch, tmp_path):
     def fake_popen(command, **kwargs):
         return FakePopen(command, **kwargs)

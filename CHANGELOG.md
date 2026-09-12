@@ -1,10 +1,17 @@
 # Changelog
 
+## 2026-09-12 - Opt-In Chrome Session For URL Downloads
+
+- Added an advanced URL download option that sends `auth_source="chrome"` to the backend.
+- URL downloads can now opt into `yt-dlp --cookies-from-browser chrome` when a source requires the user's existing Chrome session.
+- Kept the option disabled by default and did not add password fields, cookie uploads, stored credentials, or DRM/paywall/CAPTCHA bypass.
+- Added backend/API/static UI tests for the Chrome-session download request path.
+
 ## 2026-08-07 - Public Beta UI/UX Refactor Boundary Tightening
 
 - Tightened the completed Public Beta UI/UX Refactor Block 1 boundary.
 - Removed remaining user-facing `cookies` copy from the public static JavaScript bundle while preserving backend error-code compatibility.
-- Updated static API tests to assert that public JS does not expose Course/Udemy/Chrome/manual-cookie/cookies wording.
+- Updated static API tests to assert that public JS does not expose Course/Udemy/manual-cookie/cookies wording.
 - Verification: JS syntax checks passed, focused static UI/preset tests passed with `8 passed`, targeted Block 1 tests passed with `72 passed`, full pytest passed outside sandbox with `232 passed`, and browser smoke passed in public product mode.
 - Saved proof screenshots under `proof/final_ui_ux_refactor_block_1_goal_audit/`.
 

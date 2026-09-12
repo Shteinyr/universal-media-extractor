@@ -40,6 +40,7 @@ const downloadChooseFolderButton = document.querySelector("#download-choose-fold
 const downloadOutputFormatSelect = document.querySelector("#download-output-format");
 const downloadOutputTemplateInput = document.querySelector("#download-output-template");
 const downloadDuplicatePolicySelect = document.querySelector("#download-duplicate-policy");
+const downloadUseChromeSessionInput = document.querySelector("#download-use-chrome-session");
 const downloadButton = document.querySelector("#download-button");
 const cancelDownloadButton = document.querySelector("#cancel-download-button");
 const downloadResult = document.querySelector("#download-result");
@@ -362,6 +363,7 @@ downloadButton.addEventListener("click", async () => {
         output_format: selectedFormat.preset_output_format || downloadOutputFormatSelect.value || null,
         output_template: downloadOutputTemplateInput?.value?.trim() || "{title}",
         duplicate_policy: downloadDuplicatePolicySelect?.value || "rename",
+        auth_source: downloadUseChromeSessionInput?.checked ? "chrome" : "none",
         channel_name: currentAnalyzeResult.uploader?.channel_name || currentAnalyzeResult.uploader?.name || null,
       }),
     });
@@ -1398,6 +1400,9 @@ function resetDownloadSelection() {
   downloadOutputFormatSelect.innerHTML = "";
   if (downloadOutputTemplateInput) {
     downloadOutputTemplateInput.value = "{title}";
+  }
+  if (downloadUseChromeSessionInput) {
+    downloadUseChromeSessionInput.checked = false;
   }
   if (downloadDuplicatePolicySelect) {
     downloadDuplicatePolicySelect.value = "rename";

@@ -287,6 +287,8 @@ def _build_ytdlp_command(request: DownloadRequest, output_dir: Path) -> list[str
         "-o",
         output_template,
     ]
+    if request.auth_source == "chrome":
+        command.extend(["--cookies-from-browser", "chrome"])
 
     if request.mode == "subtitles":
         subtitle_format = _safe_output_format(

@@ -17,9 +17,11 @@ The public UI now starts from one `New task` composer instead of forcing the use
 
 ## Course/Public Boundary
 
-Public static UI no longer contains user-facing Course/Udemy/cookie/Chrome-session surfaces.
+Public static UI no longer contains user-facing Course/Udemy/manual-cookie surfaces.
 
 Follow-up tightening: the public JavaScript bundle also avoids user-facing `cookies` wording for private-session failures. Those backend error codes remain compatible internally, but public UI copy maps them to neutral private-session language.
+
+Later URL download refinement: normal URL downloads expose an opt-in advanced checkbox, `Use Chrome session if the source requires sign-in`, which maps to `yt-dlp --cookies-from-browser chrome`. It is disabled by default and does not add cookie upload, password, credential storage, or bypass behavior.
 
 Public product mode:
 

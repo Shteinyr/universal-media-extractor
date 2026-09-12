@@ -149,6 +149,7 @@ def test_static_index_is_available(tmp_path):
     assert "Save to" in response.text
     assert "Folder name" in response.text
     assert "If exists" in response.text
+    assert "Use Chrome session if the source requires sign-in" in response.text
     assert "Reveal in Finder" in response.text
     assert "~/Downloads/Universal Media Extractor" in response.text
     assert "Start batch" in response.text
@@ -163,7 +164,7 @@ def test_static_index_is_available(tmp_path):
     assert "License" not in response.text
     assert 'src="/static/option_normalizer.js"' in response.text
     assert 'src="/static/app.js"' in response.text
-    for forbidden in ["Course", "Udemy", "cookies", "Chrome session", "Manual cookies"]:
+    for forbidden in ["Course", "Udemy", "cookies", "Manual cookies"]:
         assert forbidden not in response.text
 
 
@@ -214,6 +215,7 @@ def test_static_javascript_is_available(tmp_path):
     assert "handleGlobalShortcuts" in response.text
     assert "settingsCard.open = true" in response.text
     assert "source_title" in response.text
+    assert "auth_source" in response.text
     assert "downloadOutputFormatSelect" in response.text
     assert "MP4" in response.text
     assert "X-UME-Session-Token" in response.text
@@ -239,7 +241,6 @@ def test_static_javascript_is_available(tmp_path):
         "/udemy/download",
         "Course mode",
         "Udemy course",
-        "Chrome session",
         "Manual cookies",
         "cookies",
     ]:
@@ -654,6 +655,7 @@ def test_download_endpoint_uses_service_and_returns_result(tmp_path):
             "format_id": "140",
             "mode": "audio",
             "user_confirmed_rights": True,
+            "auth_source": "chrome",
             "output_base_dir": str(custom_output_base),
             "source_title": "Showreel",
         },
@@ -666,6 +668,7 @@ def test_download_endpoint_uses_service_and_returns_result(tmp_path):
     assert body["status"] == "succeeded"
     assert body["result"]["selected_format_id"] == "140"
     assert calls["request"].user_confirmed_rights is True
+    assert calls["request"].auth_source == "chrome"
     assert calls["request"].output_base_dir == str(custom_output_base)
     assert calls["request"].source_title == "Showreel"
     assert app.state.output_base_dir == custom_output_base.resolve()

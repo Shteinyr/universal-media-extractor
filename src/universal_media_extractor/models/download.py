@@ -16,6 +16,7 @@ from universal_media_extractor.models.analyze import (
 
 DownloadMode = Literal["audio", "video", "combined", "subtitles"]
 DuplicatePolicy = Literal["rename", "skip", "overwrite"]
+DownloadAuthSource = Literal["none", "chrome"]
 DownloadStatus = Literal[
     "queued",
     "running",
@@ -48,6 +49,7 @@ class DownloadRequest(ContractModel):
     output_format: str | None = Field(default=None)
     output_template: str | None = Field(default=None, max_length=240)
     duplicate_policy: DuplicatePolicy = "rename"
+    auth_source: DownloadAuthSource = "none"
     project_name: str | None = Field(default=None, max_length=120)
     channel_name: str | None = Field(default=None, max_length=120)
     playlist_index: int | None = Field(default=None, ge=0)
