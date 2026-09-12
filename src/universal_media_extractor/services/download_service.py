@@ -305,11 +305,15 @@ def _build_ytdlp_command(request: DownloadRequest, output_dir: Path) -> list[str
         "--no-playlist",
         "--newline",
         "--windows-filenames",
+        "--concurrent-fragments",
+        "8",
         "-o",
         output_template,
     ]
     if request.auth_source == "chrome":
         command.extend(["--cookies-from-browser", "chrome"])
+        if request.mode == "audio":
+            command.extend(["--extractor-args", "youtube:player_client=web"])
 
     if request.mode == "subtitles":
         subtitle_format = _safe_output_format(

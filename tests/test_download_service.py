@@ -83,6 +83,8 @@ def test_download_service_builds_safe_ytdlp_command(monkeypatch, tmp_path):
     assert "140" in calls["command"]
     assert "--simulate" not in calls["command"]
     assert "--windows-filenames" in calls["command"]
+    assert "--concurrent-fragments" in calls["command"]
+    assert "8" in calls["command"]
     assert calls["kwargs"]["shell"] is False
     assert result.output_dir is not None
     assert Path(result.output_dir).name == "Showreel"
@@ -113,6 +115,8 @@ def test_download_service_can_use_chrome_session_without_shell(monkeypatch, tmp_
     assert result.status == "succeeded"
     assert "--cookies-from-browser" in calls["command"]
     assert "chrome" in calls["command"]
+    assert "--extractor-args" in calls["command"]
+    assert "youtube:player_client=web" in calls["command"]
     assert "--cookies" not in calls["command"]
     assert calls["kwargs"]["shell"] is False
 
@@ -355,6 +359,34 @@ def test_download_service_video_mode_downloads_video_with_audio(monkeypatch, tmp
     assert "-f" in calls["command"]
     assert "137+bestaudio/best" in calls["command"]
     assert "137" in result.selected_format_id
+
+
+def test_download_service_video_chrome_does_not_force_web_client(monkeypatch, tmp_path):
+    calls = {}
+
+    def fake_popen(command, **kwargs):
+        calls["command"] = command
+        return FakePopen(command, **kwargs)
+
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service.subprocess.Popen",
+        fake_popen,
+    )
+
+    request = DownloadRequest(
+        source_url="https://youtu.be/UUdxAp3kuKA",
+        format_id="137",
+        mode="video",
+        user_confirmed_rights=True,
+        output_base_dir=str(tmp_path),
+        source_title="Showreel",
+        auth_source="chrome",
+    )
+    result = DownloadService().download_media(request)
+
+    assert result.status == "succeeded"
+    assert "--cookies-from-browser" in calls["command"]
+    assert "--extractor-args" not in calls["command"]
 
 
 def test_download_service_returns_downloaded_file_metadata(monkeypatch, tmp_path):
