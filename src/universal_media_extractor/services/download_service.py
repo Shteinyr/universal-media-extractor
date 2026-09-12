@@ -205,6 +205,7 @@ class DownloadService:
 
                 line = stdout.readline() if stdout is not None else ""
                 if line:
+                    deadline = time.monotonic() + self.timeout_seconds
                     output_lines.append(line)
                     _append_log_text(log_path, line)
                     step, percent = _parse_ytdlp_progress_line(line)

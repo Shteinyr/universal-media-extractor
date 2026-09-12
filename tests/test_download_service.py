@@ -41,6 +41,16 @@ class FakePopen:
         self.returncode = -9
 
 
+class SlowProgressPopen(FakePopen):
+    def __init__(self, command, **kwargs):
+        output = (
+            "[download] 1.0% of 130.00MiB\n"
+            "[download] 2.0% of 130.00MiB\n"
+            "[download] 3.0% of 130.00MiB\n"
+        )
+        super().__init__(command, **kwargs, output=output)
+
+
 def _request(tmp_path, *, user_confirmed_rights=True):
     return DownloadRequest(
         source_url="https://youtu.be/UUdxAp3kuKA",
@@ -127,6 +137,26 @@ def test_download_service_audio_selector_falls_back_to_best_audio(monkeypatch, t
     assert result.status == "succeeded"
     format_index = calls["command"].index("-f") + 1
     assert calls["command"][format_index] == "251/bestaudio/best"
+
+
+def test_download_service_timeout_is_idle_not_absolute(monkeypatch, tmp_path):
+    def fake_popen(command, **kwargs):
+        return SlowProgressPopen(command, **kwargs)
+
+    fake_times = iter([0, 9, 18, 27, 36, 45])
+
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service.subprocess.Popen",
+        fake_popen,
+    )
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service.time.monotonic",
+        lambda: next(fake_times, 45),
+    )
+
+    result = DownloadService(timeout_seconds=10).download_media(_request(tmp_path))
+
+    assert result.status == "succeeded"
 
 
 def test_download_service_retries_access_error_with_chrome_session(monkeypatch, tmp_path):
