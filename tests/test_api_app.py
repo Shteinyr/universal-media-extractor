@@ -216,6 +216,7 @@ def test_static_javascript_is_available(tmp_path):
     assert "settingsCard.open = true" in response.text
     assert "source_title" in response.text
     assert "auth_source" in response.text
+    assert "Retry with Chrome session" in response.text
     assert "downloadOutputFormatSelect" in response.text
     assert "MP4" in response.text
     assert "X-UME-Session-Token" in response.text

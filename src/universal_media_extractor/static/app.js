@@ -336,7 +336,11 @@ async function analyzeSelectedLocalPath(filePath) {
   }
 }
 
-downloadButton.addEventListener("click", async () => {
+downloadButton.addEventListener("click", () => {
+  downloadSelected();
+});
+
+async function downloadSelected({ forceChromeSession = false } = {}) {
   if (!currentAnalyzeResult || !selectedFormat) {
     renderDownloadResult({
       status: "blocked",
@@ -346,6 +350,10 @@ downloadButton.addEventListener("click", async () => {
   }
 
   setDownloadLoading(true);
+  const authSource = forceChromeSession || downloadUseChromeSessionInput?.checked ? "chrome" : "none";
+  if (forceChromeSession && downloadUseChromeSessionInput) {
+    downloadUseChromeSessionInput.checked = true;
+  }
 
   try {
     const response = await apiFetch("/download", {
@@ -363,7 +371,7 @@ downloadButton.addEventListener("click", async () => {
         output_format: selectedFormat.preset_output_format || downloadOutputFormatSelect.value || null,
         output_template: downloadOutputTemplateInput?.value?.trim() || "{title}",
         duplicate_policy: downloadDuplicatePolicySelect?.value || "rename",
-        auth_source: downloadUseChromeSessionInput?.checked ? "chrome" : "none",
+        auth_source: authSource,
         channel_name: currentAnalyzeResult.uploader?.channel_name || currentAnalyzeResult.uploader?.name || null,
       }),
     });
@@ -398,7 +406,7 @@ downloadButton.addEventListener("click", async () => {
   } finally {
     setDownloadLoading(false);
   }
-});
+}
 
 cancelDownloadButton.addEventListener("click", async () => {
   if (activeDownloadJobId) {
@@ -1658,8 +1666,31 @@ function renderDownloadResult(result) {
   appendNoticeLines(downloadResult, [...(result.errors || []), ...(result.warnings || [])]);
 
   if ((result.errors || []).length > 0) {
+    if (hasPrivateSessionError(result.errors) && currentAnalyzeResult && selectedFormat) {
+      downloadResult.appendChild(chromeSessionRetryButton());
+    }
     updateFlowStep("download");
   }
+}
+
+function hasPrivateSessionError(errors = []) {
+  return errors.some((error) => error?.code === PRIVATE_SESSION_ERROR_CODE || error?.code === "login_required");
+}
+
+function chromeSessionRetryButton() {
+  const row = document.createElement("div");
+  row.className = "actions-row";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "secondary-button";
+  button.textContent = "Retry with Chrome session";
+  button.addEventListener("click", () => {
+    downloadSelected({ forceChromeSession: true });
+  });
+
+  row.appendChild(button);
+  return row;
 }
 
 
