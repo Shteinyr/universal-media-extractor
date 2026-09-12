@@ -107,6 +107,39 @@ def test_download_service_can_use_chrome_session_without_shell(monkeypatch, tmp_
     assert calls["kwargs"]["shell"] is False
 
 
+def test_download_service_retries_access_error_with_chrome_session(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_popen(command, **kwargs):
+        calls.append((command, kwargs))
+        if len(calls) == 1:
+            return FakePopen(
+                command,
+                **kwargs,
+                returncode=1,
+                output="ERROR: unable to download video data: HTTP Error 403: Forbidden\n",
+            )
+        return FakePopen(command, **kwargs)
+
+    monkeypatch.setattr(
+        "universal_media_extractor.services.download_service.subprocess.Popen",
+        fake_popen,
+    )
+
+    result = DownloadService(timeout_seconds=5).download_media(_request(tmp_path))
+
+    assert result.status == "succeeded"
+    assert len(calls) == 2
+    assert "--cookies-from-browser" not in calls[0][0]
+    assert "--cookies-from-browser" in calls[1][0]
+    assert "chrome" in calls[1][0]
+    assert calls[0][1]["shell"] is False
+    assert calls[1][1]["shell"] is False
+
+    request_path = Path(result.output_dir) / ".metadata" / "download_request.json"
+    assert '"auth_source": "chrome"' in request_path.read_text(encoding="utf-8")
+
+
 def test_download_service_passes_output_template_and_duplicate_policy(monkeypatch, tmp_path):
     def fake_popen(command, **kwargs):
         return FakePopen(command, **kwargs)

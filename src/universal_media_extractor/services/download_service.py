@@ -125,6 +125,26 @@ class DownloadService:
             job_service=job_service,
             job_id=job_id,
         )
+        if _should_retry_with_chrome_session(result, request):
+            retry_request = request.model_copy(update={"auth_source": "chrome"})
+            request_path.write_text(retry_request.model_dump_json(indent=2), encoding="utf-8")
+            retry_command = _build_ytdlp_command(retry_request, output_dir)
+            _append_log_text(
+                log_path,
+                "\n\nRetrying with Chrome session after access-required failure.\n"
+                + "Retry command:\n"
+                + json.dumps(retry_command, ensure_ascii=False, indent=2)
+                + "\n\nstdout:\n",
+            )
+            result = self._run_download(
+                retry_command,
+                retry_request,
+                output_dir,
+                log_path,
+                result_path,
+                job_service=job_service,
+                job_id=job_id,
+            )
         result_path.write_text(result.model_dump_json(indent=2), encoding="utf-8")
         return result
 
@@ -378,6 +398,14 @@ def _append_log(log_path: Path, stdout: str | bytes | None, stderr: str | bytes 
 def _append_log_text(log_path: Path, text: str) -> None:
     with log_path.open("a", encoding="utf-8") as handle:
         handle.write(text)
+
+
+def _should_retry_with_chrome_session(result: DownloadResult, request: DownloadRequest) -> bool:
+    if request.auth_source == "chrome":
+        return False
+    if result.status != "failed":
+        return False
+    return any(error.code in {"cookies_required", "login_required"} for error in result.errors)
 
 
 def _ensure_text(value: str | bytes | None) -> str:
